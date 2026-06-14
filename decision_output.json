@@ -1,0 +1,168 @@
+{
+  "portfolio": [
+    {
+      "rank": 1,
+      "market": "Stati Uniti",
+      "raccomandazione": "Mantenere (vincolo capacita' voli)",
+      "evidenza": [
+        "Forecast a 2 mesi: +18% vs stesse mensilita' anno prima.",
+        "Interesse di ricerca: 68/100 (+17 su anno prima).",
+        "Cambio USD: indice 0.970 (euro debole, favorevole)."
+      ],
+      "effetto_atteso": "2,665–3,098 presenze attese nel lead-time (intervallo 80%).",
+      "confidenza": "alta",
+      "confidenza_perche": "batte la naive; errore di backtest ~3%",
+      "meccanismo": "Il search anticipa gli arrivi di ~2 mesi (booking window). Si previene la stagione usando un segnale gia' osservato, non una scommessa.",
+      "rischio": "tetto di capacita' voli sullo scalo; dati ISTAT pubblicati con ~3 mesi di ritardo",
+      "opportunity_score": 98640.0
+    },
+    {
+      "rank": 2,
+      "market": "Regno Unito",
+      "raccomandazione": "Aumentare",
+      "evidenza": [
+        "Forecast a 2 mesi: +8% vs stesse mensilita' anno prima.",
+        "Interesse di ricerca: 61/100 (+9 su anno prima).",
+        "Cambio GBP: indice 1.051 (euro forte, sfavorevole)."
+      ],
+      "effetto_atteso": "2,434–3,556 presenze attese nel lead-time (intervallo 80%).",
+      "confidenza": "alta",
+      "confidenza_perche": "batte la naive; errore di backtest ~6%",
+      "meccanismo": "Il search anticipa gli arrivi di ~2 mesi (booking window). Si previene la stagione usando un segnale gia' osservato, non una scommessa.",
+      "rischio": "dati ISTAT pubblicati con ~3 mesi di ritardo",
+      "opportunity_score": 32809.0
+    },
+    {
+      "rank": 3,
+      "market": "Germania",
+      "raccomandazione": "Monitorare",
+      "evidenza": [
+        "Forecast a 2 mesi: +10% vs stesse mensilita' anno prima.",
+        "Interesse di ricerca: 64/100 (+15 su anno prima)."
+      ],
+      "effetto_atteso": "4,285–5,766 presenze attese nel lead-time (intervallo 80%).",
+      "confidenza": "bassa",
+      "confidenza_perche": "non batte la naive stagionale: uso solo riferimento storico",
+      "meccanismo": "Il search anticipa gli arrivi di ~2 mesi (booking window). Si previene la stagione usando un segnale gia' osservato, non una scommessa.",
+      "rischio": "segnale debole: trattare come ipotesi, non come certezza; dati ISTAT pubblicati con ~3 mesi di ritardo",
+      "opportunity_score": 12896.0
+    },
+    {
+      "rank": 4,
+      "market": "Austria",
+      "raccomandazione": "Mantenere",
+      "evidenza": [
+        "Forecast a 2 mesi: +6% vs stesse mensilita' anno prima.",
+        "Interesse di ricerca: 56/100 (+5 su anno prima)."
+      ],
+      "effetto_atteso": "1,795–2,242 presenze attese nel lead-time (intervallo 80%).",
+      "confidenza": "alta",
+      "confidenza_perche": "batte la naive; errore di backtest ~7%",
+      "meccanismo": "Il search anticipa gli arrivi di ~2 mesi (booking window). Si previene la stagione usando un segnale gia' osservato, non una scommessa.",
+      "rischio": "dati ISTAT pubblicati con ~3 mesi di ritardo",
+      "opportunity_score": 9269.0
+    },
+    {
+      "rank": 5,
+      "market": "Paesi Bassi",
+      "raccomandazione": "Mantenere",
+      "evidenza": [
+        "Forecast a 2 mesi: -1% vs stesse mensilita' anno prima.",
+        "Interesse di ricerca: 48/100 (-0 su anno prima)."
+      ],
+      "effetto_atteso": "1,811–2,337 presenze attese nel lead-time (intervallo 80%).",
+      "confidenza": "alta",
+      "confidenza_perche": "batte la naive; errore di backtest ~4%",
+      "meccanismo": "Il search anticipa gli arrivi di ~2 mesi (booking window). Si previene la stagione usando un segnale gia' osservato, non una scommessa.",
+      "rischio": "dati ISTAT pubblicati con ~3 mesi di ritardo",
+      "opportunity_score": 0.0
+    },
+    {
+      "rank": 6,
+      "market": "Svizzera",
+      "raccomandazione": "Ridurre",
+      "evidenza": [
+        "Forecast a 2 mesi: -10% vs stesse mensilita' anno prima.",
+        "Interesse di ricerca: 41/100 (-14 su anno prima).",
+        "Cambio CHF: indice 0.990 (euro debole, favorevole)."
+      ],
+      "effetto_atteso": "1,202–1,532 presenze attese nel lead-time (intervallo 80%).",
+      "confidenza": "alta",
+      "confidenza_perche": "batte la naive; errore di backtest ~5%",
+      "meccanismo": "Il search anticipa gli arrivi di ~2 mesi (booking window). Si previene la stagione usando un segnale gia' osservato, non una scommessa.",
+      "rischio": "dati ISTAT pubblicati con ~3 mesi di ritardo",
+      "opportunity_score": 0.0
+    }
+  ],
+  "diagnostica": {
+    "Germania": {
+      "lag_mesi": 2,
+      "batte_naive": false,
+      "mae_modello": 235.0,
+      "mae_naive": 217.0,
+      "lettura_coefficienti": [
+        "Search (lag 2 mesi): ogni +1 punto di interesse di ricerca 2 mesi fa ~ +11 presenze/mese.",
+        "Stagionalita': il mese piu' forte (effetto al netto del resto) e' il mese 8 (+4,540 vs mese base).",
+        "Trend: +7 presenze/mese di deriva di fondo."
+      ]
+    },
+    "Austria": {
+      "lag_mesi": 2,
+      "batte_naive": true,
+      "mae_modello": 91.0,
+      "mae_naive": 146.0,
+      "lettura_coefficienti": [
+        "Search (lag 2 mesi): ogni +1 punto di interesse di ricerca 2 mesi fa ~ +6 presenze/mese.",
+        "Stagionalita': il mese piu' forte (effetto al netto del resto) e' il mese 8 (+1,516 vs mese base).",
+        "Trend: +6 presenze/mese di deriva di fondo."
+      ]
+    },
+    "Regno Unito": {
+      "lag_mesi": 2,
+      "batte_naive": true,
+      "mae_modello": 150.0,
+      "mae_naive": 266.0,
+      "lettura_coefficienti": [
+        "Search (lag 2 mesi): ogni +1 punto di interesse di ricerca 2 mesi fa ~ +9 presenze/mese.",
+        "Cambio: un euro piu' forte favorisce gli arrivi (beta_fx = +296); euro debole = piu' visitatori.",
+        "Stagionalita': il mese piu' forte (effetto al netto del resto) e' il mese 8 (+3,022 vs mese base).",
+        "Trend: +6 presenze/mese di deriva di fondo."
+      ]
+    },
+    "Stati Uniti": {
+      "lag_mesi": 2,
+      "batte_naive": true,
+      "mae_modello": 51.0,
+      "mae_naive": 180.0,
+      "lettura_coefficienti": [
+        "Search (lag 2 mesi): ogni +1 punto di interesse di ricerca 2 mesi fa ~ +13 presenze/mese.",
+        "Cambio: un euro piu' forte deprime gli arrivi (beta_fx = -146); euro debole = piu' visitatori.",
+        "Stagionalita': il mese piu' forte (effetto al netto del resto) e' il mese 8 (+2,052 vs mese base).",
+        "Trend: +8 presenze/mese di deriva di fondo."
+      ]
+    },
+    "Paesi Bassi": {
+      "lag_mesi": 2,
+      "batte_naive": true,
+      "mae_modello": 62.0,
+      "mae_naive": 94.0,
+      "lettura_coefficienti": [
+        "Search (lag 2 mesi): ogni +1 punto di interesse di ricerca 2 mesi fa ~ +5 presenze/mese.",
+        "Stagionalita': il mese piu' forte (effetto al netto del resto) e' il mese 8 (+1,696 vs mese base).",
+        "Trend: +6 presenze/mese di deriva di fondo."
+      ]
+    },
+    "Svizzera": {
+      "lag_mesi": 2,
+      "batte_naive": true,
+      "mae_modello": 44.0,
+      "mae_naive": 119.0,
+      "lettura_coefficienti": [
+        "Search (lag 2 mesi): ogni +1 punto di interesse di ricerca 2 mesi fa ~ +12 presenze/mese.",
+        "Cambio: un euro piu' forte deprime gli arrivi (beta_fx = -1428); euro debole = piu' visitatori.",
+        "Stagionalita': il mese piu' forte (effetto al netto del resto) e' il mese 8 (+1,129 vs mese base).",
+        "Trend: +6 presenze/mese di deriva di fondo."
+      ]
+    }
+  }
+}

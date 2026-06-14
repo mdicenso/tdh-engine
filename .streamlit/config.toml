@@ -1,0 +1,14 @@
+# Tema e opzioni del cruscotto TDH Engine (palette Abruzzo: mare adriatico + montagna)
+[theme]
+primaryColor = "#0e7490"          # teal/adriatico
+backgroundColor = "#f1f5f9"       # main (destra): grigio chiaro, non più bianco
+secondaryBackgroundColor = "#ffffff"  # card/widget bianchi → risaltano sul main
+textColor = "#0f172a"
+font = "sans serif"
+
+[server]
+fileWatcherType = "none"          # path OneDrive profondo: evita lo scan continuo
+headless = true
+
+[browser]
+gatherUsageStats = false

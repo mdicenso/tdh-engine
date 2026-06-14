@@ -1,0 +1,24 @@
+# ambienti virtuali (mai sul repo)
+.venv/
+venv/
+env/
+
+# cache python / OneDrive
+__pycache__/
+*.pyc
+desktop.ini
+Thumbs.db
+
+# secrets locali (le password vanno nei Secrets di Streamlit Cloud, non nel repo)
+.streamlit/secrets.toml
+
+# file caricati dagli utenti e stato runtime (non vanno versionati)
+data/uploads/
+data/registry.json
+data/candidates_state.json
+
+# log
+*.log
+
+# NB: la cartella .cache/ NON è ignorata: contiene i dati (ISTAT/BdI/Eurostat/
+# Wikipedia/Trends/GeoJSON) che fanno girare l'app in cloud senza rifare le fetch.
