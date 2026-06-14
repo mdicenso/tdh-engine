@@ -20,5 +20,8 @@ data/candidates_state.json
 # log
 *.log
 
+# documentazione interna/amministrativa (solo locale, non sul repo)
+Admin/
+
 # NB: la cartella .cache/ NON è ignorata: contiene i dati (ISTAT/BdI/Eurostat/
 # Wikipedia/Trends/GeoJSON) che fanno girare l'app in cloud senza rifare le fetch.
