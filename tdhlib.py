@@ -259,6 +259,72 @@ def bdi_abruzzo_spend():
     return json.load(open(p, encoding="utf-8")).get("abruzzo_spesa_M_2024")
 
 
+# --- Banca d'Italia per PAESE di origine (nazionale, trimestrale 1997-2025) ---
+_BDI_COLMAP = {4: "DE", 5: "FR", 6: "AT", 7: "ES", 9: "GB", 10: "CH", 11: "RU", 13: "US"}
+_BDI_SHEETS = {"notti": "TS1-N-S", "spesa": "TS1-S-S", "viaggiatori": "TS1-V-S"}
+BDI_MARKETS = ["DE", "AT", "GB", "CH", "US", "FR", "ES"]
+
+
+@st.cache_data(show_spinner=False)
+def bdi_country_long():
+    """Flussi nazionali BdI per paese di origine: DataFrame date·code·notti·spesa·viaggiatori
+    (trimestrale). Sorgente: fogli TS1 dell'xlsx BdI. None se il file manca."""
+    import re
+    p = ".cache/bdi_turismo_ts.xlsx"
+    if not os.path.exists(p):
+        return None
+    import openpyxl
+    wb = openpyxl.load_workbook(p, read_only=True, data_only=True)
+    recs = []
+    for metric, sheet in _BDI_SHEETS.items():
+        rows = list(wb[sheet].iter_rows(values_only=True))
+        h = next((i for i, r in enumerate(rows) if r and any(c == "Germania" for c in r if c)), None)
+        if h is None:
+            continue
+        year = None
+        for r in rows[h + 1:]:
+            if r[0] is not None:
+                year = int(r[0])
+            m = re.match(r"\s*(\d)", str(r[1] or r[2] or ""))
+            if not (year and m):
+                continue
+            q = int(m.group(1))
+            date = pd.Timestamp(year, q * 3 - 2, 1)
+            for col, code in _BDI_COLMAP.items():
+                if col < len(r) and r[col] is not None:
+                    recs.append((date, code, metric, float(r[col])))
+    if not recs:
+        return None
+    df = pd.DataFrame(recs, columns=["date", "code", "metric", "value"])
+    return df.pivot_table(index=["date", "code"], columns="metric", values="value").reset_index()
+
+
+def bdi_country_annual():
+    """Aggregato ANNUALE per paese (notti/viaggiatori = somma, spesa = somma). Per le viste descrittive."""
+    df = bdi_country_long()
+    if df is None or df.empty:
+        return None
+    df = df.copy(); df["anno"] = df["date"].dt.year
+    g = df.groupby(["anno", "code"]).agg(
+        notti=("notti", "sum"), spesa=("spesa", "sum"), viaggiatori=("viaggiatori", "sum")).reset_index()
+    return g[g["code"].isin(BDI_MARKETS)]
+
+
+def chart_bdi_country(metric: str = "notti") -> go.Figure | None:
+    g = bdi_country_annual()
+    if g is None or g.empty:
+        return None
+    names = {mk.code: mk.name for mk in DEFAULT_MARKETS}
+    fig = go.Figure()
+    for code in BDI_MARKETS:
+        d = g[g["code"] == code].sort_values("anno")
+        if not d.empty:
+            fig.add_trace(go.Scatter(x=d["anno"], y=d[metric], name=names.get(code, code),
+                                     mode="lines+markers"))
+    fig.update_yaxes(title=metric)
+    return _layout(fig, h=380)
+
+
 def chart_value_bar(summary: list[dict]) -> go.Figure:
     s = sorted([x for x in summary if x.get("valore")], key=lambda x: x["valore"])
     fig = go.Figure(go.Bar(x=[x["valore"] for x in s], y=[x["market"] for x in s], orientation="h",
@@ -297,6 +363,65 @@ def chart_connectivity():
                            marker_color=["#16a34a" if v > 0 else "#cbd5e1" for _, v in items],
                            hovertemplate="<b>%{y}</b><br>%{x:,.0f} passeggeri 2024<extra></extra>"))
     fig.update_xaxes(title="passeggeri diretti su Pescara (2024)")
+    return _layout(fig, h=260)
+
+
+# --- Salute mercato (fiducia consumatori) e accessibilità nel tempo (voli Pescara) ---
+# Criteri DECISIONALI di contesto (non predittori del forecast: vedi bake-off).
+HEALTH_GEO = {"DE": "DE", "AT": "AT", "NL": "NL"}   # fiducia disponibile (Eurostat)
+
+
+@st.cache_data(show_spinner=False)
+def market_health() -> dict:
+    """Trend della fiducia dei consumatori per mercato: {code: {conf, delta, label, series}}.
+    Disponibile per DE/AT/NL; per gli altri mercati non c'è dato Eurostat."""
+    out = {}
+    for code, geo in HEALTH_GEO.items():
+        p = f".cache/econ_confidence_{geo}.csv"
+        if not os.path.exists(p):
+            continue
+        df = pd.read_csv(p, parse_dates=["date"]).sort_values("date")
+        if df.empty:
+            continue
+        s = df["confidence"].astype(float)
+        latest = float(s.iloc[-1])
+        prev = float(s.iloc[-7]) if len(s) >= 7 else float(s.iloc[0])   # ~6 mesi prima
+        delta = latest - prev
+        label = "📈 in ripresa" if delta >= 3 else "📉 in calo" if delta <= -3 else "➡️ stabile"
+        out[code] = {"conf": round(latest, 1), "delta": round(delta, 1), "label": label,
+                     "series": df[["date", "confidence"]]}
+    return out
+
+
+@st.cache_data(show_spinner=False)
+def flights_monthly_df():
+    p = ".cache/econ_flights_pescara_monthly.csv"
+    return pd.read_csv(p, parse_dates=["date"]).sort_values("date") if os.path.exists(p) else None
+
+
+def chart_flights_monthly():
+    df = flights_monthly_df()
+    if df is None or df.empty:
+        return None
+    df = df.copy(); df["roll12"] = df["pax"].rolling(12).mean()
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=df["date"], y=df["pax"], name="passeggeri/mese",
+                             line=dict(color="#cbd5e1", width=1)))
+    fig.add_trace(go.Scatter(x=df["date"], y=df["roll12"], name="media 12 mesi",
+                             line=dict(color="#0e7490", width=3)))
+    fig.update_yaxes(title="passeggeri Pescara")
+    return _layout(fig, h=280)
+
+
+def chart_confidence(health: dict):
+    """Mini-serie della fiducia per i mercati con dato."""
+    if not health:
+        return None
+    fig = go.Figure()
+    for code, h in health.items():
+        s = h["series"]
+        fig.add_trace(go.Scatter(x=s["date"], y=s["confidence"], name=code, mode="lines"))
+    fig.update_yaxes(title="fiducia (saldo)")
     return _layout(fig, h=260)
 
 

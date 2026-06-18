@@ -133,6 +133,24 @@ def page_ranking():
             st.caption("Passeggeri 2024 (Eurostat avia_par) — fattibilità reale nel ranking. 0 = nessun volo diretto.")
             st.plotly_chart(fig_conn, use_container_width=True)
 
+        st.subheader("🌡️ Salute dei mercati e accessibilità — contesto decisionale")
+        st.caption("Criteri di **contesto** per pesare il giudizio, **non** predittori del forecast: "
+                   "il bake-off mostra che non battono la stagionalità. Vanno letti con incertezza.")
+        hc1, hc2 = st.columns(2)
+        with hc1:
+            health = L.market_health()
+            if health:
+                st.markdown("**Salute mercato** · fiducia dei consumatori")
+                hdf = pd.DataFrame([{"Mercato": k, "Fiducia (saldo)": v["conf"],
+                                     "Trend ~6 mesi": v["label"]} for k, v in health.items()])
+                st.dataframe(hdf, hide_index=True, use_container_width=True)
+                st.caption("DE/AT/NL (Eurostat). Saldo negativo = pessimismo; conta soprattutto il trend.")
+        with hc2:
+            fig_fl = L.chart_flights_monthly()
+            if fig_fl is not None:
+                st.markdown("**Accessibilità aerea nel tempo** · Pescara")
+                st.plotly_chart(fig_fl, use_container_width=True)
+
 
 def page_forecast():
     if is_real:
@@ -178,6 +196,12 @@ def page_dettaglio():
         d2.metric("Momentum ricerca", f"{s['momentum']:+.0f}%")
         d3.metric("Valore €/viaggiatore", f"{s['valore']:.0f}")
         d4.metric("Durata media", f"{stay:.1f} notti" if stay else "—")
+        h = L.market_health().get(s["code"])
+        if h:
+            st.caption(f"🌡️ **Salute mercato** (fiducia consumatori {s['code']}): saldo {h['conf']:+.1f} "
+                       f"· {h['label']} — contesto decisionale, non previsione.")
+        else:
+            st.caption("🌡️ Salute mercato: fiducia consumatori non disponibile per questo mercato (solo DE/AT/NL).")
         st.plotly_chart(L.chart_search(ctx["R"]["panel"], s["code"]), use_container_width=True)
     else:
         rows = ctx["rows"]
@@ -552,6 +576,33 @@ def page_spesa():
         st.plotly_chart(L.chart_bdi_struttura(ext), use_container_width=True)
 
 
+def page_mercati_paese():
+    st.header("🌍 Mercati per paese (Banca d'Italia)")
+    st.caption("Quali mercati esteri contano e come si muovono nel tempo — dato **nazionale** (Italia) per "
+               "paese di origine, indagine BdI. Contesto strategico per leggere i mercati; non è il dato "
+               "regionale dell'Abruzzo (che ISTAT non espone per singolo paese).")
+    g = L.bdi_country_annual()
+    if g is None or g.empty:
+        st.info("Dati Banca d'Italia per paese non disponibili.")
+        return
+    metric = st.radio("Metrica:", ["notti", "spesa", "viaggiatori"], horizontal=True)
+    st.plotly_chart(L.chart_bdi_country(metric), use_container_width=True)
+    last = int(g["anno"].max())
+    cur = g[g["anno"] == last].set_index("code")
+    prev = g[g["anno"] == last - 1].set_index("code")
+    rows = []
+    for code in L.BDI_MARKETS:
+        if code in cur.index:
+            v = cur.loc[code, metric]
+            p = prev.loc[code, metric] if code in prev.index else None
+            yoy = (v / p - 1) * 100 if (p and p != 0) else None
+            rows.append({"Mercato": code, f"{metric.capitalize()} {last}": round(v),
+                         "var. % a/a": (f"{yoy:+.0f}%" if yoy is not None else "—")})
+    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+    st.caption("Unità BdI: notti e viaggiatori in migliaia, spesa in milioni di €. "
+               "Mercati: Germania, Austria, Regno Unito, Svizzera, USA, Francia, Spagna.")
+
+
 def page_online():
     st.header("🌐 Interesse online (segnali anticipatori)")
     st.caption("Google Trends (per paese) e Wikipedia pageviews (per lingua) anticipano gli arrivi. "
@@ -616,6 +667,7 @@ pg = st.navigation({
         st.Page(page_struttura, title="Per struttura", icon="🏨"),
         st.Page(page_occupazione, title="Occupazione", icon="🛏"),
         st.Page(page_spesa, title="Spesa turistica", icon="💶"),
+        st.Page(page_mercati_paese, title="Mercati per paese", icon="🌍"),
         st.Page(page_operatori, title="Operatori (demo)", icon="👤"),
     ],
     "Cosa fare": [
