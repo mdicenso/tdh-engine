@@ -1094,6 +1094,8 @@ def coverage_matrix() -> list[dict]:
         ("Meteo destinazione", "✅", "✅", "✅", "Open-Meteo (candidato)", "per coordinate: qualunque capoluogo/comune"),
         ("Festività mercati esteri", "✅", "—", "—", "Nager.Date (candidato)", "per paese estero (timing campagne)"),
         ("Eventi / POI turistici", "🟡", "🟡", "🟡", "open data regionali", "🟡 alcune regioni pubblicano, molte no (Abruzzo scarso)"),
+        ("Viaggi residenti per regione d'origine", "✅", "❌", "❌", "ISTAT Viaggi&Vacanze", "🔴 open data solo nazionale/macro-area; il dettaglio regionale è solo MICRODATI (richiesta istituzionale ISTAT)"),
+        ("Confini amministrativi (geojson)", "✅", "✅", "✅", "openpolis / RNDT", "completo: usato per la mappa d'Italia"),
     ]
     return [dict(zip(COVERAGE_COLS, r)) for r in M]
 
