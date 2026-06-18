@@ -463,9 +463,23 @@ def page_province():
                          "Quota stranieri %": round(r["quota_stranieri"])} for r in P["rows"]])
     L.aggrid_table(tbl, height=190, key="prov_grid")
     st.plotly_chart(L.chart_province_bar(P["rows"]), use_container_width=True)
+
     yr = st.session_state.get("yr_range", (2019, 2024))
-    st.subheader(f"Trend mensile per provincia · {yr[0]}–{yr[1]}")
-    st.plotly_chart(L.chart_province_trend(L.filter_years(P["panel"], yr)), use_container_width=True)
+    panel = P["panel"]
+    last = panel["date"].max()
+    preset = st.selectbox("Periodo del trend:",
+                          ["Slider barra laterale", "Ultimo mese", "Ultimi 12 mesi",
+                           "Ultimi 2 anni", "Ultimi 5 anni"], index=2)
+    _mesi = {"Ultimo mese": 1, "Ultimi 12 mesi": 12, "Ultimi 2 anni": 24, "Ultimi 5 anni": 60}
+    if preset in _mesi:
+        cutoff = last - pd.DateOffset(months=_mesi[preset] - 1)
+        pf, label = panel[panel["date"] >= cutoff], preset.lower()
+    else:
+        pf, label = L.filter_years(panel, yr), f"{yr[0]}–{yr[1]}"
+    st.subheader(f"Trend mensile per provincia · {label}")
+    st.plotly_chart(L.chart_province_trend(pf, rangeslider=True), use_container_width=True)
+    st.caption("Usa il menu per i preset rapidi, oppure trascina la barra/il cursore sul grafico "
+               "per restringere l'intervallo a mano.")
 
 
 def page_struttura():

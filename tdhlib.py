@@ -1189,9 +1189,9 @@ def chart_province_map(rows: list[dict]) -> go.Figure:
     gj = json.load(open("assets/abruzzo_provinces.geojson", encoding="utf-8"))
     names = [r["provincia"] for r in rows]
     fig = go.Figure(go.Choropleth(
-        geojson=gj, featureidkey="properties.prov_name", locations=names,
+        geojson=gj, featureidkey="properties.prov_name", locations=names, name="presenze",
         z=[r["presenze"] for r in rows], colorscale="Teal", marker_line_color="white", marker_line_width=1,
-        colorbar=dict(title="presenze<br>(12 mesi)"),
+        colorbar=dict(title=dict(text="presenze (12 mesi)", side="right")),
         customdata=[[r["stranieri"], r["quota_stranieri"]] for r in rows],
         hovertemplate="<b>%{location}</b><br>presenze %{z:,.0f}"
                       "<br>di cui stranieri %{customdata[0]:,.0f} (%{customdata[1]:.0f}%)<extra></extra>"))
@@ -1212,13 +1212,15 @@ def chart_province_bar(rows: list[dict]) -> go.Figure:
     return _layout(fig, h=340)
 
 
-def chart_province_trend(panel) -> go.Figure:
+def chart_province_trend(panel, rangeslider: bool = False) -> go.Figure:
     fig = go.Figure()
     for col in [c for c in panel.columns if c != "date"]:
         d = panel[["date", col]].dropna()
-        fig.add_trace(go.Scatter(x=d["date"], y=d[col], name=col, mode="lines"))
+        fig.add_trace(go.Scatter(x=d["date"], y=d[col], name=col, mode="lines+markers"))
     fig.update_yaxes(title="presenze")
-    return _layout(fig, h=360)
+    if rangeslider:
+        fig.update_xaxes(rangeslider_visible=True, rangeslider_thickness=0.08)
+    return _layout(fig, h=400 if rangeslider else 360)
 
 
 def chart_structure_donut(s: dict) -> go.Figure:
