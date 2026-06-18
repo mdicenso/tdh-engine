@@ -1,0 +1,6 @@
+# Normalizza i fine-riga a LF per i file di DATI, così il refresh da Windows (locale)
+# e da Linux (GitHub Actions/CI) produce byte identici: niente commit spuri di solo
+# cambio CRLF<->LF quando i valori non sono cambiati.
+*.csv      text eol=lf
+*.json     text eol=lf
+*.geojson  text eol=lf
