@@ -36,19 +36,19 @@ if not L.check_access():
 
 # ──────────────────────────── BARRA LATERALE (controlli) ────────────────────────────
 with st.sidebar:
-    st.markdown("### ⛰️ Turism Data Hub")
+    st.markdown("### :material/landscape: Turism Data Hub")
     st.caption("Regione Abruzzo · uso interno")
     st.radio("Modalità dati", [L.MODE_REAL, L.MODE_SYN], key="mode", index=0,
              help="Riguarda il motore dei mercati (pilastro «Cosa fare»). "
                   "Le viste descrittive usano sempre i dati reali ISTAT/BdI.")
     st.slider("Periodo (viste storiche)", 2019, 2025, (2019, 2024), key="yr_range")
     bc = st.columns(2)
-    if bc[0].button("🔄 Dati", use_container_width=True):
+    if bc[0].button(":material/sync: Dati", use_container_width=True):
         for _fn in (L.compute_real, L.compute_synthetic, L.compute_provinces,
                     L.compute_structure, L.compute_occupancy):
             _fn.clear()
         st.rerun()
-    if bc[1].button("🗑 Chat", use_container_width=True):
+    if bc[1].button(":material/delete: Chat", use_container_width=True):
         st.session_state.messages = []; st.rerun()
     st.caption("Indra Italia S.p.A. · prototipo")
 
@@ -108,7 +108,7 @@ def page_sintesi():
 
 
 def page_mappa():
-    st.header("🗺️ Mappa dei mercati")
+    st.header(":material/map: Mappa dei mercati")
     st.caption("Colore = raccomandazione · dimensione bolla = score · linea = flusso verso Abruzzo")
     st.plotly_chart(L.chart_map(summary), use_container_width=True)
     with st.expander("Ranking in forma di barre"):
@@ -116,7 +116,7 @@ def page_mappa():
 
 
 def page_ranking():
-    st.header("📊 Ranking mercati")
+    st.header(":material/leaderboard: Ranking mercati")
     st.caption("Ordinamento per opportunità: dove conviene concentrare il budget.")
     tbl = pd.DataFrame([{"#": s["rank"], "Mercato": s["market"], "Raccomandazione": s["reco"],
                          **({"Forza": s["forza"], "Momentum %": s["momentum"]} if is_real else {}),
@@ -133,7 +133,7 @@ def page_ranking():
             st.caption("Passeggeri 2024 (Eurostat avia_par) — fattibilità reale nel ranking. 0 = nessun volo diretto.")
             st.plotly_chart(fig_conn, use_container_width=True)
 
-        st.subheader("🌡️ Salute dei mercati e accessibilità — contesto decisionale")
+        st.subheader(":material/thermostat: Salute dei mercati e accessibilità — contesto decisionale")
         st.caption("Criteri di **contesto** per pesare il giudizio, **non** predittori del forecast: "
                    "il bake-off mostra che non battono la stagionalità. Vanno letti con incertezza.")
         hc1, hc2 = st.columns(2)
@@ -155,7 +155,7 @@ def page_ranking():
 def page_forecast():
     if is_real:
         R = ctx["R"]; agg = R["agg"]
-        st.header("📈 Forecast presenze straniere totali (Abruzzo)")
+        st.header(":material/trending_up: Forecast presenze straniere totali (Abruzzo)")
         m1, m2, m3 = st.columns(3)
         m1.metric("Lag segnale", f"{agg['lag']} mesi")
         m2.metric("Batte la naive?", "Sì" if agg["beats_naive"] else "No")
@@ -171,7 +171,7 @@ def page_forecast():
                 st.markdown(f"- {line}")
     else:
         rows = ctx["rows"]
-        st.header("📈 Forecast per mercato")
+        st.header(":material/trending_up: Forecast per mercato")
         sel = st.selectbox("Mercato:", [s["market"] for s in summary])
         code = next(c for c, r in rows.items() if r["name"] == sel)
         Rr = rows[code]
@@ -183,7 +183,7 @@ def page_forecast():
 
 
 def page_dettaglio():
-    st.header("🔎 Dettaglio mercato")
+    st.header(":material/search: Dettaglio mercato")
     names = [s["market"] for s in summary]
     sel = st.selectbox("Mercato:", names)
     if is_real:
@@ -198,10 +198,10 @@ def page_dettaglio():
         d4.metric("Durata media", f"{stay:.1f} notti" if stay else "—")
         h = L.market_health().get(s["code"])
         if h:
-            st.caption(f"🌡️ **Salute mercato** (fiducia consumatori {s['code']}): saldo {h['conf']:+.1f} "
+            st.caption(f":material/thermostat: **Salute mercato** (fiducia consumatori {s['code']}): saldo {h['conf']:+.1f} "
                        f"· {h['label']} — contesto decisionale, non previsione.")
         else:
-            st.caption("🌡️ Salute mercato: fiducia consumatori non disponibile per questo mercato (solo DE/AT/NL).")
+            st.caption(":material/thermostat: Salute mercato: fiducia consumatori non disponibile per questo mercato (solo DE/AT/NL).")
         st.plotly_chart(L.chart_search(ctx["R"]["panel"], s["code"]), use_container_width=True)
     else:
         rows = ctx["rows"]
@@ -219,7 +219,7 @@ def page_dettaglio():
 
 
 def page_allocatore():
-    st.header("💰 Allocatore di budget")
+    st.header(":material/savings: Allocatore di budget")
     st.caption("Ripartizione proporzionale allo score. NON è una stima causale: indica dove conviene "
                "concentrare, non quanto renderà.")
     c1, c2 = st.columns([1, 2])
@@ -242,7 +242,7 @@ def page_allocatore():
 
 
 def page_timing():
-    st.header("📅 Timing stagionale")
+    st.header(":material/calendar_month: Timing stagionale")
     st.caption("Quando l'interesse di ricerca di ogni mercato è al massimo → quando anticipare la campagna "
                "(il search precede gli arrivi).")
     panel = search_panel()
@@ -254,21 +254,21 @@ def page_timing():
 
 
 def page_assistente():
-    st.header("💬 Assistente")
+    st.header(":material/forum: Assistente")
     st.caption(f"Claude · {L.MODEL} · modalità {'REALE' if is_real else 'sintetica'} · "
                "risponde sui numeri del motore")
     L.render_assistant(ctx)
 
 
 def page_gestione_dati():
-    st.header("🗂️ Gestione dati")
+    st.header(":material/database: Gestione dati")
     st.caption("Dati presenti, candidati in valutazione (con nulla osta), copertura temporale e caricamento file.")
 
-    st.subheader("📊 Tabella Dati Presenti")
+    st.subheader(":material/table: Tabella Dati Presenti")
     st.caption("Tutte le fonti attualmente in uso dal motore: reali, candidati approvati e file caricati.")
     L.aggrid_table(pd.DataFrame(L.present_sources(), columns=L.SRC_COLS), height=320, key="present_grid")
 
-    st.subheader("🧪 Tabella dei Dati in Valutazione")
+    st.subheader(":material/science: Tabella dei Dati in Valutazione")
     st.caption("Fonti candidate proposte per il TDH. Verifica la disponibilità, valida la descrizione "
                "e dai il **nulla osta** per caricarle.")
     pend = L.pending_candidates()
@@ -287,7 +287,7 @@ def page_gestione_dati():
                 descr = st.text_area("Descrizione (valida o modifica)", value=c["descrizione"],
                                      key="desc_" + c["id"], height=70)
                 colv, cola = st.columns([1, 1])
-                if colv.button("🔍 Verifica disponibilità", key="probe_" + c["id"], use_container_width=True):
+                if colv.button(":material/search: Verifica disponibilità", key="probe_" + c["id"], use_container_width=True):
                     with st.spinner("Verifica in corso…"):
                         st.session_state["pr_" + c["id"]] = c["probe"]()
                 pr = st.session_state.get("pr_" + c["id"])
@@ -295,7 +295,7 @@ def page_gestione_dati():
                     (st.success if pr["ok"] else st.error)(pr["msg"])
                     if pr.get("preview"):
                         st.caption("Anteprima: " + pr["preview"])
-                if cola.button("✅ Approva e carica", key="appr_" + c["id"], type="primary",
+                if cola.button(":material/check_circle: Approva e carica", key="appr_" + c["id"], type="primary",
                                use_container_width=True):
                     with st.spinner("Caricamento dei dati…"):
                         res = L.approve_candidate(c["id"], descr)
@@ -305,7 +305,7 @@ def page_gestione_dati():
                     else:
                         st.error(res.get("msg", "caricamento fallito"))
 
-    st.subheader("🔄 Stato e aggiornamento delle fonti")
+    st.subheader(":material/sync: Stato e aggiornamento delle fonti")
     lr = U.last_run_info()
     cap = ("Giudizio istantaneo dalla cache — 🟢 fresco · 🟡 da controllare · "
            "🔴 probabile dato nuovo · ⚪ ignoto. Il controllo *live* riscarica e conferma cosa è cambiato.")
@@ -319,7 +319,7 @@ def page_gestione_dati():
                          "ultimo_dato": "Ultimo dato", "righe": "Righe", "scaricato": "Scaricato"}),
         hide_index=True, use_container_width=True)
 
-    if st.button("🔄 Controlla aggiornamenti (live)",
+    if st.button(":material/sync: Controlla aggiornamenti (live)",
                  help="Riscarica le fonti aggiornabili (ISTAT, Trends, ECB) e confronta con la cache. "
                       "Può richiedere 1–2 minuti (ISTAT è lento)."):
         with st.spinner("Controllo live in corso… (ISTAT può essere lento)"):
@@ -382,13 +382,13 @@ def page_gestione_dati():
                     st.caption("📝 " + r["descrizione"])
                 if r.get("fonte"):
                     st.caption("🔗 " + r["fonte"])
-            if c2.button("🗑", key="del_" + r["id"], help="Elimina"):
+            if c2.button(":material/delete:", key="del_" + r["id"], help="Elimina"):
                 L.delete_upload(r["id"]); st.rerun()
             st.divider()
 
 
 def page_azioni():
-    st.header("🎯 Azioni raccomandate")
+    st.header(":material/ads_click: Azioni raccomandate")
     st.caption("Suggerimenti operativi dai dati: dove e quando agire. "
                "Stime d'opportunità, non garanzie di ritorno.")
     if not is_real:
@@ -414,7 +414,7 @@ def page_azioni():
                 if a["picco_mese"]:
                     bits.append(f"picco ricerca {L.MONTHS_IT[a['picco_mese'] - 1]}")
                 st.caption(" · ".join(bits))
-            if c2.button("✏️ Crea campagna", key="camp_" + str(a["code"]), use_container_width=True):
+            if c2.button(":material/edit: Crea campagna", key="camp_" + str(a["code"]), use_container_width=True):
                 st.session_state["camp_open"] = a["code"]
             if st.session_state.get("camp_open") == a["code"]:
                 br = L.campaign_brief(ctx, a["code"])
@@ -428,7 +428,7 @@ def page_azioni():
 
 
 def page_architettura():
-    st.header("🏗️ Architettura & sorgenti dati")
+    st.header(":material/account_tree: Architettura & sorgenti dati")
     st.caption("La visione completa del Turism Data Hub e lo stato delle sorgenti.")
     A = L.tdh_architecture()
     st.subheader("Architettura a 5 livelli")
@@ -449,7 +449,7 @@ def page_architettura():
 
 
 def page_province():
-    st.header("📍 Presenze per provincia")
+    st.header(":material/place: Presenze per provincia")
     st.caption("Distribuzione territoriale delle presenze in Abruzzo — dati ISTAT, ultimi 12 mesi.")
     try:
         P = L.compute_provinces()
@@ -483,7 +483,7 @@ def page_province():
 
 
 def page_struttura():
-    st.header("🏨 Presenze per tipologia di struttura")
+    st.header(":material/hotel: Presenze per tipologia di struttura")
     st.caption("Alberghiero vs extra-alberghiero in Abruzzo — dati ISTAT, ultimi 12 mesi.")
     try:
         S = L.compute_structure()
@@ -502,7 +502,7 @@ def page_struttura():
 
 
 def page_occupazione():
-    st.header("🛏️ Tasso di occupazione (reale)")
+    st.header(":material/king_bed: Tasso di occupazione (reale)")
     st.caption("Indice di utilizzazione lorda dei posti letto = presenze ÷ (posti letto × giorni del mese). Dati ISTAT.")
     try:
         O = L.compute_occupancy()
@@ -511,7 +511,7 @@ def page_occupazione():
         return
     if not O["available"]:
         st.info("⏳ In attesa dei dati di **capacità ricettiva** ISTAT (posti letto): il download è in corso "
-                "(ISTAT è temporaneamente lento). Ricarica tra qualche minuto, o premi **🔄 Dati** nella barra laterale.")
+                "(ISTAT è temporaneamente lento). Ricarica tra qualche minuto, o premi **:material/sync: Dati** nella barra laterale.")
         return
     c1, c2, c3 = st.columns(3)
     c1.metric("Occupazione media (12 mesi)", f"{O['occ_media12']:.0f}%")
@@ -527,7 +527,7 @@ def page_occupazione():
 
 
 def page_operatori():
-    st.header("🧑‍💼 Vista operatori (demo)")
+    st.header(":material/badge: Vista operatori (demo)")
     L.demo_banner()
     prov = st.selectbox("Filtra per provincia:", ["Tutte", "L'Aquila", "Teramo", "Pescara", "Chieti"])
     d = L.demo_operators(prov)
@@ -559,7 +559,7 @@ def page_operatori():
 
 
 def page_spesa():
-    st.header("💶 Spesa turistica (Banca d'Italia)")
+    st.header(":material/payments: Spesa turistica (Banca d'Italia)")
     st.caption("Spesa dei turisti stranieri — Abruzzo e contesto nazionale. Indagine turismo internazionale, 2024.")
     ext = L.bdi_extended()
     if not ext:
@@ -591,7 +591,7 @@ def page_spesa():
 
 
 def page_mercati_paese():
-    st.header("🌍 Mercati per paese (Banca d'Italia)")
+    st.header(":material/public: Mercati per paese (Banca d'Italia)")
     st.caption("Quali mercati esteri contano e come si muovono nel tempo — dato **nazionale** (Italia) per "
                "paese di origine, indagine BdI. Contesto strategico per leggere i mercati; non è il dato "
                "regionale dell'Abruzzo (che ISTAT non espone per singolo paese).")
@@ -618,7 +618,7 @@ def page_mercati_paese():
 
 
 def page_online():
-    st.header("🌐 Interesse online (segnali anticipatori)")
+    st.header(":material/language: Interesse online (segnali anticipatori)")
     st.caption("Google Trends (per paese) e Wikipedia pageviews (per lingua) anticipano gli arrivi. "
                "Wikipedia corrobora il segnale; è per LINGUA, quindi DE/AT/CH condividono il tedesco e GB/US l'inglese.")
     yr = st.session_state.get("yr_range", (2019, 2024))
@@ -702,5 +702,5 @@ pg = st.navigation({
 })
 if pg.title != "Home":
     L.hero("Allocazione del budget promozionale tra i mercati esteri",
-           "🌍 Dati reali" if is_real else "🧪 Dati sintetici")
+           "Dati reali" if is_real else "Dati sintetici")
 pg.run()
