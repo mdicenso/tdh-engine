@@ -63,13 +63,23 @@ CSS = f"""<style>
   .block-container {{ padding-top: 1.1rem; max-width: 1320px; }}
   h1, h2, h3 {{ color: #0f172a; font-weight: 700; letter-spacing: -0.01em; }}
   .stApp {{ background-color: #f1f5f9; }}
-  /* sidebar SCURA */
-  [data-testid="stSidebar"] {{ background-color: #1e293b; border-right: 1px solid #0f172a; }}
+  /* sidebar scura (schiarita per leggibilità) */
+  [data-testid="stSidebar"] {{ background-color: #334155; border-right: 1px solid #1e293b; }}
   [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
   [data-testid="stSidebar"] p, [data-testid="stSidebar"] label,
   [data-testid="stSidebar"] [data-testid="stCaptionContainer"],
-  [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {{ color: #e2e8f0 !important; }}
-  [data-testid="stSidebar"] .stButton > button {{ background: #334155; border: 1px solid #475569; color: #e2e8f0; }}
+  [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {{ color: #f1f5f9 !important; }}
+  /* voci di navigazione (link + icone): chiare e leggibili */
+  [data-testid="stSidebarNav"] a, [data-testid="stSidebarNav"] a span,
+  [data-testid="stSidebarNav"] a p {{ color: #f1f5f9 !important; opacity: 1 !important; }}
+  [data-testid="stSidebarNav"] span[data-testid="stIconMaterial"] {{ color: #f1f5f9 !important; opacity: 1 !important; }}
+  [data-testid="stSidebarNav"] a:hover {{ background: rgba(94,234,212,.12); }}
+  [data-testid="stSidebarNav"] a:hover span, [data-testid="stSidebarNav"] a:hover p {{ color: #5eead4 !important; }}
+  [data-testid="stSidebarNav"] a[aria-current="page"] {{ background: rgba(94,234,212,.16); border-radius: 8px; }}
+  [data-testid="stSidebarNav"] a[aria-current="page"] span, [data-testid="stSidebarNav"] a[aria-current="page"] p {{ color: #5eead4 !important; font-weight: 600; }}
+  /* etichette dei gruppi (Cosa è successo, ...) ben visibili */
+  [data-testid="stSidebarNav"] [class*="nav-section"], [data-testid="stSidebarNav"] summary {{ color: #cbd5e1 !important; }}
+  [data-testid="stSidebar"] .stButton > button {{ background: #475569; border: 1px solid #64748b; color: #f1f5f9; }}
   [data-testid="stSidebar"] .stButton > button:hover {{ border-color: #5eead4; color: #5eead4; }}
   /* metric -> card */
   [data-testid="stMetric"] {{ background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px;
