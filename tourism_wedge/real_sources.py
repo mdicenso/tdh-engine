@@ -194,8 +194,11 @@ def fetch_search_monthly(geo: str, keyword: str = "Abruzzo", start: str = "2019-
         return pd.read_csv(cache_path, parse_dates=["date"])
 
     import time
-    import truststore
-    truststore.inject_into_ssl()  # CA aziendale Indra anche per requests (idempotente)
+    try:
+        import truststore
+        truststore.inject_into_ssl()  # CA aziendale Indra anche per requests (idempotente)
+    except Exception:  # noqa: BLE001 — in cloud/CI senza proxy non serve
+        pass
     from pytrends.request import TrendReq
 
     rng_end = end or pd.Timestamp.today().strftime("%Y-%m")
@@ -218,3 +221,76 @@ def fetch_search_monthly(geo: str, keyword: str = "Abruzzo", start: str = "2019-
     out = out.rename(columns={out.columns[0]: "date"})
     out.to_csv(cache_path, index=False)
     return out
+
+
+# --------------------------------------------------------------------------
+# ISTAT — CAPACITÀ ricettiva (posti letto) annuale, dataflow DCSC_TUR_1, DATA_TYPE=BEDS.
+# Stessa infrastruttura SDMX delle presenze (host alternativi + cache). Chiave a 11
+# dimensioni: A.<area>.BEDS..ALL...... (annuale, tutti gli alloggi).
+# --------------------------------------------------------------------------
+ISTAT_DATAFLOW_CAPACITY = "122_54_DF_DCSC_TUR_1"
+
+
+def fetch_istat_capacity(area: str = "ITF1", start: str = "2002", cache_dir: str = ".cache",
+                         timeout: int = 120, refresh: bool = False) -> pd.DataFrame:
+    """Posti letto annuali (capacità ricettiva totale) per area ISTAT.
+
+    Ritorna DataFrame con colonne: anno, letti. Con cache su disco.
+    """
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, f"istat_capacity_letti_{area}.csv")
+    if os.path.exists(cache_path) and not refresh:
+        return pd.read_csv(cache_path)
+    key = ".".join(["A", area, "BEDS", "", "ALL", "", "", "", "", "", ""])
+    qs = f"?startPeriod={start}&detail=full"
+    last_err = None
+    for host in ISTAT_HOSTS:
+        try:
+            req = urllib.request.Request(f"{host}/data/{ISTAT_DATAFLOW_CAPACITY}/{key}{qs}",
+                                         headers={"Accept": "application/vnd.sdmx.data+json;version=1.0.0-wd"})
+            raw = urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "ignore")
+            d = json.loads(raw)["data"]
+            periods = [v["id"] for v in d["structure"]["dimensions"]["observation"][0]["values"]]
+            series = d["dataSets"][0]["series"]
+            obs = series[next(iter(series))]["observations"]
+            rows = sorted((int(periods[int(i)]), float(o[0]))
+                          for i, o in obs.items() if o and o[0] is not None)
+            df = pd.DataFrame(rows, columns=["anno", "letti"])
+            df.to_csv(cache_path, index=False)
+            return df
+        except Exception as e:  # noqa: BLE001
+            last_err = e
+            continue
+    raise RuntimeError(f"ISTAT capacità non raggiungibile ({type(last_err).__name__}: {last_err})")
+
+
+# --------------------------------------------------------------------------
+# WIKIPEDIA — pageviews mensili per articolo (secondo segnale anticipatore, per lingua).
+# Wikimedia REST: filtro agent='user' (esclude bot) e titolo articolo per lingua
+# (la regione in tedesco/olandese è 'Abruzzen'). UA obbligatorio.
+# --------------------------------------------------------------------------
+WIKI_PROJECT = {"de": "de.wikipedia", "en": "en.wikipedia", "nl": "nl.wikipedia", "it": "it.wikipedia"}
+WIKI_ARTICLE = {"de": "Abruzzen", "en": "Abruzzo", "nl": "Abruzzen", "it": "Abruzzo"}
+_WIKI_UA = {"User-Agent": "TDH-Engine/1.0 (Regione Abruzzo prototype; contact marco.dicenso@gmail.com)"}
+
+
+def fetch_wikipedia_monthly(lang: str, start: str = "20190101", end: str | None = None,
+                            cache_dir: str = ".cache", refresh: bool = False) -> pd.DataFrame:
+    """Pageviews mensili (agent=user) dell'articolo regionale per lingua.
+
+    lang: de | en | nl | it. Ritorna DataFrame con colonne: date, views. Con cache.
+    """
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, f"wiki_{lang}.csv")
+    if os.path.exists(cache_path) and not refresh:
+        return pd.read_csv(cache_path, parse_dates=["date"])
+    proj, art = WIKI_PROJECT[lang], WIKI_ARTICLE[lang]
+    end = end or pd.Timestamp.today().strftime("%Y%m01")
+    url = (f"https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/{proj}"
+           f"/all-access/user/{art}/monthly/{start}/{end}")
+    raw = urllib.request.urlopen(urllib.request.Request(url, headers=_WIKI_UA), timeout=40).read()
+    items = json.loads(raw)["items"]
+    rows = [(pd.Timestamp(it["timestamp"][:6] + "01"), int(it["views"])) for it in items]
+    df = pd.DataFrame(rows, columns=["date", "views"])
+    df.to_csv(cache_path, index=False)
+    return df

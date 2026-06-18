@@ -1,0 +1,48 @@
+name: Refresh dati TDH
+
+# Modalità B: ogni settimana riscarica le fonti aggiornabili; se i dati in .cache
+# sono cambiati, committa e fa push -> l'app su Streamlit Cloud si auto-rinfresca.
+on:
+  schedule:
+    - cron: "0 6 * * 1"        # ogni lunedì 06:00 UTC
+  workflow_dispatch: {}         # avvio manuale dalla tab "Actions"
+
+permissions:
+  contents: write               # serve per committare i dati freschi
+
+concurrency:
+  group: refresh-dati
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installa dipendenze
+        run: pip install -r requirements.txt
+
+      - name: Riscarica le fonti (modalità B)
+        run: python update_check.py --apply
+
+      - name: Committa i dati cambiati
+        run: |
+          git config user.name "tdh-data-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .cache
+          if git diff --cached --quiet; then
+            echo "Nessun dato cambiato: nessun commit."
+          else
+            git commit -m "data: refresh automatico fonti ($(date -u +%Y-%m-%d))"
+            git push
+            echo "Dati aggiornati e pushati: l'app cloud si rinfrescherà."
+          fi

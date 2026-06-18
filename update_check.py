@@ -1,0 +1,280 @@
+"""
+Controllo aggiornamenti delle fonti dati del TDH.
+
+Due livelli:
+  • status_all()  -> istantaneo, SENZA rete: per ogni fonte legge dalla cache
+    l'ultimo periodo presente e calcola un giudizio di freschezza (verde/giallo/
+    rosso) confrontando l'età del dato con la cadenza tipica della fonte.
+  • live_check()  -> CON rete: riscarica in una cartella temporanea le fonti
+    "refreshabili" (ISTAT, Trends) e confronta l'ultimo periodo con la cache,
+    dicendo se c'è davvero un dato nuovo.
+  • apply_update(key) -> dà il nulla osta: riscarica nella cache reale.
+
+Riusabile sia dall'app Streamlit sia da uno schedulatore (vedi __main__).
+"""
+from __future__ import annotations
+
+import glob
+import json
+import os
+import tempfile
+
+import pandas as pd
+
+from tourism_wedge import real_sources as RS
+
+CACHE = ".cache"
+STATE_PATH = "data/update_state.json"
+
+# soglie: oltre questo "ritardo" dell'ultimo dato rispetto a oggi, vale la pena
+# controllare se la fonte ha pubblicato qualcosa di nuovo (giudizio euristico).
+_MAX_GAP_DAYS = {"mensile": 130, "trimestrale": 210, "annuale": 480}
+
+
+# ── lettura ultimo periodo da un file di cache ──────────────────────────────
+def _last_period(path: str):
+    """(ultimo_timestamp, n_righe) leggendo una colonna 'date' o 'anno'. None se assente."""
+    if not path or not os.path.exists(path):
+        return None
+    try:
+        d = pd.read_csv(path)
+    except Exception:  # noqa: BLE001
+        return None
+    if "date" in d.columns:
+        t = pd.to_datetime(d["date"], errors="coerce").dropna()
+        return (t.max(), len(d)) if len(t) else (None, len(d))
+    if "anno" in d.columns:
+        y = pd.to_numeric(d["anno"], errors="coerce").dropna()
+        return (pd.Timestamp(f"{int(y.max())}-12-31"), len(d)) if len(y) else (None, len(d))
+    return (None, len(d))
+
+
+def _first_existing(paths: list[str]) -> str | None:
+    for p in paths:
+        if os.path.exists(p):
+            return p
+    return None
+
+
+# ── registro delle fonti ────────────────────────────────────────────────────
+# kind: come si legge l'ultimo periodo. live: funzione di confronto/aggiornamento
+# disponibile in questa fase (Fase 1). 'manual' = refresh non ancora implementato.
+SOURCES = [
+    {"key": "istat_presenze", "label": "Presenze straniere (ISTAT)", "cadence": "mensile",
+     "paths": [f"{CACHE}/istat_presenze_straniere_abruzzo.csv"], "live": "istat_presenze"},
+    {"key": "istat_province", "label": "Presenze province (ISTAT)", "cadence": "mensile",
+     "paths": sorted(glob.glob(f"{CACHE}/istat_ITF1?_*.csv")) or [f"{CACHE}/istat_ITF13_NI_ALL_WORLD.csv"],
+     "live": "istat_glob"},
+    {"key": "trends", "label": "Google Trends (per mercato)", "cadence": "mensile",
+     "paths": sorted(glob.glob(f"{CACHE}/trends_abruzzo_*.csv")) or [f"{CACHE}/trends_abruzzo_DE.csv"],
+     "live": "trends"},
+    {"key": "ecb", "label": "Cambio valute (ECB)", "cadence": "mensile",
+     "paths": [], "live": "ecb"},
+    {"key": "istat_capacita", "label": "Capacità posti letto (ISTAT)", "cadence": "annuale",
+     "paths": [f"{CACHE}/istat_capacity_letti_ITF1.csv"], "live": "istat_capacita"},
+    {"key": "wikipedia", "label": "Wikipedia pageviews", "cadence": "mensile",
+     "paths": sorted(glob.glob(f"{CACHE}/wiki_*.csv")) or [f"{CACHE}/wiki_de.csv"], "live": "wikipedia"},
+    {"key": "bdi", "label": "Spesa turisti (Banca d'Italia)", "cadence": "trimestrale",
+     "paths": [f"{CACHE}/bdi_turismo_ts.xlsx"], "live": "manual"},
+    {"key": "eurostat", "label": "Voli verso Pescara (Eurostat)", "cadence": "annuale",
+     "paths": [f"{CACHE}/eurostat_pescara_flights.csv"], "live": "manual"},
+]
+
+
+def _verdict(last: pd.Timestamp | None, cadence: str) -> tuple[str, int | None]:
+    """Giudizio di freschezza dal ritardo dell'ultimo dato. Ritorna (emoji, gap_giorni)."""
+    if last is None:
+        return "⚪", None
+    gap = (pd.Timestamp.today().normalize() - last.normalize()).days
+    soglia = _MAX_GAP_DAYS.get(cadence, 130)
+    if gap <= soglia:
+        return "🟢", gap
+    if gap <= soglia * 2:
+        return "🟡", gap
+    return "🔴", gap
+
+
+# ── status istantaneo (no rete) ─────────────────────────────────────────────
+def status_all() -> list[dict]:
+    out = []
+    for s in SOURCES:
+        if s["key"] == "ecb":  # sempre live, niente file
+            out.append({"key": s["key"], "fonte": s["label"], "cadenza": s["cadence"],
+                        "ultimo_dato": "live (sempre aggiornato)", "righe": "—",
+                        "scaricato": "—", "stato": "🟢", "live": True})
+            continue
+        path = _first_existing(s["paths"])
+        lp = _last_period(path) if path else None
+        last, nrows = (lp if lp else (None, None))
+        emoji, _gap = _verdict(last, s["cadence"])
+        mtime = (pd.Timestamp(os.path.getmtime(path), unit="s").strftime("%Y-%m-%d")
+                 if path else "assente")
+        out.append({
+            "key": s["key"], "fonte": s["label"], "cadenza": s["cadence"],
+            "ultimo_dato": (last.strftime("%Y-%m") if isinstance(last, pd.Timestamp) else "—"),
+            "righe": (nrows if nrows is not None else "—"),
+            "scaricato": mtime, "stato": emoji, "live": s["live"] != "manual",
+        })
+    return out
+
+
+# ── confronto live (con rete) ───────────────────────────────────────────────
+def _fresh_last_period(source: dict) -> pd.Timestamp | None:
+    """Riscarica in temp la fonte e restituisce l'ultimo periodo disponibile alla fonte."""
+    kind = source["live"]
+    tmp = tempfile.mkdtemp(prefix="tdh_chk_")
+    if kind == "istat_presenze":
+        df = RS.fetch_presences_foreign_monthly(cache_dir=tmp, refresh=True)
+        return pd.to_datetime(df["date"]).max()
+    if kind == "istat_glob":
+        # serie rappresentativa: province di Pescara, presenze totali
+        df = RS.fetch_istat_presences(area="ITF13", data_type="NI", accom="ALL",
+                                      country="WORLD", cache_dir=tmp, refresh=True)
+        return pd.to_datetime(df["date"]).max()
+    if kind == "trends":
+        df = RS.fetch_search_monthly("DE", cache_dir=tmp, refresh=True)
+        return pd.to_datetime(df["date"]).max()
+    if kind == "wikipedia":
+        df = RS.fetch_wikipedia_monthly("de", cache_dir=tmp, refresh=True)
+        return pd.to_datetime(df["date"]).max()
+    if kind == "istat_capacita":
+        df = RS.fetch_istat_capacity(cache_dir=tmp, refresh=True)
+        return pd.Timestamp(f"{int(df['anno'].max())}-12-31")
+    if kind == "ecb":
+        df = RS.fetch_fx_monthly("USD")
+        return pd.to_datetime(df["date"]).max()
+    return None
+
+
+def live_check(keys: list[str] | None = None) -> list[dict]:
+    """Per le fonti refreshabili confronta cache vs fonte. Ritorna esiti e salva lo stato."""
+    res = []
+    for s in SOURCES:
+        if s["live"] == "manual":
+            continue
+        if keys and s["key"] not in keys:
+            continue
+        path = _first_existing(s["paths"])
+        cache_last = (_last_period(path) or (None, None))[0] if path else None
+        try:
+            fresh_last = _fresh_last_period(s)
+            if s["key"] == "ecb":
+                status, msg = "🟢", f"live · ultimo {fresh_last:%Y-%m}" if fresh_last is not None else "live"
+            elif fresh_last is None:
+                status, msg = "⚪", "nessun dato ricevuto"
+            elif cache_last is None or fresh_last > cache_last:
+                status = "🟡"
+                msg = f"NUOVO dato fino a {fresh_last:%Y-%m} (in cache: " \
+                      f"{cache_last:%Y-%m})" if cache_last is not None else f"nuovo: {fresh_last:%Y-%m}"
+            else:
+                status, msg = "🟢", f"invariato (fino a {cache_last:%Y-%m})"
+        except Exception as e:  # noqa: BLE001
+            status, msg, fresh_last = "🔴", f"errore: {type(e).__name__}", None
+        res.append({"key": s["key"], "fonte": s["label"], "stato": status, "esito": msg,
+                    "cache_last": (cache_last.strftime("%Y-%m") if isinstance(cache_last, pd.Timestamp) else None),
+                    "fresh_last": (fresh_last.strftime("%Y-%m") if isinstance(fresh_last, pd.Timestamp) else None),
+                    "nuovo": status == "🟡"})
+    _save_state(res)
+    return res
+
+
+# ── applica aggiornamento (nulla osta) ──────────────────────────────────────
+def apply_update(key: str) -> dict:
+    """Riscarica nella cache REALE la fonte indicata. Ritorna {ok, msg}."""
+    src = next((s for s in SOURCES if s["key"] == key), None)
+    if not src:
+        return {"ok": False, "msg": "fonte sconosciuta"}
+    kind = src["live"]
+    try:
+        if kind == "istat_presenze":
+            df = RS.fetch_presences_foreign_monthly(refresh=True)
+            return {"ok": True, "msg": f"ISTAT presenze aggiornate · fino a {pd.to_datetime(df['date']).max():%Y-%m}"}
+        if kind == "istat_glob":
+            n = 0
+            for p in sorted(glob.glob(f"{CACHE}/istat_ITF1?_*.csv")):
+                parts = os.path.basename(p)[:-4].split("_")  # istat_<area>_<dt>_<accom>_<country>
+                if len(parts) == 5:
+                    _, area, dt, accom, country = parts
+                    RS.fetch_istat_presences(area=area, data_type=dt, accom=accom,
+                                             country=country, refresh=True)
+                    n += 1
+            return {"ok": True, "msg": f"ISTAT province aggiornate · {n} serie"}
+        if kind == "trends":
+            geos = [os.path.basename(p)[:-4].split("_")[-1]
+                    for p in sorted(glob.glob(f"{CACHE}/trends_abruzzo_*.csv"))]
+            for g in geos:
+                RS.fetch_search_monthly(g, refresh=True)
+            return {"ok": True, "msg": f"Google Trends aggiornati · {len(geos)} mercati"}
+        if kind == "wikipedia":
+            langs = [os.path.basename(p)[:-4].split("_")[-1]
+                     for p in sorted(glob.glob(f"{CACHE}/wiki_*.csv"))]
+            for lg in langs:
+                RS.fetch_wikipedia_monthly(lg, refresh=True)
+            return {"ok": True, "msg": f"Wikipedia aggiornata · {len(langs)} lingue"}
+        if kind == "istat_capacita":
+            df = RS.fetch_istat_capacity(refresh=True)
+            return {"ok": True, "msg": f"ISTAT capacità aggiornata · fino al {int(df['anno'].max())}"}
+        if kind == "ecb":
+            return {"ok": True, "msg": "ECB è sempre live: nessuna cache da aggiornare"}
+        return {"ok": False, "msg": "refresh non ancora disponibile per questa fonte (Fase 2)"}
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "msg": f"errore: {type(e).__name__}: {e}"}
+
+
+# ── stato persistente ───────────────────────────────────────────────────────
+def _save_state(results: list[dict]):
+    os.makedirs("data", exist_ok=True)
+    state = {"last_run": pd.Timestamp.now().isoformat(timespec="seconds"),
+             "sources": {r["key"]: {"stato": r["stato"], "esito": r["esito"],
+                                    "fresh_last": r.get("fresh_last")} for r in results}}
+    json.dump(state, open(STATE_PATH, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+
+
+def last_run_info() -> dict | None:
+    if not os.path.exists(STATE_PATH):
+        return None
+    try:
+        return json.load(open(STATE_PATH, encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def refresh_all() -> list[dict]:
+    """Riscarica nella cache REALE tutte le fonti refreshabili (per lo schedulatore, modalità B).
+    Le fonti 'manual' (BdI, Eurostat) vengono saltate. Ritorna l'esito per fonte."""
+    out = []
+    for s in SOURCES:
+        if s["live"] in ("manual", "ecb"):  # ecb è sempre live, non ha cache
+            continue
+        r = apply_update(s["key"])
+        out.append({"fonte": s["label"], **r})
+    return out
+
+
+# ── uso da schedulatore ─────────────────────────────────────────────────────
+if __name__ == "__main__":
+    import sys
+    try:
+        import truststore
+        truststore.inject_into_ssl()
+    except Exception:  # noqa: BLE001
+        pass
+    if "--apply" in sys.argv:
+        # modalità B: riscarica davvero nella cache (lo schedulatore poi committa le modifiche)
+        print("Riscarico le fonti refreshabili nella cache…")
+        ok = 0
+        for r in refresh_all():
+            flag = "✓" if r.get("ok") else "✗"
+            print(f"  {flag} {r['fonte']}: {r['msg']}")
+            ok += int(bool(r.get("ok")))
+        print(f"\n{ok} fonti riscaricate.")
+        sys.exit(0)
+
+    print("Controllo aggiornamenti fonti TDH…")
+    results = live_check()
+    nuovi = [r for r in results if r["nuovo"]]
+    for r in results:
+        print(f"  {r['stato']} {r['fonte']}: {r['esito']}")
+    print(f"\n{len(nuovi)} fonti con dati nuovi." if nuovi else "\nNessun aggiornamento.")
+    # exit code 10 se ci sono novità (utile allo schedulatore per decidere)
+    sys.exit(10 if nuovi else 0)

@@ -21,6 +21,7 @@ import pandas as pd
 import streamlit as st
 
 import tdhlib as L
+import update_check as U
 
 st.set_page_config(page_title="Turism Data Hub", page_icon="⛰️", layout="wide",
                    initial_sidebar_state="expanded")
@@ -279,6 +280,46 @@ def page_gestione_dati():
                         st.rerun()
                     else:
                         st.error(res.get("msg", "caricamento fallito"))
+
+    st.subheader("🔄 Stato e aggiornamento delle fonti")
+    lr = U.last_run_info()
+    cap = ("Giudizio istantaneo dalla cache — 🟢 fresco · 🟡 da controllare · "
+           "🔴 probabile dato nuovo · ⚪ ignoto. Il controllo *live* riscarica e conferma cosa è cambiato.")
+    if lr:
+        cap += f"  ·  Ultimo controllo live: {lr['last_run'][:16].replace('T', ' ')}"
+    st.caption(cap)
+    _stat = U.status_all()
+    st.dataframe(
+        pd.DataFrame(_stat)[["stato", "fonte", "cadenza", "ultimo_dato", "righe", "scaricato"]]
+        .rename(columns={"stato": "Stato", "fonte": "Fonte", "cadenza": "Cadenza",
+                         "ultimo_dato": "Ultimo dato", "righe": "Righe", "scaricato": "Scaricato"}),
+        hide_index=True, use_container_width=True)
+
+    if st.button("🔄 Controlla aggiornamenti (live)",
+                 help="Riscarica le fonti aggiornabili (ISTAT, Trends, ECB) e confronta con la cache. "
+                      "Può richiedere 1–2 minuti (ISTAT è lento)."):
+        with st.spinner("Controllo live in corso… (ISTAT può essere lento)"):
+            st.session_state["upd_live"] = U.live_check()
+
+    _live = st.session_state.get("upd_live")
+    if _live:
+        st.markdown("**Esito ultimo controllo live**")
+        for r in _live:
+            box = st.warning if r["nuovo"] else (st.error if r["stato"] == "🔴" else st.success)
+            box(f"{r['stato']} {r['fonte']}: {r['esito']}")
+            if r["nuovo"]:
+                if st.button(f"⬇️ Aggiorna «{r['fonte']}» nella cache (nulla osta)",
+                             key="apply_" + r["key"], type="primary"):
+                    with st.spinner("Riscarico e aggiorno la cache…"):
+                        ar = U.apply_update(r["key"])
+                    if ar["ok"]:
+                        st.cache_data.clear()
+                        st.success(ar["msg"] + " · cache rigenerata.")
+                        st.rerun()
+                    else:
+                        st.error(ar["msg"])
+        st.caption("In locale l'aggiornamento resta sul tuo PC. Per portarlo anche sull'app online "
+                   "serve un `git push` (oppure ci penserà la schedulazione automatica — Fase 2).")
 
     st.subheader("Copertura temporale delle serie")
     st.caption("Le serie hanno archi temporali diversi: ecco da quando a quando ciascuna è disponibile.")

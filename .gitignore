@@ -16,6 +16,7 @@ Thumbs.db
 data/uploads/
 data/registry.json
 data/candidates_state.json
+data/update_state.json
 
 # log
 *.log
