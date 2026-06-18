@@ -132,9 +132,9 @@ def hero(subtitle: str = "", mode_label: str = ""):
             f"font-size:.8rem;font-weight:600'>{mode_label}</span>") if mode_label else ""
     st.markdown(f"""
     <div style="background:linear-gradient(120deg,#0e7490 0%,#0891b2 55%,#06b6d4 100%);
-                border-radius:16px;padding:22px 26px;margin:26px 0 18px;color:#fff;
+                border-radius:16px;padding:34px 26px 22px;margin:10px 0 18px;color:#fff;
                 box-shadow:0 6px 18px rgba(8,145,178,.25);display:flex;align-items:center;
-                justify-content:space-between;flex-wrap:wrap;gap:8px">
+                justify-content:space-between;flex-wrap:wrap;gap:8px;overflow:visible">
       <div>
         <div style="font-size:.72rem;letter-spacing:.08em;opacity:.85;font-weight:600;line-height:1.5">
              REGIONE ABRUZZO · STRUMENTO AD USO INTERNO</div>
