@@ -751,6 +751,7 @@ def page_home():
     h2.markdown("##### 📈 Segnali anticipatori\nL'interesse di ricerca precede gli arrivi: agisci **prima** della stagione.")
     h3.markdown("##### 🎯 Azioni & budget\nDove concentrare la spesa e **bozze di campagna** pronte.")
     st.caption("Prototipo dimostrativo · Indra Italia S.p.A. — scala nazionale")
+    st.caption("Foto: Sassongher (Dolomiti, Alta Badia) · Tiia Monto, CC BY-SA 3.0 · Wikimedia Commons")
 
 
 # ──────────────────── NAVIGAZIONE A DUE PILASTRI (st.navigation) + DISPATCH ────────────────────
