@@ -515,7 +515,7 @@ def markets_summary(ctx: dict) -> list[dict]:
 # ════════════════════════════════════════════════════════════════════════════
 def _layout(fig: go.Figure, h: int = 420, title: str | None = None) -> go.Figure:
     fig.update_layout(height=h, margin=dict(l=10, r=10, t=44 if title else 12, b=10),
-                      paper_bgcolor="white", plot_bgcolor="white", title=title,
+                      paper_bgcolor="white", plot_bgcolor="white", title=(title or ""),
                       font=dict(family=FONT_STACK, size=13, color="#334155"),
                       colorway=["#0e7490", "#f59e0b", "#16a34a", "#7c3aed", "#dc2626", "#0891b2"],
                       legend=dict(orientation="h", y=-0.18, font=dict(size=12)),
@@ -564,7 +564,7 @@ def chart_map(summary: list[dict]) -> go.Figure:
                                 textfont=dict(size=12, color="#7c2d12"),
                                 marker=dict(size=16, color="#7c2d12", symbol="star"),
                                 name="Destinazione", hoverinfo="text"))
-    fig.update_layout(height=560, margin=dict(l=0, r=0, t=10, b=0), paper_bgcolor="white",
+    fig.update_layout(height=560, margin=dict(l=0, r=0, t=10, b=0), paper_bgcolor="white", title_text="",
                       legend=dict(title="Raccomandazione", orientation="h", y=-0.02, x=0.02),
                       geo=dict(projection_type="natural earth", showland=False, showcountries=False,
                                showcoastlines=False, showframe=False, showocean=True, oceancolor="#eaf2fb",
@@ -1197,7 +1197,7 @@ def chart_province_map(rows: list[dict]) -> go.Figure:
                       "<br>di cui stranieri %{customdata[0]:,.0f} (%{customdata[1]:.0f}%)<extra></extra>"))
     fig.update_geos(fitbounds="locations", visible=False, projection_type="mercator", bgcolor="rgba(0,0,0,0)")
     fig.update_layout(height=460, margin=dict(l=0, r=0, t=10, b=0), paper_bgcolor="white",
-                      font=dict(family=FONT_STACK))
+                      title_text="", font=dict(family=FONT_STACK))
     return fig
 
 
@@ -1404,7 +1404,7 @@ def chart_coverage(cov: list[dict]) -> go.Figure:
                       color_discrete_sequence=["#0e7490", "#f59e0b", "#16a34a"])
     fig.update_yaxes(autorange="reversed", title=None)
     fig.update_layout(height=300, margin=dict(l=10, r=10, t=10, b=10), paper_bgcolor="white",
-                      plot_bgcolor="white", legend_title="frequenza", font=dict(family=FONT_STACK))
+                      plot_bgcolor="white", title_text="", legend_title="frequenza", font=dict(family=FONT_STACK))
     return fig
 
 
