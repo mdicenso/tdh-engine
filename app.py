@@ -670,34 +670,34 @@ def page_home():
 
 
 # ──────────────────── NAVIGAZIONE A DUE PILASTRI (st.navigation) + DISPATCH ────────────────────
-SINTESI_PAGE = st.Page(page_sintesi, title="Sintesi", icon="📋")
+SINTESI_PAGE = st.Page(page_sintesi, title="Sintesi", icon=":material/dashboard:")
 pg = st.navigation({
     "Panoramica": [
-        st.Page(page_home, title="Home", icon="🏠", default=True),
+        st.Page(page_home, title="Home", icon=":material/home:", default=True),
         SINTESI_PAGE,
     ],
     "Cosa è successo": [
-        st.Page(page_province, title="Per provincia", icon="📍"),
-        st.Page(page_struttura, title="Per struttura", icon="🏨"),
-        st.Page(page_occupazione, title="Occupazione", icon="🛏"),
-        st.Page(page_spesa, title="Spesa turistica", icon="💶"),
-        st.Page(page_mercati_paese, title="Mercati per paese", icon="🌍"),
-        st.Page(page_operatori, title="Operatori (demo)", icon="👤"),
+        st.Page(page_province, title="Per provincia", icon=":material/place:"),
+        st.Page(page_struttura, title="Per struttura", icon=":material/hotel:"),
+        st.Page(page_occupazione, title="Occupazione", icon=":material/king_bed:"),
+        st.Page(page_spesa, title="Spesa turistica", icon=":material/payments:"),
+        st.Page(page_mercati_paese, title="Mercati per paese", icon=":material/public:"),
+        st.Page(page_operatori, title="Operatori (demo)", icon=":material/person:"),
     ],
     "Cosa fare": [
-        st.Page(page_ranking, title="Ranking mercati", icon="📊"),
-        st.Page(page_mappa, title="Mappa", icon="🗺"),
-        st.Page(page_dettaglio, title="Dettaglio mercato", icon="🔎"),
-        st.Page(page_forecast, title="Forecast presenze", icon="📈"),
-        st.Page(page_timing, title="Timing", icon="📅"),
-        st.Page(page_online, title="Interesse online", icon="🌐"),
-        st.Page(page_azioni, title="Azioni", icon="🎯"),
-        st.Page(page_allocatore, title="Allocatore", icon="💰"),
+        st.Page(page_ranking, title="Ranking mercati", icon=":material/leaderboard:"),
+        st.Page(page_mappa, title="Mappa", icon=":material/map:"),
+        st.Page(page_dettaglio, title="Dettaglio mercato", icon=":material/search:"),
+        st.Page(page_forecast, title="Forecast presenze", icon=":material/trending_up:"),
+        st.Page(page_timing, title="Timing", icon=":material/calendar_month:"),
+        st.Page(page_online, title="Interesse online", icon=":material/language:"),
+        st.Page(page_azioni, title="Azioni", icon=":material/ads_click:"),
+        st.Page(page_allocatore, title="Allocatore", icon=":material/savings:"),
     ],
     "Sistema": [
-        st.Page(page_assistente, title="Assistente", icon="💬"),
-        st.Page(page_architettura, title="Architettura", icon="🏗"),
-        st.Page(page_gestione_dati, title="Gestione dati", icon="🗂"),
+        st.Page(page_assistente, title="Assistente", icon=":material/forum:"),
+        st.Page(page_architettura, title="Architettura", icon=":material/account_tree:"),
+        st.Page(page_gestione_dati, title="Gestione dati", icon=":material/database:"),
     ],
 })
 if pg.title != "Home":
