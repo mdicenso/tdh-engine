@@ -731,7 +731,7 @@ def page_home():
           {L.LOGO_SVG}
           <div style="text-align:left">
             <div style="font-size:1.9rem;font-weight:800;line-height:1.05">Turism Data Hub</div>
-            <div style="font-size:.78rem;letter-spacing:.16em;opacity:.92">REGIONE ABRUZZO</div>
+            <div style="font-size:.78rem;letter-spacing:.16em;opacity:.92">PORTALE NAZIONALE DEL TURISMO</div>
           </div>
         </div>
         <div style="font-size:1.18rem;margin-top:22px;opacity:.96;text-shadow:0 1px 10px rgba(0,0,0,.45)">

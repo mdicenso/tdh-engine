@@ -753,7 +753,7 @@ TOOLS_SCHEMA = [
 ]
 
 SYSTEM_BASE = ("Sei l'assistente del cruscotto del TDH Engine, che ordina i mercati esteri per allocare "
-    "il budget promo turistico della Regione Abruzzo. Confine SEMPRE: il motore NON stima l'effetto "
+    "il budget promo turistico regionale. Confine SEMPRE: il motore NON stima l'effetto "
     "causale della spesa ('metti X€ → +Y presenze'); ordina 'dove conviene agire'. Usa SEMPRE i tool "
     "per i numeri (non a memoria); rispondi in italiano, conciso e orientato alla decisione; risposta "
     "finale diretta senza ragionamento visibile.")
@@ -1427,6 +1427,7 @@ def chart_italy_map(highlight: str | None = None) -> go.Figure:
     fig = go.Figure(go.Choropleth(
         geojson=gj, featureidkey="properties.reg_name", locations=names, z=z, name="spesa",
         colorscale="Teal", marker_line_color="white", marker_line_width=0.6,
+        selected=dict(marker=dict(opacity=1.0)), unselected=dict(marker=dict(opacity=1.0)),
         colorbar=dict(title=dict(text="spesa straniera<br>2024 (M€)", side="right")),
         hovertemplate="<b>%{location}</b><br>spesa %{z:,.0f} M€<extra></extra>"))
     hn = RG.GEO_NAME.get(highlight) if highlight else None
