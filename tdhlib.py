@@ -60,7 +60,7 @@ def reco_cat(reco: str) -> str:
 FONT_STACK = "-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 CSS = f"""<style>
   html, body, [class*="css"] {{ font-family: {FONT_STACK}; }}
-  .block-container {{ padding-top: 2.2rem; max-width: 1320px; }}
+  .block-container {{ padding-top: 2.8rem; max-width: 1320px; }}
   h1, h2, h3 {{ color: #0f172a; font-weight: 700; letter-spacing: -0.01em; }}
   .stApp {{ background-color: #f1f5f9; }}
   /* sidebar scura (schiarita per leggibilità) */
@@ -132,7 +132,7 @@ def hero(subtitle: str = "", mode_label: str = ""):
             f"font-size:.8rem;font-weight:600'>{mode_label}</span>") if mode_label else ""
     st.markdown(f"""
     <div style="background:linear-gradient(120deg,#0e7490 0%,#0891b2 55%,#06b6d4 100%);
-                border-radius:16px;padding:22px 26px;margin:4px 0 18px;color:#fff;
+                border-radius:16px;padding:22px 26px;margin:26px 0 18px;color:#fff;
                 box-shadow:0 6px 18px rgba(8,145,178,.25);display:flex;align-items:center;
                 justify-content:space-between;flex-wrap:wrap;gap:8px">
       <div>
