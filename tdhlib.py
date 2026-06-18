@@ -117,7 +117,7 @@ def check_access() -> bool:
     with c:
         st.markdown(LOGO_SVG, unsafe_allow_html=True)
         st.markdown("#### Turism Data Hub — accesso riservato")
-        st.caption("Regione Abruzzo · prototipo Indra. Inserisci la password ricevuta.")
+        st.caption("Prototipo Indra · accesso riservato. Inserisci la password ricevuta.")
         entered = st.text_input("Password", type="password", label_visibility="collapsed",
                                 placeholder="Password")
         if st.button("Entra", type="primary", use_container_width=True):
@@ -139,7 +139,7 @@ def hero(subtitle: str = "", mode_label: str = ""):
                 justify-content:space-between;flex-wrap:wrap;gap:8px;overflow:visible">
       <div>
         <div style="font-size:.72rem;letter-spacing:.08em;opacity:.85;font-weight:600;line-height:1.5">
-             REGIONE ABRUZZO · STRUMENTO AD USO INTERNO</div>
+             STRUMENTO AD USO INTERNO · SCALA NAZIONALE</div>
         <div style="font-size:1.5rem;font-weight:800;letter-spacing:.01em;margin-top:2px">⛰️ Turism Data Hub</div>
         <div style="opacity:.92;font-size:.92rem;margin-top:2px">{subtitle}</div>
       </div>{chip}
@@ -490,7 +490,7 @@ def chart_wiki(yr_range=None) -> go.Figure:
             df = df[(df["date"].dt.year >= yr_range[0]) & (df["date"].dt.year <= yr_range[1])]
         fig.add_trace(go.Scatter(x=df["date"], y=df["views"], name=WIKI_LABEL[lang],
                                  line=dict(color=colors[lang], width=2)))
-    fig.update_yaxes(title="visualizzazioni pagina «Abruzzo»")
+    fig.update_yaxes(title="visualizzazioni pagina (per lingua)")
     return _layout(fig, h=360)
 
 

@@ -42,12 +42,9 @@ if not L.check_access():
 # ──────────────────────────── BARRA LATERALE (controlli) ────────────────────────────
 with st.sidebar:
     st.markdown("### :material/landscape: Turism Data Hub")
-    st.caption("Strumento ad uso interno · Indra")
-    _regn = L.RG.region_names()
-    st.selectbox("Regione", list(_regn), format_func=lambda c: _regn[c],
-                 key="region_code", index=list(_regn).index(L.RG.DEFAULT_REGION),
-                 help="Seleziona la regione. La pagina «Regione» mostra i dati ISTAT reali; "
-                      "le altre viste sono in migrazione al multi-regione.")
+    st.caption("Strumento ad uso interno · scala nazionale · Indra")
+    _rc = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    st.caption(f"📍 Regione attiva: **{L.RG.region(_rc)['nome']}** — cambiala nella pagina **Italia**")
     st.radio("Modalità dati", [L.MODE_REAL, L.MODE_SYN], key="mode", index=0,
              help="Riguarda il motore dei mercati (pilastro «Cosa fare»). "
                   "Le viste descrittive usano sempre i dati reali ISTAT/BdI.")
@@ -117,12 +114,31 @@ def page_sintesi():
     st.plotly_chart(L.chart_ranking_bar(summary), use_container_width=True)
 
 
+def page_italia():
+    st.header(":material/public: Italia")
+    st.caption("Seleziona la regione di interesse: **clicca la mappa** oppure usa il menu qui sotto. "
+               "Il colore indica la spesa dei turisti stranieri (Banca d'Italia 2024).")
+    code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    ev = st.plotly_chart(L.chart_italy_map(highlight=code), use_container_width=True,
+                         on_select="rerun", selection_mode="points", key="italy_map_home")
+    pts = (ev or {}).get("selection", {}).get("points", []) if hasattr(ev, "get") else []
+    if pts:
+        sel = L.RG.code_for_geo(pts[0].get("location"))
+        if sel and sel != code:
+            st.session_state["_map_region"] = sel
+            st.rerun()
+    _regn = L.RG.region_names()
+    st.selectbox("Regione", list(_regn), format_func=lambda c: _regn[c],
+                 key="region_code", index=list(_regn).index(code))
+    st.success(f"Regione attiva: **{L.RG.region(code)['nome']}** ({code}) — vale per tutte le pagine.")
+
+
 def page_regione():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     info = L.RG.region(code)
     st.header(f":material/public: {info['nome']} — quadro regionale")
-    st.caption("**Multi-regione (pilota)**: dati ISTAT reali per la regione selezionata nella barra "
-               "laterale. Le altre pagine sono ancora calibrate sull'Abruzzo (migrazione in corso).")
+    st.caption("**Multi-regione**: dati ISTAT reali per la regione selezionata (pagina **Italia**). "
+               "Alcune viste descrittive sono ancora in migrazione al multi-regione.")
     try:
         ov = L.region_overview(code)
     except Exception as e:  # noqa: BLE001
@@ -149,18 +165,9 @@ def page_regione():
 
 def page_confronto_regioni():
     st.header(":material/bar_chart: Confronto tra regioni")
-    st.caption("Mappa e classifica di **tutte le regioni** per spesa dei turisti stranieri (Banca d'Italia 2024). "
-               "**Clicca una regione sulla mappa** per selezionarla (o usa il menu in alto a sinistra).")
+    st.caption("Classifica di **tutte le regioni** per spesa dei turisti stranieri (Banca d'Italia 2024). "
+               "La regione attiva è evidenziata. La selezione si fa nella pagina **Italia**.")
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
-    st.markdown(f"**Regione selezionata: {L.RG.region(code)['nome']}**")
-    ev = st.plotly_chart(L.chart_italy_map(highlight=code), use_container_width=True,
-                         on_select="rerun", selection_mode="points", key="italy_map_sel")
-    pts = (ev or {}).get("selection", {}).get("points", []) if hasattr(ev, "get") else []
-    if pts:
-        sel = L.RG.code_for_geo(pts[0].get("location"))
-        if sel and sel != code:
-            st.session_state["_map_region"] = sel
-            st.rerun()
     st.plotly_chart(L.chart_regions_ranking(highlight=code), use_container_width=True)
     rk = L.regions_spend_ranking()
     df = pd.DataFrame([{"#": r["rank"], "Regione": r["regione"],
@@ -171,7 +178,7 @@ def page_confronto_regioni():
 
 def page_mappa():
     st.header(":material/map: Mappa dei mercati")
-    st.caption("Colore = raccomandazione · dimensione bolla = score · linea = flusso verso Abruzzo")
+    st.caption("Colore = raccomandazione · dimensione bolla = score · linea = flusso verso la destinazione")
     st.plotly_chart(L.chart_map(summary), use_container_width=True)
     with st.expander("Ranking in forma di barre"):
         st.plotly_chart(L.chart_ranking_bar(summary), use_container_width=True)
@@ -217,7 +224,7 @@ def page_ranking():
 def page_forecast():
     if is_real:
         R = ctx["R"]; agg = R["agg"]
-        st.header(":material/trending_up: Forecast presenze straniere totali (Abruzzo)")
+        st.header(":material/trending_up: Forecast presenze straniere totali")
         m1, m2, m3 = st.columns(3)
         m1.metric("Lag segnale", f"{agg['lag']} mesi")
         m2.metric("Batte la naive?", "Sì" if agg["beats_naive"] else "No")
@@ -561,7 +568,7 @@ def page_province():
 
 def page_struttura():
     st.header(":material/hotel: Presenze per tipologia di struttura")
-    st.caption("Alberghiero vs extra-alberghiero in Abruzzo — dati ISTAT, ultimi 12 mesi.")
+    st.caption("Alberghiero vs extra-alberghiero — dati ISTAT, ultimi 12 mesi.")
     try:
         S = L.compute_structure()
     except Exception as e:  # noqa: BLE001
@@ -637,7 +644,7 @@ def page_operatori():
 
 def page_spesa():
     st.header(":material/payments: Spesa turistica (Banca d'Italia)")
-    st.caption("Spesa dei turisti stranieri — Abruzzo e contesto nazionale. Indagine turismo internazionale, 2024.")
+    st.caption("Spesa dei turisti stranieri — contesto nazionale e regionale. Indagine turismo internazionale, 2024.")
     ext = L.bdi_extended()
     if not ext:
         st.info("Dati Banca d'Italia non disponibili.")
@@ -652,7 +659,7 @@ def page_spesa():
     c3.metric("Durata media", f"{durata:.1f} notti")
     c4.metric("Spesa per notte", f"€ {spnotte:.0f}")
     yr = st.session_state.get("yr_range", (2019, 2024))
-    st.subheader(f"Spesa straniera in Abruzzo · {yr[0]}–{yr[1]}")
+    st.subheader(f"Spesa straniera · {yr[0]}–{yr[1]}")
     st.plotly_chart(L.chart_abruzzo_spend(ext, yr), use_container_width=True)
     st.subheader("Confronto regioni — spesa turisti stranieri 2024")
     st.plotly_chart(L.chart_regions_spend(ext), use_container_width=True)
@@ -699,7 +706,7 @@ def page_online():
     st.caption("Google Trends (per paese) e Wikipedia pageviews (per lingua) anticipano gli arrivi. "
                "Wikipedia corrobora il segnale; è per LINGUA, quindi DE/AT/CH condividono il tedesco e GB/US l'inglese.")
     yr = st.session_state.get("yr_range", (2019, 2024))
-    st.subheader(f"Wikipedia — interesse per «Abruzzo» per lingua · {yr[0]}–{yr[1]}")
+    st.subheader(f"Wikipedia — interesse per la destinazione per lingua · {yr[0]}–{yr[1]}")
     st.plotly_chart(L.chart_wiki(yr), use_container_width=True)
     st.subheader("Corroborazione del segnale per mercato")
     if is_real:
@@ -743,7 +750,7 @@ def page_home():
     h1.markdown("##### 🌍 Mercati esteri\nRanking dei paesi per opportunità, da **ISTAT · ECB · Google Trends**.")
     h2.markdown("##### 📈 Segnali anticipatori\nL'interesse di ricerca precede gli arrivi: agisci **prima** della stagione.")
     h3.markdown("##### 🎯 Azioni & budget\nDove concentrare la spesa e **bozze di campagna** pronte.")
-    st.caption("Prototipo dimostrativo · Indra Italia S.p.A. per Regione Abruzzo")
+    st.caption("Prototipo dimostrativo · Indra Italia S.p.A. — scala nazionale")
 
 
 # ──────────────────── NAVIGAZIONE A DUE PILASTRI (st.navigation) + DISPATCH ────────────────────
@@ -751,6 +758,7 @@ SINTESI_PAGE = st.Page(page_sintesi, title="Sintesi", icon=":material/dashboard:
 pg = st.navigation({
     "Panoramica": [
         st.Page(page_home, title="Home", icon=":material/home:", default=True),
+        st.Page(page_italia, title="Italia", icon=":material/map:"),
         SINTESI_PAGE,
         st.Page(page_regione, title="Regione", icon=":material/public:"),
         st.Page(page_confronto_regioni, title="Confronto regioni", icon=":material/bar_chart:"),
