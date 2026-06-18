@@ -157,17 +157,20 @@ def fetch_istat_presences(area: str = "ITF1", data_type: str = "NI", accom: str 
     key = f"M.{area}.{data_type}..{accom}..{country}...."
     qs = f"?startPeriod={start}&endPeriod={rng_end}&detail=full"
     last_err = None
-    for host in ISTAT_HOSTS:
-        try:
-            req = urllib.request.Request(f"{host}/data/{ISTAT_DATAFLOW}/{key}{qs}",
-                                         headers={"Accept": "application/vnd.sdmx.data+json;version=1.0.0-wd"})
-            raw = urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "ignore")
-            df = _parse_sdmx_json_presences(raw)
-            df.to_csv(cache_path, index=False)
-            return df
-        except Exception as e:  # noqa: BLE001
-            last_err = e
-            continue
+    for _att in range(3):  # ISTAT dà 404/timeout transitori: ritento
+        for host in ISTAT_HOSTS:
+            try:
+                req = urllib.request.Request(f"{host}/data/{ISTAT_DATAFLOW}/{key}{qs}",
+                                             headers={"Accept": "application/vnd.sdmx.data+json;version=1.0.0-wd"})
+                raw = urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "ignore")
+                df = _parse_sdmx_json_presences(raw)
+                df.to_csv(cache_path, index=False)
+                return df
+            except Exception as e:  # noqa: BLE001
+                last_err = e
+                continue
+        import time
+        time.sleep(3)
     raise RuntimeError(f"ISTAT non raggiungibile per {key} ({type(last_err).__name__}: {last_err})")
 
 
@@ -244,23 +247,26 @@ def fetch_istat_capacity(area: str = "ITF1", start: str = "2002", cache_dir: str
     key = ".".join(["A", area, "BEDS", "", "ALL", "", "", "", "", "", ""])
     qs = f"?startPeriod={start}&detail=full"
     last_err = None
-    for host in ISTAT_HOSTS:
-        try:
-            req = urllib.request.Request(f"{host}/data/{ISTAT_DATAFLOW_CAPACITY}/{key}{qs}",
-                                         headers={"Accept": "application/vnd.sdmx.data+json;version=1.0.0-wd"})
-            raw = urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "ignore")
-            d = json.loads(raw)["data"]
-            periods = [v["id"] for v in d["structure"]["dimensions"]["observation"][0]["values"]]
-            series = d["dataSets"][0]["series"]
-            obs = series[next(iter(series))]["observations"]
-            rows = sorted((int(periods[int(i)]), float(o[0]))
-                          for i, o in obs.items() if o and o[0] is not None)
-            df = pd.DataFrame(rows, columns=["anno", "letti"])
-            df.to_csv(cache_path, index=False)
-            return df
-        except Exception as e:  # noqa: BLE001
-            last_err = e
-            continue
+    for _att in range(3):
+        for host in ISTAT_HOSTS:
+            try:
+                req = urllib.request.Request(f"{host}/data/{ISTAT_DATAFLOW_CAPACITY}/{key}{qs}",
+                                             headers={"Accept": "application/vnd.sdmx.data+json;version=1.0.0-wd"})
+                raw = urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "ignore")
+                d = json.loads(raw)["data"]
+                periods = [v["id"] for v in d["structure"]["dimensions"]["observation"][0]["values"]]
+                series = d["dataSets"][0]["series"]
+                obs = series[next(iter(series))]["observations"]
+                rows = sorted((int(periods[int(i)]), float(o[0]))
+                              for i, o in obs.items() if o and o[0] is not None)
+                df = pd.DataFrame(rows, columns=["anno", "letti"])
+                df.to_csv(cache_path, index=False)
+                return df
+            except Exception as e:  # noqa: BLE001
+                last_err = e
+                continue
+        import time
+        time.sleep(3)
     raise RuntimeError(f"ISTAT capacità non raggiungibile ({type(last_err).__name__}: {last_err})")
 
 

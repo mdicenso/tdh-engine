@@ -37,7 +37,12 @@ if not L.check_access():
 # ──────────────────────────── BARRA LATERALE (controlli) ────────────────────────────
 with st.sidebar:
     st.markdown("### :material/landscape: Turism Data Hub")
-    st.caption("Regione Abruzzo · uso interno")
+    st.caption("Strumento ad uso interno · Indra")
+    _regn = L.RG.region_names()
+    st.selectbox("Regione", list(_regn), format_func=lambda c: _regn[c],
+                 key="region_code", index=list(_regn).index(L.RG.DEFAULT_REGION),
+                 help="Seleziona la regione. La pagina «Regione» mostra i dati ISTAT reali; "
+                      "le altre viste sono in migrazione al multi-regione.")
     st.radio("Modalità dati", [L.MODE_REAL, L.MODE_SYN], key="mode", index=0,
              help="Riguarda il motore dei mercati (pilastro «Cosa fare»). "
                   "Le viste descrittive usano sempre i dati reali ISTAT/BdI.")
@@ -105,6 +110,32 @@ def page_sintesi():
 
     st.markdown("#### Ranking (opportunità per mercato)")
     st.plotly_chart(L.chart_ranking_bar(summary), use_container_width=True)
+
+
+def page_regione():
+    code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    info = L.RG.region(code)
+    st.header(f":material/public: {info['nome']} — quadro regionale")
+    st.caption("**Multi-regione (pilota)**: dati ISTAT reali per la regione selezionata nella barra "
+               "laterale. Le altre pagine sono ancora calibrate sull'Abruzzo (migrazione in corso).")
+    try:
+        ov = L.region_overview(code)
+    except Exception as e:  # noqa: BLE001
+        st.error(f"ISTAT non disponibile ora per {info['nome']} ({type(e).__name__}). "
+                 "ISTAT è instabile: riprova tra poco.")
+        return
+    df = ov["presenze"]
+    obs = df.dropna(subset=["stranieri"])
+    c1, c2, c3 = st.columns(3)
+    if len(obs):
+        c1.metric("Presenze straniere (ultimo mese)",
+                  f"{int(obs['stranieri'].iloc[-1]):,}".replace(",", "."))
+    if ov["letti"]:
+        c2.metric(f"Posti letto ({ov['anno_letti']})", f"{ov['letti']:,}".replace(",", "."))
+    c3.metric("Aeroporti", ", ".join(info["airports"]) if info["airports"] else "—")
+    st.plotly_chart(L.chart_region_presences(df), use_container_width=True)
+    st.caption(f"NUTS2 **{info['code']}** · keyword Trends «{info['trends_kw']}» · "
+               f"Wikipedia «{info['wiki'].get('it')}» · BdI «{info['bdi']}»")
 
 
 def page_mappa():
@@ -304,6 +335,14 @@ def page_gestione_dati():
                         st.rerun()
                     else:
                         st.error(res.get("msg", "caricamento fallito"))
+
+    st.subheader(":material/grid_view: Copertura dati — Nazionale · Regionale · Provinciale")
+    st.caption("Cosa abbiamo a ciascun livello geografico (✅ disponibile · 🟡 parziale · ❌ assente). "
+               "Serve a vedere i **buchi** da coprire per il portale multi-regione.")
+    st.dataframe(pd.DataFrame(L.coverage_matrix(), columns=L.COVERAGE_COLS),
+                 hide_index=True, use_container_width=True)
+    st.caption("🔴 Buchi principali: presenze **per paese a livello regionale**, **anagrafica strutture**, "
+               "spesa per paese regionale, accessibilità ferroviaria regionale.")
 
     st.subheader(":material/sync: Stato e aggiornamento delle fonti")
     lr = U.last_run_info()
@@ -675,6 +714,7 @@ pg = st.navigation({
     "Panoramica": [
         st.Page(page_home, title="Home", icon=":material/home:", default=True),
         SINTESI_PAGE,
+        st.Page(page_regione, title="Regione", icon=":material/public:"),
     ],
     "Cosa è successo": [
         st.Page(page_province, title="Per provincia", icon=":material/place:"),

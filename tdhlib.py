@@ -25,6 +25,8 @@ from tourism_wedge import (DEFAULT_MARKETS, SyntheticProvider,
 from tourism_wedge.engine_aggregate import (assemble_real, fit_aggregate,
                                             forecast_aggregate, rank_markets)
 from tourism_wedge import candidate_sources as CS
+from tourism_wedge import real_sources as RS
+import regions as RG
 
 MODEL = "claude-sonnet-4-6"
 MODE_SYN = "🧪 Sintetico (collaudo)"
@@ -1069,6 +1071,33 @@ def pending_candidates() -> list[dict]:
     return rows
 
 
+COVERAGE_COLS = ["Informazione", "Nazionale", "Regionale", "Provinciale", "Fonte", "Note / buco da coprire"]
+
+
+def coverage_matrix() -> list[dict]:
+    """Mappa cosa abbiamo per LIVELLO geografico (nazionale/regionale/provinciale).
+    ✅ disponibile · 🟡 parziale · ❌ assente. Serve a vedere i buchi per il multi-regione."""
+    M = [
+        ("Presenze turistiche (totali)", "✅", "✅", "✅", "ISTAT DCSC_TUR", "completo per tutte le regioni"),
+        ("Presenze straniere (aggregato)", "✅", "✅", "✅", "ISTAT DCSC_TUR", "stranieri totali, non per singolo paese"),
+        ("Presenze per PAESE di origine", "✅", "❌", "❌", "BdI TS1 / ISTAT naz.", "🔴 BUCO chiave: a livello regionale ISTAT non lo espone → si stima dalle quote nazionali"),
+        ("Capacità ricettiva (posti letto)", "✅", "✅", "🟡", "ISTAT DCSC_TUR_1", "regionale ok; provinciale solo alcune"),
+        ("Anagrafica strutture ricettive", "🟡", "❌", "❌", "registri regionali", "🔴 BUCO: registri non federati come open data"),
+        ("Spesa turistica per paese", "✅", "🟡", "❌", "Banca d'Italia", "regionale solo TOTALE (TS2), non per paese"),
+        ("Accessibilità aerea (voli/pax)", "✅", "✅", "—", "Eurostat avia_par", "regionale via mappa regione→aeroporto"),
+        ("Accessibilità ferroviaria", "✅", "❌", "❌", "Aut. Trasporti", "🟡 solo totale nazionale; manca il dettaglio regionale"),
+        ("Interesse online — Google Trends", "✅", "✅", "—", "Google Trends", "per regione: keyword = nome regione"),
+        ("Interesse online — Wikipedia", "✅", "✅", "—", "Wikimedia", "per regione: articolo della regione"),
+        ("Cambio valute (FX mercati)", "✅", "—", "—", "ECB", "nazionale per i mercati esteri (non è dato regionale)"),
+        ("Fiducia consumatori (mercati)", "✅", "—", "—", "Eurostat", "per paese estero (DE/AT/NL); GB/CH/US via OCSE"),
+        ("Domanda culturale (musei)", "✅", "✅", "🟡", "MiC (candidato)", "per istituto → filtrabile per regione"),
+        ("Meteo destinazione", "✅", "✅", "✅", "Open-Meteo (candidato)", "per coordinate: qualunque capoluogo/comune"),
+        ("Festività mercati esteri", "✅", "—", "—", "Nager.Date (candidato)", "per paese estero (timing campagne)"),
+        ("Eventi / POI turistici", "🟡", "🟡", "🟡", "open data regionali", "🟡 alcune regioni pubblicano, molte no (Abruzzo scarso)"),
+    ]
+    return [dict(zip(COVERAGE_COLS, r)) for r in M]
+
+
 # ════════════════════════════════════════════════════════════════════════════
 # AZIONI RACCOMANDATE + BOZZA CAMPAGNA  (ispirate al "Suggerimento AI" del POC)
 # ════════════════════════════════════════════════════════════════════════════
@@ -1300,6 +1329,38 @@ def chart_occupancy(panel) -> go.Figure:
     fig = go.Figure(go.Scatter(x=panel["date"], y=panel["occ"], line=dict(color="#0e7490", width=2),
                                name="occupazione", fill="tozeroy", fillcolor="rgba(14,116,144,.12)"))
     fig.update_yaxes(title="occupazione lorda", ticksuffix="%")
+    return _layout(fig, h=360)
+
+
+# ── MULTI-REGIONE: quadro ISTAT per qualunque regione (NUTS2) ─────────────────
+@st.cache_data(show_spinner="Carico i dati ISTAT della regione…")
+def region_overview(code: str) -> dict:
+    """Presenze mensili (totale + stranieri) e capacità della regione richiesta.
+    Funziona per tutte le 20 regioni (ISTAT per NUTS2). Cache per-regione."""
+    info = RG.region(code)
+    area = info["code"]
+    stran = RS.fetch_istat_presences(area=area, country="WRL_X_ITA", start="2019-01")
+    tot = RS.fetch_istat_presences(area=area, country="WORLD", start="2019-01")
+    df = (stran.rename(columns={"presences": "stranieri"})
+          .merge(tot.rename(columns={"presences": "totale"}), on="date", how="outer")
+          .sort_values("date").reset_index(drop=True))
+    letti = anno = None
+    try:
+        cap = RS.fetch_istat_capacity(area=area)
+        letti, anno = int(cap["letti"].iloc[-1]), int(cap["anno"].iloc[-1])
+    except Exception:  # noqa: BLE001
+        pass
+    return {"info": info, "presenze": df, "letti": letti, "anno_letti": anno}
+
+
+def chart_region_presences(df) -> go.Figure:
+    fig = go.Figure()
+    if "totale" in df:
+        fig.add_trace(go.Scatter(x=df["date"], y=df["totale"], name="totale",
+                                 mode="lines", line=dict(color="#0e7490", width=2)))
+    fig.add_trace(go.Scatter(x=df["date"], y=df["stranieri"], name="stranieri",
+                             mode="lines", line=dict(color="#f59e0b", width=2)))
+    fig.update_yaxes(title="presenze (mese)")
     return _layout(fig, h=360)
 
 
