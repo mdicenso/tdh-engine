@@ -27,6 +27,11 @@ st.set_page_config(page_title="Turism Data Hub", page_icon="⛰️", layout="wid
                    initial_sidebar_state="expanded")
 L.inject_css()
 
+# Riconcilia un'eventuale selezione regione fatta cliccando la mappa d'Italia:
+# va applicata PRIMA che il selectbox «region_code» venga istanziato.
+if st.session_state.get("_map_region"):
+    st.session_state["region_code"] = st.session_state.pop("_map_region")
+
 # ──────────────────────────── GATE D'ACCESSO (opzionale) ────────────────────────────
 # Attivo solo se è impostato il secret APP_PASSWORD (Streamlit Cloud → Settings → Secrets).
 # In locale, senza secret, non chiede nulla. Per l'accesso "su invito" vero si usa
@@ -144,9 +149,18 @@ def page_regione():
 
 def page_confronto_regioni():
     st.header(":material/bar_chart: Confronto tra regioni")
-    st.caption("Posizionamento di **tutte le regioni** per spesa dei turisti stranieri (Banca d'Italia 2024). "
-               "La regione selezionata è evidenziata. Vista nazionale del portale multi-regione.")
+    st.caption("Mappa e classifica di **tutte le regioni** per spesa dei turisti stranieri (Banca d'Italia 2024). "
+               "**Clicca una regione sulla mappa** per selezionarla (o usa il menu in alto a sinistra).")
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    st.markdown(f"**Regione selezionata: {L.RG.region(code)['nome']}**")
+    ev = st.plotly_chart(L.chart_italy_map(highlight=code), use_container_width=True,
+                         on_select="rerun", selection_mode="points", key="italy_map_sel")
+    pts = (ev or {}).get("selection", {}).get("points", []) if hasattr(ev, "get") else []
+    if pts:
+        sel = L.RG.code_for_geo(pts[0].get("location"))
+        if sel and sel != code:
+            st.session_state["_map_region"] = sel
+            st.rerun()
     st.plotly_chart(L.chart_regions_ranking(highlight=code), use_container_width=True)
     rk = L.regions_spend_ranking()
     df = pd.DataFrame([{"#": r["rank"], "Regione": r["regione"],

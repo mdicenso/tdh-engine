@@ -86,6 +86,22 @@ REGIONS = {
 }
 
 
+# Nome regione come appare nel geojson (openpolis) → per agganciare la mappa d'Italia.
+# Bolzano e Trento condividono il poligono "Trentino-Alto Adige".
+GEO_NAME = {
+    "ITC1": "Piemonte", "ITC2": "Valle d'Aosta/Vallée d'Aoste", "ITC3": "Liguria", "ITC4": "Lombardia",
+    "ITH1": "Trentino-Alto Adige/Südtirol", "ITH2": "Trentino-Alto Adige/Südtirol", "ITH3": "Veneto",
+    "ITH4": "Friuli-Venezia Giulia", "ITH5": "Emilia-Romagna", "ITI1": "Toscana", "ITI2": "Umbria",
+    "ITI3": "Marche", "ITI4": "Lazio", "ITF1": "Abruzzo", "ITF2": "Molise", "ITF3": "Campania",
+    "ITF4": "Puglia", "ITF5": "Basilicata", "ITF6": "Calabria", "ITG1": "Sicilia", "ITG2": "Sardegna",
+}
+
+
+def code_for_geo(reg_name: str | None):
+    """Nome regione del geojson → codice NUTS2 (primo match)."""
+    return next((c for c, n in GEO_NAME.items() if n == reg_name), None)
+
+
 def region(code: str | None = None) -> dict:
     """Restituisce il dict della regione (default Abruzzo). Aggiunge sempre 'code'."""
     code = code or DEFAULT_REGION

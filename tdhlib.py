@@ -1390,6 +1390,40 @@ def region_spend(code: str):
     return (hit["spesa_M"], hit["rank"], len(rk)) if hit else None
 
 
+@st.cache_data(show_spinner=False)
+def _italy_regions_geojson():
+    return json.load(open("assets/italy_regions.geojson", encoding="utf-8"))
+
+
+def chart_italy_map(highlight: str | None = None) -> go.Figure:
+    """Mappa d'Italia delle regioni, colorata per spesa straniera (BdI). La regione
+    `highlight` ha il bordo rosso. Cliccabile come selettore (gestito in app)."""
+    gj = _italy_regions_geojson()
+    spend = {RG.REGIONS[r["code"]]["bdi"]: r["spesa_M"] for r in regions_spend_ranking()}
+    names, z = [], []
+    for f in gj["features"]:
+        nm = f["properties"]["reg_name"]
+        code = RG.code_for_geo(nm)
+        names.append(nm)
+        z.append(spend.get(RG.region(code)["bdi"]) if code else None)
+    fig = go.Figure(go.Choropleth(
+        geojson=gj, featureidkey="properties.reg_name", locations=names, z=z, name="spesa",
+        colorscale="Teal", marker_line_color="white", marker_line_width=0.6,
+        colorbar=dict(title=dict(text="spesa straniera<br>2024 (M€)", side="right")),
+        hovertemplate="<b>%{location}</b><br>spesa %{z:,.0f} M€<extra></extra>"))
+    hn = RG.GEO_NAME.get(highlight) if highlight else None
+    if hn:
+        fig.add_trace(go.Choropleth(
+            geojson=gj, featureidkey="properties.reg_name", locations=[hn], z=[0], showscale=False,
+            colorscale=[[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0)"]],
+            marker_line_color="#dc2626", marker_line_width=2.5, hoverinfo="skip"))
+    fig.update_geos(fitbounds="locations", visible=False, projection_type="mercator",
+                    bgcolor="rgba(0,0,0,0)")
+    fig.update_layout(height=620, margin=dict(l=0, r=0, t=10, b=0), paper_bgcolor="white",
+                      title_text="", font=dict(family=FONT_STACK))
+    return fig
+
+
 def chart_regions_ranking(highlight: str | None = None) -> go.Figure:
     rk = regions_spend_ranking()
     if not rk:
