@@ -134,3 +134,73 @@ def load_istat_viaggi() -> dict:
     df.to_csv(p, index=False)
     return {"ok": True, "msg": f"{len(df)} periodi (serie rappresentativa dei residenti, da rifinire)",
             "path": p, "rows": len(df)}
+
+
+# ── Caricatore CSV generico (open data dati.gov.it / portali regionali) ──────
+# Riusabile e multi-regione: scarica un CSV pubblico in .cache e ne conta righe/colonne.
+def _csv_probe(url: str, sep: str = ";") -> dict:
+    try:
+        raw = urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=40).read(3000)
+        lines = [l for l in raw.decode("utf-8", "ignore").splitlines() if l.strip()]
+        cols = lines[0].split(sep) if lines else []
+        return {"ok": len(cols) > 1, "msg": f"raggiungibile · {len(cols)} colonne",
+                "preview": " · ".join(c.strip() for c in cols[:6])[:130]}
+    except Exception as e:  # noqa: BLE001
+        return {"ok": False, "msg": f"non raggiungibile: {type(e).__name__}", "preview": ""}
+
+
+def _csv_load(url: str, cache_name: str, sep: str = ";") -> dict:
+    raw = urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=120).read()
+    os.makedirs(".cache", exist_ok=True)
+    p = os.path.join(".cache", cache_name)
+    with open(p, "wb") as f:
+        f.write(raw)
+    df = pd.read_csv(p, sep=sep, engine="python", on_bad_lines="skip")
+    return {"ok": True, "msg": f"{len(df)} righe · {len(df.columns)} colonne (scaricato in cache)",
+            "path": p, "rows": len(df)}
+
+
+# ── Dataset open data nazionali (validi per TUTTE le regioni, filtrabili per territorio) ──
+URL_MUSEI = ("https://dati.comune.milano.it/dataset/0e119e7d-ef26-4094-a45d-6d01f694e6ab/"
+             "resource/8f361917-c6da-40fb-8902-bb7eb6049ab7/download/"
+             "ds513_musei_statali_visitatori_introiti.csv")
+URL_AEROPORTI = ("https://bdt.autorita-trasporti.it/wp-content/uploads/dcat/"
+                 "D16-Mappa-degli-aeroporti-aperti-al-traffico-commerciale-2022.csv")
+URL_FERROVIA = ("https://bdt.autorita-trasporti.it/wp-content/uploads/dcat/"
+                "D10-Andamento-traffico-passeggeri-pax-2022.csv")
+
+
+def probe_musei():
+    return _csv_probe(URL_MUSEI)
+
+
+def load_musei():
+    return _csv_load(URL_MUSEI, "musei_statali_visitatori.csv")
+
+
+def probe_aeroporti():
+    return _csv_probe(URL_AEROPORTI)
+
+
+def load_aeroporti():
+    return _csv_load(URL_AEROPORTI, "aeroporti_italia.csv")
+
+
+def probe_ferrovia():
+    return _csv_probe(URL_FERROVIA)
+
+
+def load_ferrovia():
+    return _csv_load(URL_FERROVIA, "ferrovia_passeggeri_nazionale.csv")
+
+
+# Registro id -> funzione di load: usato dall'auto-aggiornamento (update_check) per
+# rinfrescare le fonti candidate APPROVATE, senza dipendere da Streamlit/tdhlib.
+CANDIDATE_LOADERS = {
+    "openmeteo": load_open_meteo,
+    "holidays": load_holidays,
+    "istat_viaggi": load_istat_viaggi,
+    "musei": load_musei,
+    "aeroporti": load_aeroporti,
+    "ferrovia": load_ferrovia,
+}

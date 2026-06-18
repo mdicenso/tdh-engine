@@ -22,9 +22,11 @@ import tempfile
 import pandas as pd
 
 from tourism_wedge import real_sources as RS
+from tourism_wedge import candidate_sources as CS
 
 CACHE = ".cache"
 STATE_PATH = "data/update_state.json"
+STATE_CAND = "data/candidates_state.json"  # fonti candidate approvate (da tenere aggiornate)
 
 # soglie: oltre questo "ritardo" dell'ultimo dato rispetto a oggi, vale la pena
 # controllare se la fonte ha pubblicato qualcosa di nuovo (giudizio euristico).
@@ -239,15 +241,40 @@ def last_run_info() -> dict | None:
         return None
 
 
+def refresh_approved_candidates() -> list[dict]:
+    """Rinfresca le fonti candidate APPROVATE (lette da data/candidates_state.json),
+    così le fonti 'prese in carico dal motore' restano aggiornate. Senza dipendere da Streamlit."""
+    out = []
+    if not os.path.exists(STATE_CAND):
+        return out
+    try:
+        state = json.load(open(STATE_CAND, encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        return out
+    for cid, info in state.items():
+        if not info.get("approved"):
+            continue
+        fn = CS.CANDIDATE_LOADERS.get(cid)
+        if not fn:
+            continue
+        try:
+            r = fn()
+            out.append({"fonte": f"candidata:{cid}", "ok": True, "msg": r.get("msg", "ok")})
+        except Exception as e:  # noqa: BLE001
+            out.append({"fonte": f"candidata:{cid}", "ok": False, "msg": f"{type(e).__name__}"})
+    return out
+
+
 def refresh_all() -> list[dict]:
-    """Riscarica nella cache REALE tutte le fonti refreshabili (per lo schedulatore, modalità B).
-    Le fonti 'manual' (BdI, Eurostat) vengono saltate. Ritorna l'esito per fonte."""
+    """Riscarica nella cache REALE tutte le fonti refreshabili (per lo schedulatore, modalità B):
+    fonti core + candidate APPROVATE. Le fonti 'manual' (BdI, Eurostat) vengono saltate."""
     out = []
     for s in SOURCES:
         if s["live"] in ("manual", "ecb"):  # ecb è sempre live, non ha cache
             continue
         r = apply_update(s["key"])
         out.append({"fonte": s["label"], **r})
+    out.extend(refresh_approved_candidates())
     return out
 
 

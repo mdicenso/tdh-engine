@@ -979,6 +979,24 @@ CANDIDATES = [
      "descrizione": "Viaggi/notti dei residenti dell'Abruzzo per destinazione (le «partenze»).",
      "fonte": "ISTAT · DCCV_TURNOT", "url": "https://esploradati.istat.it/", "frequenza": "annuale",
      "probe": CS.probe_istat_viaggi, "load": CS.load_istat_viaggi},
+    {"id": "musei", "nome": "Musei statali — visitatori e introiti",
+     "descrizione": "Visitatori e introiti dei musei statali per istituto (1996-2024). NAZIONALE, "
+                    "filtrabile per regione → segnale di domanda culturale del territorio.",
+     "fonte": "MiC · dati.gov.it", "frequenza": "annuale",
+     "url": "https://www.dati.gov.it/opendata/dataset/musei-statali-visitatori-ed-introiti-1996-2024",
+     "probe": CS.probe_musei, "load": CS.load_musei},
+    {"id": "aeroporti", "nome": "Mappa aeroporti commerciali italiani",
+     "descrizione": "Anagrafica degli aeroporti italiani aperti al traffico (coord., IATA, località). "
+                    "NAZIONALE → base per la mappa regione→aeroporto (accessibilità multi-regione).",
+     "fonte": "Autorità Trasporti · dati.gov.it", "frequenza": "annuale",
+     "url": "https://www.dati.gov.it/opendata/dataset/mappa-degli-aeroporti-aperti-al-traffico-commerciale",
+     "probe": CS.probe_aeroporti, "load": CS.load_aeroporti},
+    {"id": "ferrovia", "nome": "Traffico passeggeri ferroviario (nazionale)",
+     "descrizione": "Passeggeri ferroviari per anno (totale nazionale). Indicatore di contesto "
+                    "sull'accessibilità ferroviaria; non disaggregato per regione.",
+     "fonte": "Autorità Trasporti · dati.gov.it", "frequenza": "annuale",
+     "url": "https://www.dati.gov.it/opendata/dataset/evoluzione-del-traffico-passeggeri-per-ferrovia",
+     "probe": CS.probe_ferrovia, "load": CS.load_ferrovia},
 ]
 
 
