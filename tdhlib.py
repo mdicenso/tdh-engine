@@ -1364,6 +1364,46 @@ def chart_region_presences(df) -> go.Figure:
     return _layout(fig, h=360)
 
 
+def regions_spend_ranking() -> list[dict]:
+    """Classifica delle regioni per spesa turistica straniera 2024 (Banca d'Italia).
+    code (NUTS2) · regione · spesa_M · rank. Multi-regione by construction."""
+    ext = bdi_extended()
+    spese = (ext or {}).get("regioni_2024", {})
+    if not spese:
+        return []
+    rows = []
+    for code, info in RG.REGIONS.items():
+        sp = spese.get(info["bdi"])
+        if sp is not None:
+            rows.append({"code": code, "regione": info["nome"], "spesa_M": float(sp)})
+    rows.sort(key=lambda r: r["spesa_M"], reverse=True)
+    for i, r in enumerate(rows):
+        r["rank"] = i + 1
+    return rows
+
+
+def region_spend(code: str):
+    """(spesa_M, rank, totale_regioni) per la regione richiesta, o None."""
+    rk = regions_spend_ranking()
+    bdi = RG.region(code)["bdi"]
+    hit = next((r for r in rk if RG.REGIONS[r["code"]]["bdi"] == bdi), None)
+    return (hit["spesa_M"], hit["rank"], len(rk)) if hit else None
+
+
+def chart_regions_ranking(highlight: str | None = None) -> go.Figure:
+    rk = regions_spend_ranking()
+    if not rk:
+        return _layout(go.Figure(), h=300)
+    rk = sorted(rk, key=lambda r: r["spesa_M"])
+    hi_bdi = RG.region(highlight)["bdi"] if highlight else None
+    colors = ["#f59e0b" if RG.REGIONS[r["code"]]["bdi"] == hi_bdi else "#0e7490" for r in rk]
+    fig = go.Figure(go.Bar(x=[r["spesa_M"] for r in rk], y=[r["regione"] for r in rk],
+                           orientation="h", marker_color=colors,
+                           hovertemplate="<b>%{y}</b><br>%{x:,.0f} M€<extra></extra>"))
+    fig.update_xaxes(title="spesa turisti stranieri 2024 (M€)")
+    return _layout(fig, h=560)
+
+
 def chart_occupancy_season(panel) -> go.Figure:
     d = panel.copy(); d["m"] = d["date"].dt.month
     prof = d.groupby("m")["occ"].mean().reindex(range(1, 13))

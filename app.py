@@ -126,16 +126,33 @@ def page_regione():
         return
     df = ov["presenze"]
     obs = df.dropna(subset=["stranieri"])
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3, c4 = st.columns(4)
     if len(obs):
         c1.metric("Presenze straniere (ultimo mese)",
                   f"{int(obs['stranieri'].iloc[-1]):,}".replace(",", "."))
     if ov["letti"]:
         c2.metric(f"Posti letto ({ov['anno_letti']})", f"{ov['letti']:,}".replace(",", "."))
-    c3.metric("Aeroporti", ", ".join(info["airports"]) if info["airports"] else "—")
+    sp = L.region_spend(code)
+    if sp:
+        c3.metric("Spesa straniera 2024 (BdI)", f"{sp[0]:,.0f} M€".replace(",", "."),
+                  delta=f"#{sp[1]} su {sp[2]} regioni", delta_color="off")
+    c4.metric("Aeroporti", ", ".join(info["airports"]) if info["airports"] else "—")
     st.plotly_chart(L.chart_region_presences(df), use_container_width=True)
     st.caption(f"NUTS2 **{info['code']}** · keyword Trends «{info['trends_kw']}» · "
                f"Wikipedia «{info['wiki'].get('it')}» · BdI «{info['bdi']}»")
+
+
+def page_confronto_regioni():
+    st.header(":material/bar_chart: Confronto tra regioni")
+    st.caption("Posizionamento di **tutte le regioni** per spesa dei turisti stranieri (Banca d'Italia 2024). "
+               "La regione selezionata è evidenziata. Vista nazionale del portale multi-regione.")
+    code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    st.plotly_chart(L.chart_regions_ranking(highlight=code), use_container_width=True)
+    rk = L.regions_spend_ranking()
+    df = pd.DataFrame([{"#": r["rank"], "Regione": r["regione"],
+                        "Spesa straniera 2024 (M€)": round(r["spesa_M"])} for r in rk])
+    st.dataframe(df, hide_index=True, use_container_width=True)
+    st.caption("Nota BdI: Bolzano e Trento sono aggregati come «Trentino Alto Adige».")
 
 
 def page_mappa():
@@ -715,6 +732,7 @@ pg = st.navigation({
         st.Page(page_home, title="Home", icon=":material/home:", default=True),
         SINTESI_PAGE,
         st.Page(page_regione, title="Regione", icon=":material/public:"),
+        st.Page(page_confronto_regioni, title="Confronto regioni", icon=":material/bar_chart:"),
     ],
     "Cosa è successo": [
         st.Page(page_province, title="Per provincia", icon=":material/place:"),
