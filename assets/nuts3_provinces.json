@@ -1,0 +1,151 @@
+{
+"ITC1": {
+"ITC11": "Torino",
+"ITC12": "Vercelli",
+"ITC15": "Novara",
+"ITC16": "Cuneo",
+"ITC17": "Asti",
+"ITC18": "Alessandria",
+"ITC13": "Biella",
+"ITC14": "Verbano-Cusio-Ossola"
+},
+"ITC2": {
+"ITC20": "Valle d'Aosta / Vallée d'Aoste"
+},
+"ITC3": {
+"ITC31": "Imperia",
+"ITC32": "Savona",
+"ITC33": "Genova",
+"ITC34": "La Spezia"
+},
+"ITC4": {
+"ITC41": "Varese",
+"ITC42": "Como",
+"ITC44": "Sondrio",
+"ITC45": "Milano",
+"ITC46": "Bergamo",
+"ITC47": "Brescia",
+"ITC48": "Pavia",
+"ITC4A": "Cremona",
+"ITC4B": "Mantova",
+"ITC43": "Lecco",
+"ITC49": "Lodi"
+},
+"ITD1": {
+"ITD10": "Bolzano / Bozen"
+},
+"ITD2": {
+"ITD20": "Trento"
+},
+"ITD3": {
+"ITD31": "Verona",
+"ITD32": "Vicenza",
+"ITD33": "Belluno",
+"ITD34": "Treviso",
+"ITD35": "Venezia",
+"ITD36": "Padova",
+"ITD37": "Rovigo"
+},
+"ITD4": {
+"ITD42": "Udine",
+"ITD43": "Gorizia",
+"ITD44": "Trieste",
+"ITD41": "Pordenone"
+},
+"ITD5": {
+"ITD51": "Piacenza",
+"ITD52": "Parma",
+"ITD53": "Reggio nell'Emilia",
+"ITD54": "Modena",
+"ITD55": "Bologna",
+"ITD56": "Ferrara",
+"ITD57": "Ravenna",
+"ITD58": "Forlì-Cesena",
+"ITD59": "Rimini"
+},
+"ITE3": {
+"ITE31": "Pesaro e Urbino",
+"ITE32": "Ancona",
+"ITE33": "Macerata",
+"ITE34": "Ascoli Piceno"
+},
+"ITE1": {
+"ITE11": "Massa-Carrara",
+"ITE12": "Lucca",
+"ITE13": "Pistoia",
+"ITE14": "Firenze",
+"ITE16": "Livorno",
+"ITE17": "Pisa",
+"ITE18": "Arezzo",
+"ITE19": "Siena",
+"ITE1A": "Grosseto",
+"ITE15": "Prato"
+},
+"ITE2": {
+"ITE21": "Perugia",
+"ITE22": "Terni"
+},
+"ITE4": {
+"ITE41": "Viterbo",
+"ITE42": "Rieti",
+"ITE43": "Roma",
+"ITE44": "Latina",
+"ITE45": "Frosinone"
+},
+"ITF3": {
+"ITF31": "Caserta",
+"ITF32": "Benevento",
+"ITF33": "Napoli",
+"ITF34": "Avellino",
+"ITF35": "Salerno"
+},
+"ITF1": {
+"ITF11": "L'Aquila",
+"ITF12": "Teramo",
+"ITF13": "Pescara",
+"ITF14": "Chieti"
+},
+"ITF2": {
+"ITF22": "Campobasso",
+"ITF21": "Isernia"
+},
+"ITF4": {
+"ITF41": "Foggia",
+"ITF42": "Bari",
+"ITF43": "Taranto",
+"ITF44": "Brindisi",
+"ITF45": "Lecce"
+},
+"ITF5": {
+"ITF51": "Potenza",
+"ITF52": "Matera"
+},
+"ITF6": {
+"ITF61": "Cosenza",
+"ITF63": "Catanzaro",
+"ITF65": "Reggio di Calabria",
+"ITF62": "Crotone",
+"ITF64": "Vibo Valentia"
+},
+"ITG1": {
+"ITG11": "Trapani",
+"ITG12": "Palermo",
+"ITG13": "Messina",
+"ITG14": "Agrigento",
+"ITG15": "Caltanissetta",
+"ITG16": "Enna",
+"ITG17": "Catania",
+"ITG18": "Ragusa",
+"ITG19": "Siracusa"
+},
+"ITG2": {
+"ITG25": "Sassari",
+"ITG26": "Nuoro",
+"ITG27": "Cagliari",
+"ITG28": "Oristano",
+"ITG29": "Olbia-Tempio",
+"ITG2A": "Ogliastra",
+"ITG2B": "Medio Campidano",
+"ITG2C": "Carbonia-Iglesias"
+}
+}

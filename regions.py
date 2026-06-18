@@ -1,19 +1,20 @@
 """
 Registro delle REGIONI italiane — rende "la regione una variabile".
 
-Ogni regione mappa i parametri che le fonti del TDH usano:
-  code      : NUTS2 ISTAT (REF_AREA per DCSC_TUR)
-  nome      : nome esteso (UI)
-  latlon    : coord. del capoluogo (per meteo)
-  airports  : ICAO degli aeroporti commerciali (Eurostat avia_par)
-  trends_kw : keyword Google Trends (di norma il nome regione)
-  wiki      : articolo Wikipedia per lingua (it/en/de/nl) — segnale culturale
-  bdi       : etichetta regione come appare nei dati Banca d'Italia (TS2 / regioni_2024)
+IMPORTANTE: i codici NUTS2 sono quelli che ISTAT (DCSC_TUR / CL_ITTER107) accetta,
+cioè la codifica NUTS *storica*: Centro = ITE (Toscana ITE1…), Nord-Est = ITD
+(Veneto ITD3…). NON la NUTS 2021 (ITI/ITH). Le presenze ISTAT funzionano solo con questi.
 
-NB: le province (NUTS3) si ricavano da ISTAT; qui le elenchiamo dove già note
-(Abruzzo) e si completano in fase 2 con discovery verificata.
+Campi:
+  code(chiave) NUTS2 ISTAT · nome · latlon capoluogo · airports ICAO ·
+  trends_kw · wiki(it/en/de/nl) · bdi (etichetta Banca d'Italia).
+Le province (NUTS3) vengono da assets/nuts3_provinces.json (estratte da CL_ITTER107).
 """
 from __future__ import annotations
+
+import functools
+import json
+import os
 
 DEFAULT_REGION = "ITF1"  # Abruzzo (pilota)
 
@@ -30,38 +31,37 @@ REGIONS = {
     "ITC4": {"nome": "Lombardia", "latlon": (45.46, 9.19), "airports": ["LIMC", "LIML", "LIME"],
              "trends_kw": "Lombardia", "bdi": "Lombardia",
              "wiki": {"it": "Lombardia", "en": "Lombardy", "de": "Lombardei", "nl": "Lombardije"}},
-    "ITH1": {"nome": "Provincia Autonoma di Bolzano", "latlon": (46.50, 11.35), "airports": ["LIPB"],
+    "ITD1": {"nome": "Provincia Autonoma di Bolzano", "latlon": (46.50, 11.35), "airports": ["LIPB"],
              "trends_kw": "Alto Adige", "bdi": "Trentino Alto Adige",
              "wiki": {"it": "Sudtirolo", "en": "South Tyrol", "de": "Südtirol", "nl": "Zuid-Tirol"}},
-    "ITH2": {"nome": "Provincia Autonoma di Trento", "latlon": (46.07, 11.12), "airports": [],
+    "ITD2": {"nome": "Provincia Autonoma di Trento", "latlon": (46.07, 11.12), "airports": [],
              "trends_kw": "Trentino", "bdi": "Trentino Alto Adige",
              "wiki": {"it": "Trentino", "en": "Trentino", "de": "Trentino", "nl": "Trentino"}},
-    "ITH3": {"nome": "Veneto", "latlon": (45.44, 12.32), "airports": ["LIPZ", "LIPX", "LIPH"],
+    "ITD3": {"nome": "Veneto", "latlon": (45.44, 12.32), "airports": ["LIPZ", "LIPX", "LIPH"],
              "trends_kw": "Veneto", "bdi": "Veneto",
              "wiki": {"it": "Veneto", "en": "Veneto", "de": "Venetien", "nl": "Veneto"}},
-    "ITH4": {"nome": "Friuli-Venezia Giulia", "latlon": (45.65, 13.78), "airports": ["LIPQ"],
+    "ITD4": {"nome": "Friuli-Venezia Giulia", "latlon": (45.65, 13.78), "airports": ["LIPQ"],
              "trends_kw": "Friuli Venezia Giulia", "bdi": "Friuli Venezia Giulia",
              "wiki": {"it": "Friuli-Venezia Giulia", "en": "Friuli-Venezia Giulia",
                       "de": "Friaul-Julisch Venetien", "nl": "Friuli-Venezia Giulia"}},
-    "ITH5": {"nome": "Emilia-Romagna", "latlon": (44.49, 11.34), "airports": ["LIPE", "LIPR", "LIMP"],
+    "ITD5": {"nome": "Emilia-Romagna", "latlon": (44.49, 11.34), "airports": ["LIPE", "LIPR", "LIMP"],
              "trends_kw": "Emilia Romagna", "bdi": "Emilia Romagna",
              "wiki": {"it": "Emilia-Romagna", "en": "Emilia-Romagna", "de": "Emilia-Romagna", "nl": "Emilia-Romagna"}},
-    "ITI1": {"nome": "Toscana", "latlon": (43.77, 11.26), "airports": ["LIRP", "LIRQ"],
+    "ITE1": {"nome": "Toscana", "latlon": (43.77, 11.26), "airports": ["LIRP", "LIRQ"],
              "trends_kw": "Toscana", "bdi": "Toscana",
              "wiki": {"it": "Toscana", "en": "Tuscany", "de": "Toskana", "nl": "Toscane"}},
-    "ITI2": {"nome": "Umbria", "latlon": (43.11, 12.39), "airports": ["LIRZ"],
+    "ITE2": {"nome": "Umbria", "latlon": (43.11, 12.39), "airports": ["LIRZ"],
              "trends_kw": "Umbria", "bdi": "Umbria",
              "wiki": {"it": "Umbria", "en": "Umbria", "de": "Umbrien", "nl": "Umbrië"}},
-    "ITI3": {"nome": "Marche", "latlon": (43.62, 13.51), "airports": ["LIPY"],
+    "ITE3": {"nome": "Marche", "latlon": (43.62, 13.51), "airports": ["LIPY"],
              "trends_kw": "Marche", "bdi": "Marche",
              "wiki": {"it": "Marche", "en": "Marche", "de": "Marken", "nl": "Marche"}},
-    "ITI4": {"nome": "Lazio", "latlon": (41.90, 12.50), "airports": ["LIRF", "LIRA"],
+    "ITE4": {"nome": "Lazio", "latlon": (41.90, 12.50), "airports": ["LIRF", "LIRA"],
              "trends_kw": "Lazio", "bdi": "Lazio",
              "wiki": {"it": "Lazio", "en": "Lazio", "de": "Latium", "nl": "Lazio"}},
     "ITF1": {"nome": "Abruzzo", "latlon": (42.35, 13.40), "airports": ["LIBP"],
              "trends_kw": "Abruzzo", "bdi": "Abruzzo",
-             "wiki": {"it": "Abruzzo", "en": "Abruzzo", "de": "Abruzzen", "nl": "Abruzzen"},
-             "province": {"ITF11": "L'Aquila", "ITF12": "Teramo", "ITF13": "Pescara", "ITF14": "Chieti"}},
+             "wiki": {"it": "Abruzzo", "en": "Abruzzo", "de": "Abruzzen", "nl": "Abruzzen"}},
     "ITF2": {"nome": "Molise", "latlon": (41.56, 14.66), "airports": [],
              "trends_kw": "Molise", "bdi": "Molise",
              "wiki": {"it": "Molise", "en": "Molise", "de": "Molise", "nl": "Molise"}},
@@ -85,14 +85,12 @@ REGIONS = {
              "wiki": {"it": "Sardegna", "en": "Sardinia", "de": "Sardinien", "nl": "Sardinië"}},
 }
 
-
-# Nome regione come appare nel geojson (openpolis) → per agganciare la mappa d'Italia.
-# Bolzano e Trento condividono il poligono "Trentino-Alto Adige".
+# Nome regione nel geojson (openpolis) → per la mappa d'Italia.
 GEO_NAME = {
     "ITC1": "Piemonte", "ITC2": "Valle d'Aosta/Vallée d'Aoste", "ITC3": "Liguria", "ITC4": "Lombardia",
-    "ITH1": "Trentino-Alto Adige/Südtirol", "ITH2": "Trentino-Alto Adige/Südtirol", "ITH3": "Veneto",
-    "ITH4": "Friuli-Venezia Giulia", "ITH5": "Emilia-Romagna", "ITI1": "Toscana", "ITI2": "Umbria",
-    "ITI3": "Marche", "ITI4": "Lazio", "ITF1": "Abruzzo", "ITF2": "Molise", "ITF3": "Campania",
+    "ITD1": "Trentino-Alto Adige/Südtirol", "ITD2": "Trentino-Alto Adige/Südtirol", "ITD3": "Veneto",
+    "ITD4": "Friuli-Venezia Giulia", "ITD5": "Emilia-Romagna", "ITE1": "Toscana", "ITE2": "Umbria",
+    "ITE3": "Marche", "ITE4": "Lazio", "ITF1": "Abruzzo", "ITF2": "Molise", "ITF3": "Campania",
     "ITF4": "Puglia", "ITF5": "Basilicata", "ITF6": "Calabria", "ITG1": "Sicilia", "ITG2": "Sardegna",
 }
 
@@ -102,11 +100,22 @@ def code_for_geo(reg_name: str | None):
     return next((c for c, n in GEO_NAME.items() if n == reg_name), None)
 
 
+@functools.lru_cache(maxsize=1)
+def _prov_map() -> dict:
+    p = "assets/nuts3_provinces.json"
+    return json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}
+
+
+def provinces(code: str | None = None) -> dict:
+    """{NUTS3: nome} delle province della regione (da CL_ITTER107). {} se ignota."""
+    return _prov_map().get(code or DEFAULT_REGION, {})
+
+
 def region(code: str | None = None) -> dict:
-    """Restituisce il dict della regione (default Abruzzo). Aggiunge sempre 'code'."""
-    code = code or DEFAULT_REGION
-    r = dict(REGIONS.get(code, REGIONS[DEFAULT_REGION]))
-    r["code"] = code if code in REGIONS else DEFAULT_REGION
+    """Dict della regione (default Abruzzo). Aggiunge sempre 'code'."""
+    code = code if code in REGIONS else DEFAULT_REGION
+    r = dict(REGIONS[code])
+    r["code"] = code
     return r
 
 

@@ -519,14 +519,21 @@ def page_architettura():
 
 
 def page_province():
+    code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    nome = L.RG.region(code)["nome"]
     st.header(":material/place: Presenze per provincia")
-    st.caption("Distribuzione territoriale delle presenze in Abruzzo — dati ISTAT, ultimi 12 mesi.")
+    st.caption(f"Distribuzione territoriale delle presenze in **{nome}** — dati ISTAT (multi-regione), ultimi 12 mesi.")
     try:
-        P = L.compute_provinces()
+        P = L.compute_provinces(code)
     except Exception as e:  # noqa: BLE001
         st.error(f"Dati province non disponibili: {type(e).__name__}: {e}")
         return
-    st.plotly_chart(L.chart_province_map(P["rows"]), use_container_width=True)
+    if not P["rows"]:
+        st.warning(f"ISTAT non ha restituito dati provinciali per {nome} (può essere instabilità ISTAT: riprova).")
+        return
+    fig_map = L.chart_province_map(P["rows"])
+    if fig_map is not None:
+        st.plotly_chart(fig_map, use_container_width=True)
     st.subheader("Riepilogo per provincia")
     tbl = pd.DataFrame([{"Provincia": r["provincia"], "Presenze": round(r["presenze"]),
                          "Stranieri": round(r["stranieri"]),

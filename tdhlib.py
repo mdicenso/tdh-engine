@@ -1220,17 +1220,25 @@ def tdh_architecture() -> dict:
 # VISTE TERRITORIALI — per Provincia e per tipologia di Struttura (dati ISTAT reali)
 # ════════════════════════════════════════════════════════════════════════════
 @st.cache_data(show_spinner="Carico le presenze per provincia (ISTAT)…")
-def compute_provinces() -> dict:
-    from tourism_wedge.real_sources import fetch_istat_presences, ISTAT_PROVINCES
+def compute_provinces(code: str | None = None) -> dict:
+    """Presenze per provincia (NUTS3) della regione richiesta. Multi-regione: le
+    province vengono dal registro; le serie che ISTAT non espone vengono saltate."""
+    from tourism_wedge.real_sources import fetch_istat_presences
+    code = code or RG.DEFAULT_REGION
     rows, wide = [], None
-    for area, nome in ISTAT_PROVINCES.items():
-        tot = fetch_istat_presences(area=area, country="WORLD").rename(columns={"presences": nome})
-        est = fetch_istat_presences(area=area, country="WRL_X_ITA")
+    for area, nome in RG.provinces(code).items():
+        try:
+            tot = fetch_istat_presences(area=area, country="WORLD").rename(columns={"presences": nome})
+            est = fetch_istat_presences(area=area, country="WRL_X_ITA")
+        except Exception:  # noqa: BLE001 — provincia non esposta/abolita: salto
+            continue
         wide = tot if wide is None else wide.merge(tot, on="date", how="outer")
         t12 = float(tot.sort_values("date").tail(12)[nome].sum())
         e12 = float(est.sort_values("date").tail(12)["presences"].sum())
         rows.append({"provincia": nome, "presenze": t12, "stranieri": e12,
                      "quota_stranieri": (e12 / t12 * 100 if t12 else 0.0)})
+    if wide is None:
+        return {"rows": [], "panel": pd.DataFrame({"date": []})}
     return {"rows": sorted(rows, key=lambda r: -r["presenze"]), "panel": wide.sort_values("date")}
 
 
@@ -1244,8 +1252,16 @@ def compute_structure() -> dict:
             "extra": float(oth.tail(12)["extra"].sum()), "panel": panel}
 
 
-def chart_province_map(rows: list[dict]) -> go.Figure:
-    gj = json.load(open("assets/abruzzo_provinces.geojson", encoding="utf-8"))
+@st.cache_data(show_spinner=False)
+def _italy_provinces_geojson():
+    p = "assets/italy_provinces.geojson"
+    return json.load(open(p, encoding="utf-8")) if os.path.exists(p) else None
+
+
+def chart_province_map(rows: list[dict]) -> go.Figure | None:
+    gj = _italy_provinces_geojson()
+    if gj is None or not rows:
+        return None
     names = [r["provincia"] for r in rows]
     fig = go.Figure(go.Choropleth(
         geojson=gj, featureidkey="properties.prov_name", locations=names, name="presenze",
