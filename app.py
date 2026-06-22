@@ -203,10 +203,12 @@ def page_ranking():
         st.subheader("Valore economico per mercato")
         st.caption("Spesa media per viaggiatore (Banca d'Italia, 2024) — peso economico reale usato nel ranking.")
         st.plotly_chart(L.chart_value_bar(summary), use_container_width=True)
-        fig_conn = L.chart_connectivity()
+        _rc = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+        fig_conn = L.chart_connectivity(_rc)
         if fig_conn is not None:
-            st.subheader("Connettività aerea diretta su Pescara")
-            st.caption("Passeggeri 2024 (Eurostat avia_par) — fattibilità reale nel ranking. 0 = nessun volo diretto.")
+            st.subheader(f"Connettività aerea diretta — {L.RG.region(_rc)['nome']}")
+            st.caption("Passeggeri 2024 verso gli aeroporti della regione (Eurostat avia_par) — "
+                       "fattibilità reale nel ranking. 0 = nessun volo diretto da quel mercato.")
             st.plotly_chart(fig_conn, use_container_width=True)
 
         st.subheader(":material/thermostat: Salute dei mercati e accessibilità — contesto decisionale")

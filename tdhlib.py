@@ -27,6 +27,7 @@ from tourism_wedge.engine_aggregate import (assemble_real, fit_aggregate,
 from tourism_wedge import candidate_sources as CS
 from tourism_wedge import real_sources as RS
 import regions as RG
+import econ_sources as ECS
 
 MODEL = "claude-sonnet-4-6"
 MODE_SYN = "🧪 Sintetico (collaudo)"
@@ -255,10 +256,20 @@ def compute_real(region_code: str | None = None) -> dict:
 
 
 def region_feas_weights(code: str) -> dict:
-    """Pesi di fattibilità (voli) per regione. Per ora solo Abruzzo (voli Pescara reali);
-    le altre regioni usano la fattibilità statica di default finché non aggiungiamo i voli
-    per i loro aeroporti (vedi registro: airports per regione)."""
-    return feas_weights() if code == RG.DEFAULT_REGION else {}
+    """Pesi di fattibilità (voli) per regione: connettività reale Eurostat sugli AEROPORTI
+    della regione (registro). 0.4 se nessun volo diretto da quel mercato, fino a 1.0 per il
+    mercato più connesso. Regioni senza aeroporti commerciali → {} (fattibilità di default)."""
+    airports = RG.region(code)["airports"]
+    if not airports:
+        return {}
+    try:
+        conn = ECS.fetch_region_connectivity(airports, cache_name=f"conn_{code}.csv")
+    except Exception:  # noqa: BLE001 — Eurostat non raggiungibile: fattibilità di default
+        return {}
+    if not conn:
+        return {}
+    mx = max(conn.values()) or 1
+    return {mk.code: round(0.4 + 0.6 * min(conn.get(mk.code, 0) / mx, 1.0), 3) for mk in DEFAULT_MARKETS}
 
 
 # --- Banca d'Italia: valore economico reale (spesa €/viaggiatore per mercato) ---
@@ -374,16 +385,30 @@ def feas_weights() -> dict:
     return {k: round(0.4 + 0.6 * min(v / mx, 1.0), 3) for k, v in pax.items()}
 
 
-def chart_connectivity():
-    pax = pescara_connectivity()
+@st.cache_data(show_spinner=False)
+def region_connectivity(code: str | None = None) -> dict:
+    """Connettività aerea per mercato verso gli aeroporti della regione (Eurostat avia)."""
+    code = code or RG.DEFAULT_REGION
+    airports = RG.region(code)["airports"]
+    if not airports:
+        return {}
+    try:
+        return ECS.fetch_region_connectivity(airports, cache_name=f"conn_{code}.csv")
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def chart_connectivity(code: str | None = None):
+    code = code or RG.DEFAULT_REGION
+    pax = region_connectivity(code)
     if not pax:
         return None
     names = {mk.code: mk.name for mk in DEFAULT_MARKETS}
-    items = sorted(pax.items(), key=lambda x: x[1])
+    items = sorted(((mk.code, pax.get(mk.code, 0)) for mk in DEFAULT_MARKETS), key=lambda x: x[1])
     fig = go.Figure(go.Bar(x=[v for _, v in items], y=[names.get(k, k) for k, _ in items], orientation="h",
                            marker_color=["#16a34a" if v > 0 else "#cbd5e1" for _, v in items],
                            hovertemplate="<b>%{y}</b><br>%{x:,.0f} passeggeri 2024<extra></extra>"))
-    fig.update_xaxes(title="passeggeri diretti su Pescara (2024)")
+    fig.update_xaxes(title=f"passeggeri diretti verso {RG.region(code)['nome']} (2024)")
     return _layout(fig, h=260)
 
 

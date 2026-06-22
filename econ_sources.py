@@ -86,6 +86,51 @@ def fetch_pescara_flights_monthly(start: str = "2008-01", cache_dir: str = ".cac
     return df
 
 
+# mercato del motore <- codice paese Eurostat (avia usa UK per il Regno Unito)
+_AVIA_GEO2MK = {"DE": "DE", "AT": "AT", "UK": "GB", "CH": "CH", "US": "US", "NL": "NL"}
+
+
+def fetch_region_connectivity(airports: list, year: int = 2024, cache_dir: str = ".cache",
+                              cache_name: str | None = None, refresh: bool = False) -> dict:
+    """Passeggeri annuali per PAESE di origine verso gli aeroporti della regione (Eurostat avia_par_it).
+
+    airports: lista ICAO (es. ['LIRF','LIRA'] per il Lazio). Ritorna {mercato: pax}.
+    Aggrega tutte le rotte (entrambe le direzioni) che coinvolgono quegli aeroporti.
+    """
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, cache_name or "region_conn.csv")
+    if os.path.exists(cache_path) and not refresh:
+        df = pd.read_csv(cache_path)
+        return {str(r["code"]): int(r["pax"]) for _, r in df.iterrows()}
+    apset = set(airports or [])
+    if not apset:
+        return {}
+    url = (f"{EUROSTAT}/avia_par_it?format=JSON&lang=EN&freq=A&tra_meas=PAS_CRD&unit=PAS&time={year}")
+    d = json.loads(urllib.request.urlopen(urllib.request.Request(url, headers=_UA), timeout=90).read())
+    inv = {v: k for k, v in d["dimension"]["airp_pr"]["category"]["index"].items()}
+    bycountry: dict[str, float] = {}
+    for flat, val in d["value"].items():
+        code = inv.get(int(flat))  # con freq/tra_meas/unit/time singoli, flat = pos di airp_pr
+        if not code:
+            continue
+        parts = code.split("_")  # CC1_AP1_CC2_AP2
+        if len(parts) != 4:
+            continue
+        cc1, ap1, cc2, ap2 = parts
+        if ap1 in apset:
+            partner = cc2
+        elif ap2 in apset:
+            partner = cc1
+        else:
+            continue
+        mk = _AVIA_GEO2MK.get(partner)
+        if mk:
+            bycountry[mk] = bycountry.get(mk, 0.0) + float(val)
+    out = {mk: int(p) for mk, p in bycountry.items()}
+    pd.DataFrame([{"code": k, "pax": v} for k, v in out.items()]).to_csv(cache_path, index=False)
+    return out
+
+
 def build_confidence_panel(start: str = "2008-01", refresh: bool = False) -> pd.DataFrame:
     """Pannello LONG della fiducia per i mercati coperti: date, mercato, confidence."""
     blocks = []
