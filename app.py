@@ -224,16 +224,21 @@ def page_ranking():
                 st.dataframe(hdf, hide_index=True, use_container_width=True)
                 st.caption("DE/AT/NL (Eurostat). Saldo negativo = pessimismo; conta soprattutto il trend.")
         with hc2:
-            fig_fl = L.chart_flights_monthly()
+            _rc2 = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+            fig_fl = L.chart_flights_monthly() if _rc2 == L.RG.DEFAULT_REGION else None
             if fig_fl is not None:
                 st.markdown("**Accessibilità aerea nel tempo** · Pescara")
                 st.plotly_chart(fig_fl, use_container_width=True)
+            else:
+                st.markdown("**Accessibilità per mercato** (vedi grafico sopra)")
+                st.caption("La serie *mensile* dell'aeroporto è disponibile per la regione pilota (Pescara).")
 
 
 def page_forecast():
     if is_real:
         R = ctx["R"]; agg = R["agg"]
-        st.header(":material/trending_up: Forecast presenze straniere totali")
+        _nome = L.RG.region(ctx.get("region", L.RG.DEFAULT_REGION))["nome"]
+        st.header(f":material/trending_up: Forecast presenze straniere — {_nome}")
         m1, m2, m3 = st.columns(3)
         m1.metric("Lag segnale", f"{agg['lag']} mesi")
         m2.metric("Batte la naive?", "Sì" if agg["beats_naive"] else "No")
@@ -811,6 +816,7 @@ pg = st.navigation({
     ],
 })
 if pg.title != "Home":
-    L.hero("Allocazione del budget promozionale tra i mercati esteri",
+    _rc = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    L.hero(f"<b>📍 {L.RG.region(_rc)['nome']}</b> · allocazione del budget promozionale sui mercati esteri",
            "Dati reali" if is_real else "Dati sintetici")
 pg.run()
