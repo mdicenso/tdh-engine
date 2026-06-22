@@ -567,12 +567,14 @@ def page_province():
 
 
 def page_struttura():
+    code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    nome = L.RG.region(code)["nome"]
     st.header(":material/hotel: Presenze per tipologia di struttura")
-    st.caption("Alberghiero vs extra-alberghiero — dati ISTAT, ultimi 12 mesi.")
+    st.caption(f"Alberghiero vs extra-alberghiero in **{nome}** — dati ISTAT, ultimi 12 mesi.")
     try:
-        S = L.compute_structure()
+        S = L.compute_structure(code)
     except Exception as e:  # noqa: BLE001
-        st.error(f"Dati struttura non disponibili: {type(e).__name__}: {e}")
+        st.error(f"Dati struttura non disponibili per {nome}: {type(e).__name__} (ISTAT instabile: riprova).")
         return
     tot = S["alberghiero"] + S["extra"]
     c1, c2, c3 = st.columns(3)
@@ -586,20 +588,22 @@ def page_struttura():
 
 
 def page_occupazione():
+    code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    nome = L.RG.region(code)["nome"]
     st.header(":material/king_bed: Tasso di occupazione (reale)")
-    st.caption("Indice di utilizzazione lorda dei posti letto = presenze ÷ (posti letto × giorni del mese). Dati ISTAT.")
+    st.caption(f"Utilizzazione lorda dei posti letto in **{nome}** = presenze ÷ (posti letto × giorni del mese). Dati ISTAT.")
     try:
-        O = L.compute_occupancy()
+        O = L.compute_occupancy(code)
     except Exception as e:  # noqa: BLE001
         st.error(f"Dati occupazione non disponibili: {type(e).__name__}: {e}")
         return
     if not O["available"]:
-        st.info("⏳ In attesa dei dati di **capacità ricettiva** ISTAT (posti letto): il download è in corso "
-                "(ISTAT è temporaneamente lento). Ricarica tra qualche minuto, o premi **:material/sync: Dati** nella barra laterale.")
+        st.info(f"⏳ Dati di **capacità ricettiva** ISTAT per {nome} non ancora disponibili (ISTAT lento/instabile). "
+                "Ricarica tra poco, o premi **:material/sync: Dati** nella barra laterale.")
         return
     c1, c2, c3 = st.columns(3)
     c1.metric("Occupazione media (12 mesi)", f"{O['occ_media12']:.0f}%")
-    c2.metric("Posti letto (Abruzzo)", f"{O['letti_ultimo']:,}".replace(",", "."))
+    c2.metric(f"Posti letto ({nome})", f"{O['letti_ultimo']:,}".replace(",", "."))
     c3.metric("Anno capacità", O["anno_letti"])
     yr = st.session_state.get("yr_range", (2019, 2024))
     pan = L.filter_years(O["panel"], yr)

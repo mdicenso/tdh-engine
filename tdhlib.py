@@ -1243,10 +1243,11 @@ def compute_provinces(code: str | None = None) -> dict:
 
 
 @st.cache_data(show_spinner="Carico le presenze per struttura (ISTAT)…")
-def compute_structure() -> dict:
+def compute_structure(code: str | None = None) -> dict:
     from tourism_wedge.real_sources import fetch_istat_presences
-    hot = fetch_istat_presences(area="ITF1", accom="HOTELLIKE", country="WORLD").rename(columns={"presences": "alberghiero"})
-    oth = fetch_istat_presences(area="ITF1", accom="OTHER", country="WORLD").rename(columns={"presences": "extra"})
+    code = code or RG.DEFAULT_REGION
+    hot = fetch_istat_presences(area=code, accom="HOTELLIKE", country="WORLD").rename(columns={"presences": "alberghiero"})
+    oth = fetch_istat_presences(area=code, accom="OTHER", country="WORLD").rename(columns={"presences": "extra"})
     panel = hot.merge(oth, on="date", how="outer").sort_values("date")
     return {"alberghiero": float(hot.tail(12)["alberghiero"].sum()),
             "extra": float(oth.tail(12)["extra"].sum()), "panel": panel}
@@ -1321,19 +1322,18 @@ def chart_structure_trend(panel) -> go.Figure:
 # presenze totali Abruzzo = somma delle 4 province (WORLD); posti letto: dataset Capacità.
 # ════════════════════════════════════════════════════════════════════════════
 @st.cache_data(show_spinner="Calcolo l'occupazione (ISTAT)…")
-def compute_occupancy() -> dict:
-    beds_path = ".cache/istat_capacity_letti_ITF1.csv"
-    if not os.path.exists(beds_path):
+def compute_occupancy(code: str | None = None) -> dict:
+    from tourism_wedge.real_sources import fetch_istat_presences, fetch_istat_capacity
+    code = code or RG.DEFAULT_REGION
+    try:
+        beds = fetch_istat_capacity(area=code)
+        tot = fetch_istat_presences(area=code, country="WORLD")
+    except Exception:  # noqa: BLE001 — ISTAT instabile/serie assente
         return {"available": False}
-    beds = pd.read_csv(beds_path)
     beds_map = dict(zip(beds["anno"].astype(int), beds["letti"].astype(float)))
-    if not beds_map:
+    if not beds_map or tot.empty:
         return {"available": False}
-    P = compute_provinces()
-    panel = P["panel"].copy()
-    prov_cols = [c for c in panel.columns if c != "date"]
-    panel["presenze"] = panel[prov_cols].sum(axis=1)
-    panel = panel[["date", "presenze"]].dropna().copy()
+    panel = tot.rename(columns={"presences": "presenze"})[["date", "presenze"]].dropna().copy()
     last_year = max(beds_map)
     panel["letti"] = panel["date"].dt.year.map(lambda y: beds_map.get(int(y), beds_map[last_year]))
     panel["giorni"] = panel["date"].dt.daysinmonth
