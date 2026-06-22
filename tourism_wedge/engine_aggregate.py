@@ -129,13 +129,20 @@ def fit_aggregate(df: pd.DataFrame, markets: list[Market] = DEFAULT_MARKETS,
     weights = {mk.code: float(wi) for mk, wi in zip(markets, w)}
     d["basket"] = sum(weights[mk.code] * d[f"search_{mk.code}"] for mk in markets)
 
-    # lag del basket sul target (deseasonalizzato), poi feature laggata
+    # se Google Trends non è disponibile per la regione (basket vuoto/scarso),
+    # ripiego su un modello SOLO stagionale (niente segnale anticipatore).
     tr = d.dropna(subset=["presences"]).reset_index(drop=True)
-    lag, _ = lead_corr(tr["presences"], tr["basket"], tr["month"])
-    d["basket_lag"] = d["basket"].shift(lag)
-
-    fit_df = d.dropna(subset=["presences", "basket_lag"]).reset_index(drop=True)
-    formula = "presences ~ basket_lag + C(month) + t + covid"
+    has_basket = tr["basket"].notna().sum() >= 24
+    if has_basket:
+        lag, _ = lead_corr(tr["presences"], tr["basket"], tr["month"])
+        d["basket_lag"] = d["basket"].shift(lag)
+        fit_df = d.dropna(subset=["presences", "basket_lag"]).reset_index(drop=True)
+        formula = "presences ~ basket_lag + C(month) + t + covid"
+    else:
+        lag = 1
+        d["basket_lag"] = np.nan
+        fit_df = d.dropna(subset=["presences"]).reset_index(drop=True)
+        formula = "presences ~ C(month) + t + covid"
 
     train, test = fit_df.iloc[:-holdout], fit_df.iloc[-holdout:]
     model = smf.ols(formula, data=train).fit()
@@ -152,7 +159,7 @@ def fit_aggregate(df: pd.DataFrame, markets: list[Market] = DEFAULT_MARKETS,
 
     full_model = smf.ols(formula, data=fit_df).fit()
     # tengo anche le righe future (presences NaN) per il forecast nel lead-time
-    d["basket_lag"] = d["basket"].shift(lag)
+    d["basket_lag"] = d["basket"].shift(lag) if has_basket else np.nan
     return AggregateFit(full_model, d, lag, beats, mae_model, mae_naive, mape_model, weights)
 
 
@@ -176,7 +183,9 @@ def forecast_aggregate(fit: AggregateFit) -> AggregateForecast:
     rows = []
     for h, dt in enumerate(fut_dates, start=1):
         src = d.loc[d["date"] == dt - pd.DateOffset(months=lag), "basket"]
-        basket_lag = float(src.iloc[0]) if len(src) and pd.notna(src.iloc[0]) else float(d["basket"].dropna().iloc[-1])
+        bk = d["basket"].dropna()
+        basket_lag = (float(src.iloc[0]) if len(src) and pd.notna(src.iloc[0])
+                      else (float(bk.iloc[-1]) if len(bk) else 0.0))
         rows.append({"month": dt.month, "t": last_t + h, "basket_lag": basket_lag, "covid": 0})
     fut = pd.DataFrame(rows)
     pr = fit.model.get_prediction(fut).summary_frame(alpha=0.20)  # PI 80%
