@@ -21,28 +21,34 @@ import pandas as pd
 import statsmodels.formula.api as smf
 
 from .data import Market, DEFAULT_MARKETS
-from .real_sources import (fetch_presences_foreign_monthly,
+from .real_sources import (fetch_presences_foreign_monthly, fetch_istat_presences,
                            fetch_search_monthly, fetch_fx_monthly)
 
 
 # --------------------------------------------------------------------------
 def assemble_real(start: str = "2019-01", end: str | None = None,
-                  markets: list[Market] = DEFAULT_MARKETS) -> pd.DataFrame:
-    """Costruisce il pannello reale mensile.
+                  markets: list[Market] = DEFAULT_MARKETS,
+                  region_code: str = "ITF1", trends_kw: str = "Abruzzo") -> pd.DataFrame:
+    """Costruisce il pannello reale mensile PER REGIONE.
 
-    Colonne: date, presences (stranieri totali Abruzzo, ISTAT),
-             search_<code> (Google Trends per paese), fx_<code> (ECB per valuta).
-    Le righe oltre l'ultimo mese ISTAT hanno presences=NaN ma search/fx osservati
-    (servono per il forecast entro il lead-time).
+    Colonne: date, presences (stranieri della regione, ISTAT),
+             search_<code> (Google Trends per paese, keyword = nome regione),
+             fx_<code> (ECB per valuta).
+    Tollerante ai 429 di Trends: se un mercato non torna, la sua colonna resta NaN.
     """
-    target = fetch_presences_foreign_monthly(start=start, end=end)  # date, presences
-    # spina temporale: dall'inizio fino all'ultimo mese di search disponibile
+    # target: presenze straniere della REGIONE selezionata (NUTS2, con retry)
+    target = fetch_istat_presences(area=region_code, data_type="NI", accom="ALL",
+                                   country="WRL_X_ITA", start=start, end=end)[["date", "presences"]]
     smax = target["date"].max()
     cols = {}
     for mk in markets:
-        s = fetch_search_monthly(mk.code, start=start, end=end)
+        try:
+            s = fetch_search_monthly(mk.code, keyword=trends_kw, start=start, end=end)
+        except Exception:  # noqa: BLE001 — Google Trends 429/instabile: colonna NaN
+            s = pd.DataFrame({"date": pd.Series(dtype="datetime64[ns]"), "search": pd.Series(dtype=float)})
         cols[mk.code] = s
-        smax = max(smax, s["date"].max())
+        if len(s):
+            smax = max(smax, s["date"].max())
     spine = pd.DataFrame({"date": pd.date_range(f"{start}-01", smax, freq="MS")})
 
     df = spine.merge(target, on="date", how="left")
@@ -200,6 +206,8 @@ def rank_markets(df: pd.DataFrame, markets: list[Market] = DEFAULT_MARKETS,
         valore = float(vov.get(mk.code, mk.spend_per_visitor))
         scode = f"search_{mk.code}"
         lag, corr = lead_corr(tr["presences"], tr[scode], tr["month"])
+        if not np.isfinite(corr):  # mercato senza Trends per la regione: forza 0
+            corr = 0.0
 
         s = d[scode].dropna()
         recent = s.tail(3).mean()

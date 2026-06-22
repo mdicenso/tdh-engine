@@ -232,13 +232,15 @@ def compute_synthetic() -> tuple[list[dict], dict]:
     return portfolio(cards), rows
 
 
-@st.cache_data(show_spinner="Carico i dati reali (ECB · ISTAT · Google Trends)…")
-def compute_real() -> dict:
-    df = assemble_real(start="2019-01")
+@st.cache_data(show_spinner="Carico il motore per la regione (ECB · ISTAT · Trends)…")
+def compute_real(region_code: str | None = None) -> dict:
+    region_code = region_code or RG.DEFAULT_REGION
+    info = RG.region(region_code)
+    df = assemble_real(start="2019-01", region_code=region_code, trends_kw=info["trends_kw"])
     fit = fit_aggregate(df)
     fc = forecast_aggregate(fit)
     ranked = rank_markets(df, value_override=bdi_spend_per_market() or None,
-                          feas_override=feas_weights() or None)
+                          feas_override=region_feas_weights(region_code) or None)
     obs = df.dropna(subset=["presences"])[["date", "presences"]].reset_index(drop=True)
     return {
         "ranked": ranked,
@@ -250,6 +252,13 @@ def compute_real() -> dict:
                      "lastyear": [None if pd.isna(x) else float(x) for x in fc.lastyear]},
         "history": obs, "panel": df,
     }
+
+
+def region_feas_weights(code: str) -> dict:
+    """Pesi di fattibilità (voli) per regione. Per ora solo Abruzzo (voli Pescara reali);
+    le altre regioni usano la fattibilità statica di default finché non aggiungiamo i voli
+    per i loro aeroporti (vedi registro: airports per regione)."""
+    return feas_weights() if code == RG.DEFAULT_REGION else {}
 
 
 # --- Banca d'Italia: valore economico reale (spesa €/viaggiatore per mercato) ---
@@ -494,14 +503,15 @@ def chart_wiki(yr_range=None) -> go.Figure:
     return _layout(fig, h=360)
 
 
-def get_context() -> dict:
-    """Ritorna il contesto della modalità corrente (dati + ctx per i tool)."""
+def get_context(region_code: str | None = None) -> dict:
+    """Ritorna il contesto della modalità corrente per la REGIONE attiva (dati + ctx per i tool)."""
+    region_code = region_code or st.session_state.get("region_code", RG.DEFAULT_REGION)
     mode = st.session_state.get("mode", MODE_REAL)
     if MODE_REAL in mode or "Reale" in mode:
-        R = compute_real()
-        return {"mode": "real", "R": R}
+        R = compute_real(region_code)
+        return {"mode": "real", "R": R, "region": region_code}
     ranked, rows = compute_synthetic()
-    return {"mode": "synthetic", "ranked": ranked, "rows": rows}
+    return {"mode": "synthetic", "ranked": ranked, "rows": rows, "region": region_code}
 
 
 def markets_summary(ctx: dict) -> list[dict]:
