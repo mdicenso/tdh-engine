@@ -45,8 +45,10 @@ if not L.check_access():
 with st.sidebar:
     st.markdown("### :material/landscape: Turism Data Hub")
     st.caption("Strumento ad uso interno · scala nazionale · Indra")
-    _rc = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
-    st.caption(f"📍 Regione attiva: **{L.RG.region(_rc)['nome']}** — cambiala nella pagina **Italia**")
+    _regn = L.RG.region_names()
+    st.selectbox("📍 Regione", list(_regn), format_func=lambda c: _regn[c], key="region_code",
+                 help="Regione attiva su tutte le pagine multi-regione. La puoi scegliere anche "
+                      "cliccando la mappa nella pagina «Italia».")
     st.radio("Modalità dati", [L.MODE_REAL, L.MODE_SYN], key="mode", index=0,
              help="Riguarda il motore dei mercati (pilastro «Cosa fare»). "
                   "Le viste descrittive usano sempre i dati reali ISTAT/BdI.")
@@ -134,10 +136,8 @@ def page_italia():
     if sel and sel in L.RG.REGIONS and sel != code:
         st.session_state["_map_region"] = sel
         st.rerun()
-    _regn = L.RG.region_names()
-    st.selectbox("Regione", list(_regn), format_func=lambda c: _regn[c], key="region_code")
-    st.success(f"Regione attiva: **{L.RG.region(code)['nome']}** ({code}) — vale per le pagine "
-               "multi-regione (Regione, Per provincia, Occupazione, Struttura, Confronto).")
+    st.success(f"Regione attiva: **{L.RG.region(code)['nome']}** ({code}) — clicca un'altra regione "
+               "sulla mappa o usa il **menu 📍 Regione** nella barra laterale (vale per tutte le pagine).")
 
 
 def page_regione():
