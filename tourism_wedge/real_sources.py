@@ -280,17 +280,19 @@ WIKI_ARTICLE = {"de": "Abruzzen", "en": "Abruzzo", "nl": "Abruzzen", "it": "Abru
 _WIKI_UA = {"User-Agent": "TDH-Engine/1.0 (Regione Abruzzo prototype; contact marco.dicenso@gmail.com)"}
 
 
-def fetch_wikipedia_monthly(lang: str, start: str = "20190101", end: str | None = None,
-                            cache_dir: str = ".cache", refresh: bool = False) -> pd.DataFrame:
-    """Pageviews mensili (agent=user) dell'articolo regionale per lingua.
+def fetch_wikipedia_monthly(lang: str, article: str | None = None, start: str = "20190101",
+                            end: str | None = None, cache_dir: str = ".cache",
+                            cache_name: str | None = None, refresh: bool = False) -> pd.DataFrame:
+    """Pageviews mensili (agent=user) di un articolo Wikipedia per lingua.
 
-    lang: de | en | nl | it. Ritorna DataFrame con colonne: date, views. Con cache.
+    lang: de | en | nl | it. article: titolo (default = articolo Abruzzo).
+    cache_name: nome file cache (default wiki_<lang>.csv). Ritorna date, views.
     """
     os.makedirs(cache_dir, exist_ok=True)
-    cache_path = os.path.join(cache_dir, f"wiki_{lang}.csv")
+    cache_path = os.path.join(cache_dir, cache_name or f"wiki_{lang}.csv")
     if os.path.exists(cache_path) and not refresh:
         return pd.read_csv(cache_path, parse_dates=["date"])
-    proj, art = WIKI_PROJECT[lang], WIKI_ARTICLE[lang]
+    proj, art = WIKI_PROJECT[lang], (article or WIKI_ARTICLE[lang])
     end = end or pd.Timestamp.today().strftime("%Y%m01")
     url = (f"https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/{proj}"
            f"/all-access/user/{art}/monthly/{start}/{end}")

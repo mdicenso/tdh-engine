@@ -453,8 +453,18 @@ WIKI_LABEL = {"de": "Tedesco (DE/AT/CH)", "en": "Inglese (GB/US)", "nl": "Olande
 
 
 @st.cache_data(show_spinner=False)
-def wiki_series(lang: str):
-    p = f".cache/wiki_{lang}.csv"
+def wiki_series(lang: str, code: str | None = None):
+    code = code or RG.DEFAULT_REGION
+    art = RG.region(code)["wiki"].get(lang)
+    if not art:
+        return None
+    cache_name = f"wiki_{lang}.csv" if code == RG.DEFAULT_REGION else f"wiki_{code}_{lang}.csv"
+    p = f".cache/{cache_name}"
+    if not os.path.exists(p):  # regione nuova: scarico l'articolo (Wikipedia è affidabile)
+        try:
+            RS.fetch_wikipedia_monthly(lang, article=art, cache_name=cache_name)
+        except Exception:  # noqa: BLE001
+            return None
     if not os.path.exists(p):
         return None
     df = pd.read_csv(p, parse_dates=["date"])
@@ -463,8 +473,8 @@ def wiki_series(lang: str):
     return df[df["date"] < cutoff].reset_index(drop=True)
 
 
-def wiki_momentum(lang: str):
-    df = wiki_series(lang)
+def wiki_momentum(lang: str, code: str | None = None):
+    df = wiki_series(lang, code)
     if df is None or df.empty:
         return None
     s = df.sort_values("date")["views"]
@@ -473,11 +483,11 @@ def wiki_momentum(lang: str):
     return round((recent - yoy) / yoy * 100, 1) if (yoy and yoy != 0) else None
 
 
-def online_interest(summary: list[dict]) -> list[dict]:
+def online_interest(summary: list[dict], code: str | None = None) -> list[dict]:
     out = []
     for m in summary:
         lang = WIKI_LANG.get(m["code"])
-        wmom = wiki_momentum(lang)
+        wmom = wiki_momentum(lang, code)
         tmom = m.get("momentum")
         conc = "—"
         if tmom is not None and wmom is not None:
@@ -488,11 +498,11 @@ def online_interest(summary: list[dict]) -> list[dict]:
     return out
 
 
-def chart_wiki(yr_range=None) -> go.Figure:
+def chart_wiki(yr_range=None, code: str | None = None) -> go.Figure:
     colors = {"de": "#0e7490", "en": "#f59e0b", "nl": "#16a34a"}
     fig = go.Figure()
     for lang in ["de", "en", "nl"]:
-        df = wiki_series(lang)
+        df = wiki_series(lang, code)
         if df is None:
             continue
         if yr_range:
@@ -1237,16 +1247,19 @@ def compute_provinces(code: str | None = None) -> dict:
     code = code or RG.DEFAULT_REGION
     rows, wide = [], None
     for area, nome in RG.provinces(code).items():
-        try:
+        try:  # il TOTALE (WORLD) è indispensabile per mostrare la provincia
             tot = fetch_istat_presences(area=area, country="WORLD").rename(columns={"presences": nome})
-            est = fetch_istat_presences(area=area, country="WRL_X_ITA")
         except Exception:  # noqa: BLE001 — provincia non esposta/abolita: salto
             continue
+        try:  # gli stranieri possono mancare per qualche provincia: in quel caso restano vuoti
+            est = fetch_istat_presences(area=area, country="WRL_X_ITA")
+            e12 = float(est.sort_values("date").tail(12)["presences"].sum())
+        except Exception:  # noqa: BLE001
+            e12 = float("nan")
         wide = tot if wide is None else wide.merge(tot, on="date", how="outer")
         t12 = float(tot.sort_values("date").tail(12)[nome].sum())
-        e12 = float(est.sort_values("date").tail(12)["presences"].sum())
         rows.append({"provincia": nome, "presenze": t12, "stranieri": e12,
-                     "quota_stranieri": (e12 / t12 * 100 if t12 else 0.0)})
+                     "quota_stranieri": (e12 / t12 * 100 if (t12 and pd.notna(e12)) else float("nan"))})
     if wide is None:
         return {"rows": [], "panel": pd.DataFrame({"date": []})}
     return {"rows": sorted(rows, key=lambda r: -r["presenze"]), "panel": wide.sort_values("date")}

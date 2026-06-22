@@ -713,15 +713,17 @@ def page_mercati_paese():
 
 
 def page_online():
+    code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    nome = L.RG.region(code)["nome"]
     st.header(":material/language: Interesse online (segnali anticipatori)")
-    st.caption("Google Trends (per paese) e Wikipedia pageviews (per lingua) anticipano gli arrivi. "
-               "Wikipedia corrobora il segnale; è per LINGUA, quindi DE/AT/CH condividono il tedesco e GB/US l'inglese.")
+    st.caption(f"Google Trends (per paese) e Wikipedia pageviews (per lingua) per **{nome}** anticipano gli arrivi. "
+               "Wikipedia è per LINGUA, quindi DE/AT/CH condividono il tedesco e GB/US l'inglese.")
     yr = st.session_state.get("yr_range", (2019, 2024))
-    st.subheader(f"Wikipedia — interesse per la destinazione per lingua · {yr[0]}–{yr[1]}")
-    st.plotly_chart(L.chart_wiki(yr), use_container_width=True)
+    st.subheader(f"Wikipedia — interesse per «{nome}» per lingua · {yr[0]}–{yr[1]}")
+    st.plotly_chart(L.chart_wiki(yr, code), use_container_width=True)
     st.subheader("Corroborazione del segnale per mercato")
     if is_real:
-        L.aggrid_table(pd.DataFrame(L.online_interest(summary)), height=240, key="online_grid")
+        L.aggrid_table(pd.DataFrame(L.online_interest(summary, code)), height=240, key="online_grid")
         st.caption("Concordanza = Google Trends e Wikipedia indicano la stessa direzione → segnale più robusto.")
     else:
         st.info("La corroborazione con Google Trends è disponibile in modalità **Reale**.")
