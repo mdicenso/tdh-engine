@@ -656,35 +656,42 @@ def page_operatori():
 
 
 def page_spesa():
+    code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    nome = L.RG.region(code)["nome"]
     st.header(":material/payments: Spesa turistica (Banca d'Italia)")
-    st.caption("Spesa dei turisti stranieri — contesto nazionale e regionale. Indagine turismo internazionale, 2024.")
-    ext = L.bdi_extended()
-    if not ext:
-        st.info("Dati Banca d'Italia non disponibili.")
+    st.caption(f"Spesa dei turisti stranieri in **{nome}** + contesto nazionale. Indagine turismo internazionale BdI.")
+    g = L.bdi_region_annual(code)
+    if g is None or g.empty:
+        st.info(f"Dati Banca d'Italia per {nome} non disponibili.")
         return
-    a = ext["abruzzo"]
-    sp, notti, viagg = a["spesa"][-1], a["notti"][-1], a["viaggiatori"][-1]
+    full = g[g["trimestri"] >= 4]  # ultimo anno completo (esclude l'anno in corso parziale)
+    last = (full if not full.empty else g).iloc[-1]
+    sp, notti, viagg, anno = last["spesa"], last["notti"], last["viaggiatori"], int(last["anno"])
     durata = notti / viagg if viagg else 0
     spnotte = sp * 1e6 / (notti * 1e3) if notti else 0
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Spesa straniera Abruzzo 2024", f"{sp:.0f} M€")
+    c1.metric(f"Spesa straniera {anno}", f"{sp:,.0f} M€".replace(",", "."))
     c2.metric("Pernottamenti", f"{notti / 1000:.1f} mln")
     c3.metric("Durata media", f"{durata:.1f} notti")
     c4.metric("Spesa per notte", f"€ {spnotte:.0f}")
     yr = st.session_state.get("yr_range", (2019, 2024))
-    st.subheader(f"Spesa straniera · {yr[0]}–{yr[1]}")
-    st.plotly_chart(L.chart_abruzzo_spend(ext, yr), use_container_width=True)
-    st.subheader("Confronto regioni — spesa turisti stranieri 2024")
-    st.plotly_chart(L.chart_regions_spend(ext), use_container_width=True)
-    cA, cB = st.columns(2)
-    with cA:
-        st.subheader("Per motivo del viaggio")
-        st.caption("Dato nazionale (turisti stranieri in Italia)")
-        st.plotly_chart(L.chart_bdi_motivo(ext), use_container_width=True)
-    with cB:
-        st.subheader("Per tipo di struttura")
-        st.caption("Dato nazionale (turisti stranieri in Italia)")
-        st.plotly_chart(L.chart_bdi_struttura(ext), use_container_width=True)
+    st.subheader(f"Spesa straniera in {nome} · {yr[0]}–{yr[1]}")
+    fig_sp = L.chart_region_spend(code, yr)
+    if fig_sp is not None:
+        st.plotly_chart(fig_sp, use_container_width=True)
+    ext = L.bdi_extended()
+    if ext:
+        st.subheader("Confronto regioni — spesa turisti stranieri 2024")
+        st.plotly_chart(L.chart_regions_spend(ext), use_container_width=True)
+        cA, cB = st.columns(2)
+        with cA:
+            st.subheader("Per motivo del viaggio")
+            st.caption("Dato nazionale (turisti stranieri in Italia)")
+            st.plotly_chart(L.chart_bdi_motivo(ext), use_container_width=True)
+        with cB:
+            st.subheader("Per tipo di struttura")
+            st.caption("Dato nazionale (turisti stranieri in Italia)")
+            st.plotly_chart(L.chart_bdi_struttura(ext), use_container_width=True)
 
 
 def page_mercati_paese():

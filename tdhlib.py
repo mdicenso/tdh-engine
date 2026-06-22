@@ -291,6 +291,79 @@ def bdi_abruzzo_spend():
     return json.load(open(p, encoding="utf-8")).get("abruzzo_spesa_M_2024")
 
 
+# --- Banca d'Italia per REGIONE visitata (TS2): spesa/notti/viaggiatori, trimestrale ---
+# colonna del foglio -> codice/i NUTS2 (Trentino = una colonna -> Bolzano+Trento).
+_BDI_REG_COL = {4: ["ITC1"], 5: ["ITC2"], 6: ["ITC4"], 7: ["ITC3"], 9: ["ITD1", "ITD2"],
+                10: ["ITD3"], 11: ["ITD4"], 12: ["ITD5"], 14: ["ITE1"], 15: ["ITE2"],
+                16: ["ITE3"], 17: ["ITE4"], 19: ["ITF1"], 20: ["ITF2"], 21: ["ITF3"],
+                22: ["ITF4"], 23: ["ITF5"], 24: ["ITF6"], 25: ["ITG1"], 26: ["ITG2"]}
+_BDI_REG_SHEETS = {"spesa": "TS2-S-S", "notti": "TS2-N-S", "viaggiatori": "TS2-V-S"}
+
+
+@st.cache_data(show_spinner=False)
+def bdi_region_long():
+    """Spesa/notti/viaggiatori dei turisti stranieri per REGIONE visitata (trimestrale,
+    1997-2025). DataFrame: date·code·spesa·notti·viaggiatori. None se l'xlsx manca."""
+    import re
+    p = ".cache/bdi_turismo_ts.xlsx"
+    if not os.path.exists(p):
+        return None
+    import openpyxl
+    wb = openpyxl.load_workbook(p, read_only=True, data_only=True)
+    recs = []
+    for metric, sheet in _BDI_REG_SHEETS.items():
+        year = None
+        for r in wb[sheet].iter_rows(values_only=True):
+            if r and r[0] is not None:
+                try:
+                    year = int(r[0])
+                except (TypeError, ValueError):
+                    pass
+            m = re.match(r"\s*(\d)", str((r[1] or r[2]) if r else ""))
+            if not (year and m):
+                continue
+            q = int(m.group(1))
+            date = pd.Timestamp(year, q * 3 - 2, 1)
+            for col, codes in _BDI_REG_COL.items():
+                if col < len(r) and r[col] is not None:
+                    try:
+                        val = float(r[col])
+                    except (TypeError, ValueError):
+                        continue
+                    for code in codes:
+                        recs.append((date, code, metric, val))
+    if not recs:
+        return None
+    df = pd.DataFrame(recs, columns=["date", "code", "metric", "value"])
+    return df.pivot_table(index=["date", "code"], columns="metric", values="value").reset_index()
+
+
+def bdi_region_annual(code: str):
+    """Aggregato ANNUALE (spesa M€, notti/viaggiatori in migliaia) per la regione."""
+    df = bdi_region_long()
+    if df is None or df.empty:
+        return None
+    d = df[df["code"] == code].copy()
+    if d.empty:
+        return None
+    d["anno"] = d["date"].dt.year
+    return d.groupby("anno").agg(spesa=("spesa", "sum"), notti=("notti", "sum"),
+                                 viaggiatori=("viaggiatori", "sum"),
+                                 trimestri=("date", "count")).reset_index()
+
+
+def chart_region_spend(code: str, yr_range=None) -> go.Figure | None:
+    g = bdi_region_annual(code)
+    if g is None or g.empty:
+        return None
+    if yr_range:
+        g = g[(g["anno"] >= yr_range[0]) & (g["anno"] <= yr_range[1])]
+    fig = go.Figure(go.Bar(x=g["anno"], y=g["spesa"], marker_color="#0e7490",
+                           hovertemplate="<b>%{x}</b><br>%{y:,.0f} M€<extra></extra>"))
+    fig.update_yaxes(title="spesa turisti stranieri (M€)")
+    return _layout(fig, h=340)
+
+
 # --- Banca d'Italia per PAESE di origine (nazionale, trimestrale 1997-2025) ---
 _BDI_COLMAP = {4: "DE", 5: "FR", 6: "AT", 7: "ES", 9: "GB", 10: "CH", 11: "RU", 13: "US"}
 _BDI_SHEETS = {"notti": "TS1-N-S", "spesa": "TS1-S-S", "viaggiatori": "TS1-V-S"}
