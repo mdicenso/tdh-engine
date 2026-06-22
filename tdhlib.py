@@ -1418,15 +1418,16 @@ def chart_italy_map(highlight: str | None = None) -> go.Figure:
     `highlight` ha il bordo rosso. Cliccabile come selettore (gestito in app)."""
     gj = _italy_regions_geojson()
     spend = {RG.REGIONS[r["code"]]["bdi"]: r["spesa_M"] for r in regions_spend_ranking()}
-    names, z = [], []
+    names, z, codes = [], [], []
     for f in gj["features"]:
         nm = f["properties"]["reg_name"]
         code = RG.code_for_geo(nm)
         names.append(nm)
+        codes.append(code or "")
         z.append(spend.get(RG.region(code)["bdi"]) if code else None)
     fig = go.Figure(go.Choropleth(
         geojson=gj, featureidkey="properties.reg_name", locations=names, z=z, name="spesa",
-        colorscale="Teal", marker_line_color="white", marker_line_width=0.6,
+        colorscale="Teal", marker_line_color="white", marker_line_width=0.6, customdata=codes,
         selected=dict(marker=dict(opacity=1.0)), unselected=dict(marker=dict(opacity=1.0)),
         colorbar=dict(title=dict(text="spesa straniera<br>2024 (M€)", side="right")),
         hovertemplate="<b>%{location}</b><br>spesa %{z:,.0f} M€<extra></extra>"))

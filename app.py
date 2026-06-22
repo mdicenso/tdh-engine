@@ -27,6 +27,8 @@ st.set_page_config(page_title="Turism Data Hub", page_icon="⛰️", layout="wid
                    initial_sidebar_state="expanded")
 L.inject_css()
 
+# Regione attiva: sempre presente in session_state (default Abruzzo).
+st.session_state.setdefault("region_code", L.RG.DEFAULT_REGION)
 # Riconcilia un'eventuale selezione regione fatta cliccando la mappa d'Italia:
 # va applicata PRIMA che il selectbox «region_code» venga istanziato.
 if st.session_state.get("_map_region"):
@@ -121,16 +123,21 @@ def page_italia():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     ev = st.plotly_chart(L.chart_italy_map(highlight=code), use_container_width=True,
                          on_select="rerun", selection_mode="points", key="italy_map_home")
-    pts = (ev or {}).get("selection", {}).get("points", []) if hasattr(ev, "get") else []
-    if pts:
-        sel = L.RG.code_for_geo(pts[0].get("location"))
-        if sel and sel != code:
-            st.session_state["_map_region"] = sel
-            st.rerun()
+    sel = None
+    try:
+        pts = ev["selection"]["points"]
+        if pts:
+            cd = pts[0].get("customdata")
+            sel = (cd[0] if isinstance(cd, (list, tuple)) else cd) or L.RG.code_for_geo(pts[0].get("location"))
+    except Exception:  # noqa: BLE001
+        sel = None
+    if sel and sel in L.RG.REGIONS and sel != code:
+        st.session_state["_map_region"] = sel
+        st.rerun()
     _regn = L.RG.region_names()
-    st.selectbox("Regione", list(_regn), format_func=lambda c: _regn[c],
-                 key="region_code", index=list(_regn).index(code))
-    st.success(f"Regione attiva: **{L.RG.region(code)['nome']}** ({code}) — vale per tutte le pagine.")
+    st.selectbox("Regione", list(_regn), format_func=lambda c: _regn[c], key="region_code")
+    st.success(f"Regione attiva: **{L.RG.region(code)['nome']}** ({code}) — vale per le pagine "
+               "multi-regione (Regione, Per provincia, Occupazione, Struttura, Confronto).")
 
 
 def page_regione():
