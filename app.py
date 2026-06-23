@@ -62,6 +62,7 @@ with st.sidebar:
     if bc[1].button(":material/delete: Chat", use_container_width=True):
         st.session_state.messages = []; st.rerun()
     st.caption("Indra Italia S.p.A. · prototipo")
+    st.caption("Powered by MDC")
 
 # ──────────────────────────── DATI DELLA MODALITÀ ────────────────────────────
 try:
