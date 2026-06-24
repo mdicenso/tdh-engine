@@ -986,17 +986,27 @@ def _row(dataset, descr, fonte, url, freq, stato, righe, agg):
             "Frequenza": freq, "Stato": stato, "Righe": righe, "Aggiornato": agg}
 
 
+def _safe_kw(kw: str) -> str:
+    """Slug del nome regione per i file di cache Trends (allineato a _trends_precache.py)."""
+    return "".join(c if c.isalnum() else "_" for c in kw.lower())
+
+
 def builtin_sources() -> list[dict]:
     """Fonti dati GIÀ in uso dal motore (cache + live), colonne unificate con URL."""
     A = "🟢 Attiva"
     rows = []
     istat = ".cache/istat_presenze_straniere_abruzzo.csv"
     if os.path.exists(istat):
-        rows.append(_row("Presenze straniere Abruzzo", "Presenze di stranieri al mese in Abruzzo (movimento clienti)",
+        rows.append(_row("Presenze straniere per regione",
+                         "Presenze di stranieri al mese (movimento clienti) — tutte le 21 regioni",
                          "ISTAT", "https://esploradati.istat.it/", "mensile", A, _csv_rows(istat), _fmt_mtime(istat)))
     trends = sorted(glob.glob(".cache/trends_*.csv"))
     if trends:
-        rows.append(_row(f"Google Trends — {len(trends)} mercati", "Interesse di ricerca «Abruzzo» per paese (leading)",
+        _geos = [mk.code for mk in DEFAULT_MARKETS]
+        _full = sum(1 for info in RG.REGIONS.values()
+                    if all(os.path.exists(f".cache/trends_{_safe_kw(info['trends_kw'])}_{g}.csv") for g in _geos))
+        rows.append(_row(f"Google Trends — {_full}/{len(RG.REGIONS)} regioni × {len(_geos)} mercati",
+                         "Interesse di ricerca per regione e per paese di origine (segnale leading)",
                          "Google Trends", "https://trends.google.com/", "mensile", A,
                          sum((_csv_rows(t) or 0) for t in trends), _fmt_mtime(trends[0])))
     rows.append(_row("Cambio valute", "Indice del cambio EUR vs USD/GBP/CHF (driver economico)",
@@ -1009,17 +1019,18 @@ def builtin_sources() -> list[dict]:
                          "trimestrale", A, _csv_rows(bdi), _fmt_mtime(bdi)))
     cap = ".cache/istat_capacity_letti_ITF1.csv"
     if os.path.exists(cap):
-        rows.append(_row("Capacità ricettiva (posti letto)", "Posti letto Abruzzo per anno (per l'occupazione)",
+        rows.append(_row("Capacità ricettiva (posti letto)", "Posti letto per regione per anno (per l'occupazione)",
                          "ISTAT · Capacità esercizi ricettivi", "https://esploradati.istat.it/", "annuale", A,
                          _csv_rows(cap), _fmt_mtime(cap)))
     eu = ".cache/eurostat_pescara_flights.csv"
     if os.path.exists(eu):
-        rows.append(_row("Connettività aerea Pescara", "Passeggeri voli diretti per paese verso Pescara (fattibilità)",
+        rows.append(_row("Connettività aerea per regione",
+                         "Passeggeri voli diretti per paese verso ogni regione (fattibilità) — serie mensile per Pescara",
                          "Eurostat · avia_par", "https://ec.europa.eu/eurostat/", "annuale", A,
                          _csv_rows(eu), _fmt_mtime(eu)))
     wk = ".cache/wiki_de.csv"
     if os.path.exists(wk):
-        rows.append(_row("Wikipedia pageviews", "Visualizzazioni pagina «Abruzzo» per lingua (2° segnale leading)",
+        rows.append(_row("Wikipedia pageviews", "Visualizzazioni pagina della regione per lingua (2° segnale leading)",
                          "Wikimedia · Pageviews API", "https://wikimedia.org/api/rest_v1/", "mensile", A,
                          _csv_rows(wk), _fmt_mtime(wk)))
     geo = ".cache/world_countries.geojson"
