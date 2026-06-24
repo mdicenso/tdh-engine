@@ -1059,6 +1059,13 @@ def builtin_sources() -> list[dict]:
         rows.append(_row("Wikipedia pageviews", "Visualizzazioni pagina della regione per lingua (2° segnale leading)",
                          "Wikimedia · Pageviews API", "https://wikimedia.org/api/rest_v1/", "mensile", A,
                          _csv_rows(wk), _fmt_mtime(wk)))
+    wbx = ".cache/wb_tourism_expenditure.csv"
+    if os.path.exists(wbx):
+        rows.append(_row("Spesa turismo outbound (mercati)",
+                         "Spesa per turismo all'estero dei 10 paesi d'origine (taglia del mercato; current US$)",
+                         "World Bank · ST.INT.XPND.CD",
+                         "https://data.worldbank.org/indicator/ST.INT.XPND.CD",
+                         "annuale", A, _csv_rows(wbx), _fmt_mtime(wbx)))
     geo = ".cache/world_countries.geojson"
     if os.path.exists(geo):
         rows.append(_row("Confini paesi (mappa)", "Geometrie dei confini per la mappa GIS (offline)",

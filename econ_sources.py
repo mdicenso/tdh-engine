@@ -144,6 +144,56 @@ def build_confidence_panel(start: str = "2008-01", refresh: bool = False) -> pd.
     return pd.concat(blocks, ignore_index=True) if blocks else pd.DataFrame()
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# WORLD BANK — spesa per turismo internazionale OUTBOUND dei mercati d'origine
+# (residenti del paese che spendono per turismo all'estero, current US$).
+# Indicatore ST.INT.XPND.CD. È la "taglia" del mercato: quanto vale il portafoglio
+# turistico di quel paese, di cui l'Italia cattura una quota (BdI "spesa in Italia").
+# Fonte/API: https://api.worldbank.org/v2 — https://data.worldbank.org/indicator/ST.INT.XPND.CD
+# ─────────────────────────────────────────────────────────────────────────────
+WORLDBANK = "https://api.worldbank.org/v2"
+WB_INDICATOR_XPND = "ST.INT.XPND.CD"   # International tourism, expenditures (current US$)
+
+# I 10 mercati d'origine (stessi della BdI): codice BdI -> (ISO3 World Bank, nome IT)
+ORIGIN_COUNTRIES = {
+    "DE": ("DEU", "Germania"), "FR": ("FRA", "Francia"), "AT": ("AUT", "Austria"),
+    "ES": ("ESP", "Spagna"), "GB": ("GBR", "Regno Unito"), "CH": ("CHE", "Svizzera"),
+    "RU": ("RUS", "Russia"), "US": ("USA", "Stati Uniti"), "CA": ("CAN", "Canada"),
+    "JP": ("JPN", "Giappone"),
+}
+
+
+def fetch_wb_tourism_expenditure(start: int = 2008, end: int = 2024, cache_dir: str = ".cache",
+                                 cache_name: str = "wb_tourism_expenditure.csv",
+                                 refresh: bool = False) -> pd.DataFrame:
+    """Spesa per turismo internazionale OUTBOUND (World Bank ST.INT.XPND.CD, current US$)
+    per i 10 mercati d'origine. Ritorna DataFrame: code(BdI), iso3, paese, anno, spesa_out_usd.
+    Cache su disco unica per tutti i paesi."""
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, cache_name)
+    if os.path.exists(cache_path) and not refresh:
+        return pd.read_csv(cache_path)
+    rows = []
+    for code, (iso3, nome) in ORIGIN_COUNTRIES.items():
+        url = (f"{WORLDBANK}/country/{iso3}/indicator/{WB_INDICATOR_XPND}"
+               f"?format=json&per_page=300&date={start}:{end}")
+        try:
+            raw = urllib.request.urlopen(urllib.request.Request(url, headers=_UA), timeout=40).read()
+            j = json.loads(raw.decode("utf-8", "ignore"))
+            data = j[1] if isinstance(j, list) and len(j) > 1 and j[1] else []
+            for d in data:
+                if d.get("value") is not None:
+                    rows.append({"code": code, "iso3": iso3, "paese": nome,
+                                 "anno": int(d["date"]), "spesa_out_usd": float(d["value"])})
+        except Exception:  # noqa: BLE001 — paese mancante/timeout: salto, riprovo al refresh
+            continue
+    df = pd.DataFrame(rows)
+    if not df.empty:
+        df = df.sort_values(["code", "anno"]).reset_index(drop=True)
+        df.to_csv(cache_path, index=False)
+    return df
+
+
 if __name__ == "__main__":
     try:
         import truststore
