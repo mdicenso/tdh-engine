@@ -68,11 +68,6 @@ CSS = f"""<style>
   .stApp {{ background-color: #f1f5f9; }}
   /* sidebar scura (schiarita per leggibilità) */
   [data-testid="stSidebar"] {{ background-color: #334155; border-right: 1px solid #1e293b; }}
-  /* porta i controlli (selettore Regione, modalità, periodo) SOPRA il menù di navigazione */
-  [data-testid="stSidebar"] > div:first-child {{ display: flex; flex-direction: column; }}
-  [data-testid="stSidebarHeader"] {{ order: 0; }}
-  [data-testid="stSidebarUserContent"] {{ order: 1; }}
-  [data-testid="stSidebarNav"] {{ order: 2; border-top: 1px solid #475569; margin-top: 6px; padding-top: 6px; }}
   [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
   [data-testid="stSidebar"] p, [data-testid="stSidebar"] label,
   [data-testid="stSidebar"] [data-testid="stCaptionContainer"],
