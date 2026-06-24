@@ -1632,6 +1632,61 @@ def chart_region_indexed(df: pd.DataFrame, keys: list[str]) -> go.Figure:
     return _layout(fig, h=380)
 
 
+def project_var(panel: pd.DataFrame, key: str, horizon: int = 2, drop_covid: bool = True,
+                n_years: int | None = 5) -> dict | None:
+    """Proiezione a trend LINEARE (OLS) della variabile annuale `key` su `horizon` anni,
+    con intervallo di previsione all'80%. `n_years` limita la BASE del trend agli ultimi N
+    anni (None = tutto lo storico): utile quando c'è un cambio di regime (es. salto post-COVID
+    della spesa/turista). `drop_covid` esclude il 2020 prima di contare gli anni."""
+    import numpy as np
+    import statsmodels.api as sm
+    if panel is None or panel.empty or key not in panel:
+        return None
+    s = panel[key].dropna()
+    s.index = s.index.astype(int)
+    if drop_covid and 2020 in s.index:
+        s = s.drop(index=2020)
+    if n_years:
+        s = s.tail(int(n_years))
+    if len(s) < 3:
+        return None
+    x, y = s.index.values.astype(float), s.values.astype(float)
+    m = sm.OLS(y, sm.add_constant(x)).fit()
+    last = int(s.index.max())
+    fut = list(range(last + 1, last + 1 + int(horizon)))
+    Xf = sm.add_constant(np.array(fut, dtype=float), has_constant="add")
+    pr = m.get_prediction(Xf).summary_frame(alpha=0.2)  # 80% → obs_ci = intervallo di previsione
+    return {"hist_years": [int(v) for v in s.index], "hist_vals": [float(v) for v in y],
+            "fit_vals": [float(v) for v in m.predict(sm.add_constant(x))],
+            "fut_years": fut, "fc_mean": [float(v) for v in pr["mean"]],
+            "fc_lo": [float(v) for v in pr["obs_ci_lower"]],
+            "fc_hi": [float(v) for v in pr["obs_ci_upper"]],
+            "slope": float(m.params[1]), "r2": float(m.rsquared)}
+
+
+def chart_projection(proj: dict, label: str, unit: str = "") -> go.Figure:
+    """Storico + trend fittato + proiezione con banda di previsione 80% (unità assolute)."""
+    hx, hy = proj["hist_years"], proj["hist_vals"]
+    fx, fm = proj["fut_years"], proj["fc_mean"]
+    lo, hi = proj["fc_lo"], proj["fc_hi"]
+    bx = [hx[-1]] + fx                       # aggancia la banda all'ultimo punto storico
+    bl = [hy[-1]] + [max(0.0, v) for v in lo]
+    bh = [hy[-1]] + hi
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=bx + bx[::-1], y=bh + bl[::-1], fill="toself",
+                             fillcolor="rgba(245,158,11,.15)", line=dict(width=0),
+                             name="intervallo 80%", hoverinfo="skip"))
+    fig.add_trace(go.Scatter(x=hx, y=proj["fit_vals"], name="trend", mode="lines",
+                             line=dict(color="#94a3b8", width=1, dash="dot")))
+    fig.add_trace(go.Scatter(x=hx, y=hy, name="storico", mode="lines+markers",
+                             line=dict(color="#0e7490", width=2)))
+    fig.add_trace(go.Scatter(x=[hx[-1]] + fx, y=[hy[-1]] + fm, name="proiezione",
+                             mode="lines+markers", line=dict(color="#f59e0b", width=2, dash="dash")))
+    fig.update_yaxes(title=label + (f" ({unit})" if unit and unit != "n" else ""))
+    fig.update_xaxes(title="anno", dtick=1)
+    return _layout(fig, h=380)
+
+
 def regions_spend_ranking() -> list[dict]:
     """Classifica delle regioni per spesa turistica straniera 2024 (Banca d'Italia).
     code (NUTS2) · regione · spesa_M · rank. Multi-regione by construction."""
