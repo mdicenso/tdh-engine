@@ -174,7 +174,16 @@ def page_regione():
         c4.metric("Regioni coperte", f"{len(L.RG.REGIONS)}")
     else:
         c4.metric("Aeroporti", ", ".join(info["airports"]) if info["airports"] else "—")
-    st.plotly_chart(L.chart_region_presences(df), use_container_width=True)
+    # ── Periodo: UNA dropdown condivisa, filtra sia le presenze sia l'analisi pluriennale ──
+    win = st.selectbox("Periodo", ["Ultimo anno", "Ultimi 2 anni", "Ultimi 3 anni",
+                                   "Ultimi 5 anni", "Tutti gli anni"], index=3, key="reg_win",
+                       help="Filtra sia il grafico delle presenze sia la tabella/indici qui sotto.")
+    _nwin = {"Ultimo anno": 1, "Ultimi 2 anni": 2, "Ultimi 3 anni": 3, "Ultimi 5 anni": 5}
+    if win == "Tutti gli anni" or df.empty:
+        dfm = df
+    else:
+        dfm = df[df["date"] >= df["date"].max() - pd.DateOffset(years=_nwin[win])]
+    st.plotly_chart(L.chart_region_presences(dfm), use_container_width=True)
     if nazionale:
         st.caption("Totale Italia (ISTAT area «IT») · spesa BdI = somma delle regioni visitate")
     else:
@@ -186,18 +195,15 @@ def page_regione():
     st.subheader(":material/insights: Analisi pluriennale")
     st.caption("Accendi/spegni le variabili: la **tabella** mostra i valori assoluti per anno, il "
                "**grafico a indici** (base 100 = primo anno) confronta i trend — così vedi se, *a parità "
-               "di turisti, la spesa per turista è salita o scesa*. Base per le proiezioni.")
+               "di turisti, la spesa per turista è salita o scesa*. Usa la **dropdown «Periodo» qui sopra** "
+               "per la finestra temporale. Base per le proiezioni.")
     panel = L.region_annual_panel(code)
     if panel is None or panel.empty:
         st.info("Serie annuali non ancora disponibili (ISTAT/BdI).")
         return
     avail = [k for k in panel.columns if panel[k].notna().any()]
-    cwin, cvar = st.columns([1, 2.6])
-    win = cwin.selectbox("Periodo", ["Ultimo anno", "Ultimi 2 anni", "Ultimi 3 anni",
-                                     "Ultimi 5 anni", "Tutti gli anni"], index=3, key="reg_win")
-    _nwin = {"Ultimo anno": 1, "Ultimi 2 anni": 2, "Ultimi 3 anni": 3, "Ultimi 5 anni": 5}
     default_sel = [k for k in ("presenze_tot", "spesa_per_viagg") if k in avail] or avail[:2]
-    sel = cvar.multiselect(
+    sel = st.multiselect(
         "Variabili da confrontare", avail, default=default_sel, key="reg_vars",
         format_func=lambda k: L.REGION_VAR_LABEL[k] + (f" ({L.REGION_VAR_UNIT[k]})"
                                                        if L.REGION_VAR_UNIT[k] != "n" else ""))
