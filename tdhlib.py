@@ -1687,6 +1687,78 @@ def chart_projection(proj: dict, label: str, unit: str = "") -> go.Figure:
     return _layout(fig, h=380)
 
 
+# ── Proiezione STAGIONALE (mensile) — riusa la metodologia del motore aggregato:
+#    value ~ C(mese) + trend + dummy COVID. Disponibile per le serie mensili (presenze ISTAT).
+MONTHLY_VARS = {"presenze_tot": "totale", "presenze_str": "stranieri"}
+
+
+def region_monthly_series(code: str, key: str) -> pd.DataFrame | None:
+    """Serie MENSILE (date, value) per le variabili con dato mensile (presenze ISTAT)."""
+    col = MONTHLY_VARS.get(key)
+    if not col:
+        return None
+    try:
+        df = region_overview(code)["presenze"]
+    except Exception:  # noqa: BLE001
+        return None
+    if col not in df:
+        return None
+    out = df[["date", col]].rename(columns={col: "value"}).dropna().sort_values("date")
+    return out if not out.empty else None
+
+
+def project_seasonal(series: pd.DataFrame, horizon_years: int = 2) -> dict | None:
+    """Proiezione mensile stagionale: value ~ C(mese) + trend + dummy COVID (2020-03→2021-12),
+    intervallo di previsione 80%. Ritorna serie mensile (storico+forecast) e roll-up annuale
+    (somma 12 mesi) per gli anni futuri completi. Stessa metodologia del motore aggregato."""
+    import numpy as np
+    import statsmodels.formula.api as smf
+    if series is None or len(series) < 24:  # servono ~2 anni di mesi
+        return None
+    d = series.dropna().sort_values("date").reset_index(drop=True).copy()
+    d["month"] = d["date"].dt.month
+    d["t"] = np.arange(len(d))
+    d["covid"] = ((d["date"] >= pd.Timestamp("2020-03-01")) &
+                  (d["date"] <= pd.Timestamp("2021-12-01"))).astype(int)
+    model = smf.ols("value ~ C(month) + t + covid", data=d).fit()
+    n = int(horizon_years) * 12
+    last_t = int(d["t"].iloc[-1])
+    fut_dates = pd.date_range(d["date"].max() + pd.DateOffset(months=1), periods=n, freq="MS")
+    fut = pd.DataFrame({"date": fut_dates, "month": fut_dates.month,
+                        "t": last_t + np.arange(1, n + 1), "covid": 0})
+    pr = model.get_prediction(fut).summary_frame(alpha=0.2)
+    fut["mean"] = pr["mean"].values
+    fut["lo"] = pr["obs_ci_lower"].clip(lower=0).values
+    fut["hi"] = pr["obs_ci_upper"].values
+    ha = d.assign(anno=d["date"].dt.year).groupby("anno")["value"].agg(["sum", "count"])
+    hist_ann = {int(y): float(r["sum"]) for y, r in ha.iterrows() if r["count"] >= 12}
+    fut["anno"] = fut["date"].dt.year
+    fa = fut.groupby("anno").agg(mean=("mean", "sum"), lo=("lo", "sum"),
+                                 hi=("hi", "sum"), n=("mean", "count"))
+    fc_ann = {int(y): (float(r["mean"]), float(r["lo"]), float(r["hi"]))
+              for y, r in fa.iterrows() if r["n"] >= 12}
+    return {"hist": d[["date", "value"]], "fut": fut[["date", "mean", "lo", "hi"]],
+            "hist_ann": hist_ann, "fc_ann": fc_ann, "r2": float(model.rsquared)}
+
+
+def chart_projection_monthly(proj: dict, label: str, unit: str = "") -> go.Figure:
+    """Storico mensile + proiezione stagionale con banda di previsione 80%."""
+    h, f = proj["hist"], proj["fut"]
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=list(f["date"]) + list(f["date"])[::-1],
+                             y=list(f["hi"]) + list(f["lo"])[::-1], fill="toself",
+                             fillcolor="rgba(245,158,11,.15)", line=dict(width=0),
+                             name="intervallo 80%", hoverinfo="skip"))
+    fig.add_trace(go.Scatter(x=h["date"], y=h["value"], name="storico", mode="lines",
+                             line=dict(color="#0e7490", width=2)))
+    mx = [h["date"].iloc[-1]] + list(f["date"])   # aggancia all'ultimo punto storico
+    my = [h["value"].iloc[-1]] + list(f["mean"])
+    fig.add_trace(go.Scatter(x=mx, y=my, name="proiezione stagionale", mode="lines",
+                             line=dict(color="#f59e0b", width=2, dash="dash")))
+    fig.update_yaxes(title=label + (f" ({unit})" if unit and unit != "n" else "") + " · mese")
+    return _layout(fig, h=380)
+
+
 def regions_spend_ranking() -> list[dict]:
     """Classifica delle regioni per spesa turistica straniera 2024 (Banca d'Italia).
     code (NUTS2) · regione · spesa_M · rank. Multi-regione by construction."""

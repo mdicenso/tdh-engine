@@ -229,40 +229,68 @@ def page_regione():
     st.caption("⚠️ Spesa, pernottamenti e viaggiatori = **solo turisti stranieri** (Banca d'Italia); "
                "le presenze sono **totali** (ISTAT). La spesa per turista è quindi sul perimetro straniero.")
 
-    # ── Proiezione (trend lineare) sulla variabile scelta ──
+    # ── Proiezione: motore STAGIONALE (mensile) o TREND lineare (annuale) ──
     st.divider()
     st.subheader(":material/trending_up: Proiezione")
-    st.caption("Proiezione a **trend lineare** con intervallo di previsione all'80%. È una prima stima "
-               "semplice (no stagionalità): utile per l'ordine di grandezza e la direzione. Scegli la "
-               "**base del trend** per privilegiare il regime recente (utile dopo il salto post-COVID).")
-    fc1, fc2, fc3, fc4 = st.columns([2, 1, 1.3, 1])
-    fvar = fc1.selectbox("Variabile da proiettare", sel, key="reg_fc_var",
+    pc1, pc2 = st.columns([2, 1])
+    fvar = pc1.selectbox("Variabile da proiettare", sel, key="reg_fc_var",
                          format_func=lambda k: L.REGION_VAR_LABEL[k])
-    horizon = fc2.selectbox("Orizzonte", [1, 2, 3], index=1, key="reg_fc_h",
+    horizon = pc2.selectbox("Orizzonte", [1, 2, 3], index=1, key="reg_fc_h",
                             format_func=lambda h: f"{h} anno" if h == 1 else f"{h} anni")
-    _base = {"Ultimi 5 anni": 5, "Ultimi 10 anni": 10, "Tutto lo storico": None}
-    base_lbl = fc3.selectbox("Base del trend", list(_base), index=0, key="reg_fc_base",
-                             help="Su quanti anni stimare la retta. «Ultimi 5» segue il regime recente.")
-    drop_covid = fc4.checkbox("Escludi 2020", value=True, key="reg_fc_covid",
-                              help="Esclude l'anomalia COVID dal calcolo del trend.")
-    proj = L.project_var(panel, fvar, horizon, drop_covid, n_years=_base[base_lbl])
-    if proj is None:
-        st.info("Servono almeno 3 anni di dati per proiettare questa variabile.")
+    seasonal_ok = fvar in L.MONTHLY_VARS
+    if seasonal_ok:
+        method = st.radio("Metodo", ["Stagionale (mensile)", "Trend lineare (annuale)"],
+                          index=0, horizontal=True, key="reg_fc_method",
+                          help="Stagionale: C(mese) + trend + dummy COVID sui dati mensili ISTAT "
+                               "(cattura la stagionalità delle presenze). Trend: retta sugli annuali.")
     else:
-        st.plotly_chart(L.chart_projection(proj, L.REGION_VAR_LABEL[fvar], L.REGION_VAR_UNIT[fvar]),
-                        use_container_width=True)
-        dec = L.REGION_VAR_DEC[fvar]
-        ny, nv = proj["fut_years"][-1], proj["fc_mean"][-1]
-        lo, hi = proj["fc_lo"][-1], proj["fc_hi"][-1]
-        base_v = proj["hist_vals"][-1]
-        var_pct = (nv / base_v - 1) * 100 if base_v else float("nan")
-        f = lambda v: f"{v:,.{dec}f}".replace(",", ".")  # noqa: E731
-        st.success(f"**{L.REGION_VAR_LABEL[fvar]}** — proiezione **{ny}**: ~**{f(nv)}** "
-                   f"{L.REGION_VAR_UNIT[fvar] if L.REGION_VAR_UNIT[fvar] != 'n' else ''} "
-                   f"(intervallo {f(lo)}–{f(hi)}, 80%) · {var_pct:+.0f}% vs {proj['hist_years'][-1]}")
-        st.caption(f"Trend stimato sugli anni {proj['hist_years'][0]}–{proj['hist_years'][-1]} "
-                   f"(R²={proj['r2']:.2f}{' · 2020 escluso' if drop_covid else ''}). "
-                   "R² alto = trend regolare; R² basso = serie più rumorosa, proiezione più incerta.")
+        method = "Trend lineare (annuale)"
+        st.caption("Per questa variabile è disponibile il **trend lineare annuale** "
+                   "(il motore stagionale richiede una serie mensile: presenze ISTAT).")
+
+    _fmt = lambda v: f"{v:,.0f}".replace(",", ".")  # noqa: E731
+    if method.startswith("Stagionale"):
+        proj = L.project_seasonal(L.region_monthly_series(code, fvar), horizon)
+        if proj is None:
+            st.info("Serie mensile insufficiente per il modello stagionale (servono ~2 anni).")
+        else:
+            st.plotly_chart(L.chart_projection_monthly(proj, L.REGION_VAR_LABEL[fvar],
+                            L.REGION_VAR_UNIT[fvar]), use_container_width=True)
+            if proj["fc_ann"]:
+                ny = max(proj["fc_ann"]); m, lo, hi = proj["fc_ann"][ny]
+                last_y = max(proj["hist_ann"]) if proj["hist_ann"] else None
+                base_v = proj["hist_ann"].get(last_y) if last_y else None
+                vp = f" · {(m / base_v - 1) * 100:+.0f}% vs {last_y}" if base_v else ""
+                st.success(f"**{L.REGION_VAR_LABEL[fvar]}** — proiezione **{ny}** (somma 12 mesi): "
+                           f"~**{_fmt(m)}** (intervallo {_fmt(lo)}–{_fmt(hi)}, 80%){vp}")
+            st.caption(f"Motore stagionale ISTAT: C(mese) + trend + dummy COVID (2020-03→2021-12), "
+                       f"R²={proj['r2']:.2f}, intervallo di previsione 80%. La banda annuale è la somma "
+                       "dei mesi (indicativa).")
+    else:
+        bc1, bc2 = st.columns([1.3, 1])
+        _base = {"Ultimi 5 anni": 5, "Ultimi 10 anni": 10, "Tutto lo storico": None}
+        base_lbl = bc1.selectbox("Base del trend", list(_base), index=0, key="reg_fc_base",
+                                 help="Su quanti anni stimare la retta. «Ultimi 5» segue il regime recente.")
+        drop_covid = bc2.checkbox("Escludi 2020", value=True, key="reg_fc_covid",
+                                  help="Esclude l'anomalia COVID dal calcolo del trend.")
+        proj = L.project_var(panel, fvar, horizon, drop_covid, n_years=_base[base_lbl])
+        if proj is None:
+            st.info("Servono almeno 3 anni di dati per proiettare questa variabile.")
+        else:
+            st.plotly_chart(L.chart_projection(proj, L.REGION_VAR_LABEL[fvar], L.REGION_VAR_UNIT[fvar]),
+                            use_container_width=True)
+            dec = L.REGION_VAR_DEC[fvar]
+            ny, nv = proj["fut_years"][-1], proj["fc_mean"][-1]
+            lo, hi = proj["fc_lo"][-1], proj["fc_hi"][-1]
+            base_v = proj["hist_vals"][-1]
+            var_pct = (nv / base_v - 1) * 100 if base_v else float("nan")
+            fdec = lambda v: f"{v:,.{dec}f}".replace(",", ".")  # noqa: E731
+            st.success(f"**{L.REGION_VAR_LABEL[fvar]}** — proiezione **{ny}**: ~**{fdec(nv)}** "
+                       f"{L.REGION_VAR_UNIT[fvar] if L.REGION_VAR_UNIT[fvar] != 'n' else ''} "
+                       f"(intervallo {fdec(lo)}–{fdec(hi)}, 80%) · {var_pct:+.0f}% vs {proj['hist_years'][-1]}")
+            st.caption(f"Trend stimato sugli anni {proj['hist_years'][0]}–{proj['hist_years'][-1]} "
+                       f"(R²={proj['r2']:.2f}{' · 2020 escluso' if drop_covid else ''}). "
+                       "R² alto = trend regolare; R² basso = serie più rumorosa, proiezione più incerta.")
 
 
 def page_confronto_regioni():
