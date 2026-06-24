@@ -181,6 +181,48 @@ def page_regione():
         st.caption(f"NUTS2 **{info['code']}** · keyword Trends «{info['trends_kw']}» · "
                    f"Wikipedia «{info['wiki'].get('it')}» · BdI «{info['bdi']}»")
 
+    # ── Analisi pluriennale: tabella valori assoluti + grafico a indici, variabili on/off ──
+    st.divider()
+    st.subheader(":material/insights: Analisi pluriennale")
+    st.caption("Accendi/spegni le variabili: la **tabella** mostra i valori assoluti per anno, il "
+               "**grafico a indici** (base 100 = primo anno) confronta i trend — così vedi se, *a parità "
+               "di turisti, la spesa per turista è salita o scesa*. Base per le proiezioni.")
+    panel = L.region_annual_panel(code)
+    if panel is None or panel.empty:
+        st.info("Serie annuali non ancora disponibili (ISTAT/BdI).")
+        return
+    avail = [k for k in panel.columns if panel[k].notna().any()]
+    cwin, cvar = st.columns([1, 2.6])
+    win = cwin.selectbox("Periodo", ["Ultimo anno", "Ultimi 2 anni", "Ultimi 3 anni",
+                                     "Ultimi 5 anni", "Tutti gli anni"], index=3, key="reg_win")
+    _nwin = {"Ultimo anno": 1, "Ultimi 2 anni": 2, "Ultimi 3 anni": 3, "Ultimi 5 anni": 5}
+    default_sel = [k for k in ("presenze_tot", "spesa_per_viagg") if k in avail] or avail[:2]
+    sel = cvar.multiselect(
+        "Variabili da confrontare", avail, default=default_sel, key="reg_vars",
+        format_func=lambda k: L.REGION_VAR_LABEL[k] + (f" ({L.REGION_VAR_UNIT[k]})"
+                                                       if L.REGION_VAR_UNIT[k] != "n" else ""))
+    if not sel:
+        st.info("Seleziona almeno una variabile dal menu qui sopra.")
+        return
+    dfp = panel if win == "Tutti gli anni" else panel.tail(_nwin[win])
+    show = pd.DataFrame({"Anno": dfp.index.astype(int)})
+    for k in sel:
+        dec = L.REGION_VAR_DEC[k]
+        show[L.REGION_VAR_LABEL[k]] = [("—" if pd.isna(v) else f"{v:,.{dec}f}".replace(",", "."))
+                                       for v in dfp[k]]
+    st.dataframe(show, hide_index=True, use_container_width=True)
+    deltas = []
+    for k in sel:
+        s = dfp[k].dropna()
+        if len(s) >= 2 and s.iloc[0]:
+            deltas.append(f"**{L.REGION_VAR_LABEL[k]}** {(s.iloc[-1] / s.iloc[0] - 1) * 100:+.0f}% "
+                          f"({int(s.index[0])}→{int(s.index[-1])})")
+    if deltas:
+        st.caption("Variazione nel periodo — " + " · ".join(deltas))
+    st.plotly_chart(L.chart_region_indexed(dfp, sel), use_container_width=True)
+    st.caption("⚠️ Spesa, pernottamenti e viaggiatori = **solo turisti stranieri** (Banca d'Italia); "
+               "le presenze sono **totali** (ISTAT). La spesa per turista è quindi sul perimetro straniero.")
+
 
 def page_confronto_regioni():
     st.header(":material/bar_chart: Confronto tra regioni")
@@ -799,8 +841,8 @@ pg = st.navigation({
     "Panoramica": [
         st.Page(page_home, title="Home", icon=":material/home:", default=True),
         st.Page(page_italia, title="Italia", icon=":material/map:"),
-        SINTESI_PAGE,
         st.Page(page_regione, title="Regione", icon=":material/public:"),
+        SINTESI_PAGE,
         st.Page(page_confronto_regioni, title="Confronto regioni", icon=":material/bar_chart:"),
     ],
     "Cosa è successo": [

@@ -1540,6 +1540,98 @@ def chart_region_presences(df) -> go.Figure:
     return _layout(fig, h=360)
 
 
+# ── Pannello ANNUALE multi-variabile per la scheda Regione (base per le proiezioni) ──
+# Registro variabili: chiave · etichetta · unità · decimali. Le derivate (quota, spesa/turista,
+# occupazione) si calcolano da quelle grezze. Spesa/notti/viaggiatori = SOLO stranieri (BdI).
+REGION_VARS = [
+    ("presenze_tot", "Presenze totali", "n", 0),
+    ("presenze_str", "Presenze straniere", "n", 0),
+    ("quota_str", "Quota stranieri", "%", 1),
+    ("spesa", "Spesa straniera", "M€", 0),
+    ("spesa_per_viagg", "Spesa per viaggiatore", "€", 0),
+    ("spesa_per_notte", "Spesa per notte", "€", 0),
+    ("viaggiatori", "Viaggiatori stranieri", "migliaia", 0),
+    ("notti", "Pernottamenti stranieri", "migliaia", 0),
+    ("letti", "Posti letto", "n", 0),
+    ("occ", "Occupazione", "%", 1),
+]
+REGION_VAR_LABEL = {k: lab for k, lab, _u, _d in REGION_VARS}
+REGION_VAR_UNIT = {k: u for k, _l, u, _d in REGION_VARS}
+REGION_VAR_DEC = {k: d for k, _l, _u, d in REGION_VARS}
+
+
+@st.cache_data(show_spinner="Costruisco il quadro pluriennale…")
+def region_annual_panel(code: str) -> pd.DataFrame:
+    """Pannello ANNUALE (anno × variabili) per regione o Italia. Unisce ISTAT (presenze
+    mensili→somma annua su anni completi, capacità) e Banca d'Italia (spesa/notti/viaggiatori,
+    anni completi). Aggiunge le derivate: quota stranieri, spesa/viaggiatore, spesa/notte,
+    occupazione. Le celle mancanti restano NaN (le serie partono da anni diversi)."""
+    out: dict[int, dict] = {}
+    # ISTAT presenze: mensile → somma annua, solo anni con 12 mesi
+    try:
+        p = region_overview(code)["presenze"].copy()
+        p["anno"] = p["date"].dt.year
+        for col, key in (("totale", "presenze_tot"), ("stranieri", "presenze_str")):
+            if col in p:
+                g = p.dropna(subset=[col]).groupby("anno")[col].agg(["sum", "count"])
+                for y, r in g.iterrows():
+                    if r["count"] >= 12:
+                        out.setdefault(int(y), {})[key] = float(r["sum"])
+    except Exception:  # noqa: BLE001
+        pass
+    # Banca d'Italia: spesa/notti/viaggiatori (stranieri), solo anni completi (4 trimestri)
+    g = bdi_region_annual(code)
+    if g is not None and not g.empty:
+        for _, r in g.iterrows():
+            if r["trimestri"] >= 4:
+                d = out.setdefault(int(r["anno"]), {})
+                d["spesa"], d["notti"], d["viaggiatori"] = float(r["spesa"]), float(r["notti"]), float(r["viaggiatori"])
+    # ISTAT capacità: posti letto annuali
+    try:
+        cap = RS.fetch_istat_capacity(area=RG.istat_area(code))
+        for _, r in cap.iterrows():
+            out.setdefault(int(r["anno"]), {})["letti"] = float(r["letti"])
+    except Exception:  # noqa: BLE001
+        pass
+    if not out:
+        return pd.DataFrame()
+    df = pd.DataFrame(out).T.sort_index()
+    df.index.name = "anno"
+    # derivate
+    if {"presenze_str", "presenze_tot"} <= set(df.columns):
+        df["quota_str"] = df["presenze_str"] / df["presenze_tot"] * 100
+    if {"spesa", "viaggiatori"} <= set(df.columns):
+        df["spesa_per_viagg"] = df["spesa"] * 1e6 / (df["viaggiatori"] * 1e3)
+    if {"spesa", "notti"} <= set(df.columns):
+        df["spesa_per_notte"] = df["spesa"] * 1e6 / (df["notti"] * 1e3)
+    if {"presenze_tot", "letti"} <= set(df.columns):
+        df["occ"] = df["presenze_tot"] / (df["letti"] * 365) * 100
+    # ordina le colonne come nel registro
+    cols = [k for k, *_ in REGION_VARS if k in df.columns]
+    return df[cols]
+
+
+def chart_region_indexed(df: pd.DataFrame, keys: list[str]) -> go.Figure:
+    """Linee a INDICE (base 100 = primo anno della finestra) per le variabili scelte:
+    confronta i TREND relativi a prescindere dall'unità (es. turisti vs spesa/turista)."""
+    palette = ["#0e7490", "#f59e0b", "#7c3aed", "#059669", "#dc2626",
+               "#2563eb", "#db2777", "#65a30d", "#0891b2", "#ca8a04"]
+    fig = go.Figure()
+    for i, k in enumerate(keys):
+        if k not in df:
+            continue
+        s = df[k].dropna()
+        if s.empty or not s.iloc[0]:
+            continue
+        fig.add_trace(go.Scatter(x=s.index.astype(int), y=s / s.iloc[0] * 100,
+                                 name=REGION_VAR_LABEL.get(k, k), mode="lines+markers",
+                                 line=dict(color=palette[i % len(palette)], width=2)))
+    fig.add_hline(y=100, line=dict(color="#94a3b8", dash="dot"))
+    fig.update_yaxes(title="indice (base 100 = primo anno)")
+    fig.update_xaxes(title="anno", dtick=1)
+    return _layout(fig, h=380)
+
+
 def regions_spend_ranking() -> list[dict]:
     """Classifica delle regioni per spesa turistica straniera 2024 (Banca d'Italia).
     code (NUTS2) · regione · spesa_M · rank. Multi-regione by construction."""
