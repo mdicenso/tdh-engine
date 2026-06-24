@@ -18,6 +18,10 @@ import os
 
 DEFAULT_REGION = "ITF1"  # Abruzzo (pilota)
 
+# Sentinella "tutta Italia": vista d'insieme nazionale (non è un NUTS2).
+NATIONAL = "ITALIA"
+NATIONAL_LABEL = "🇮🇹 Italia (tutte le regioni)"
+
 REGIONS = {
     "ITC1": {"nome": "Piemonte", "latlon": (45.07, 7.69), "airports": ["LIMF"],
              "trends_kw": "Piemonte", "bdi": "Piemonte",
@@ -111,14 +115,28 @@ def provinces(code: str | None = None) -> dict:
     return _prov_map().get(code or DEFAULT_REGION, {})
 
 
+def is_national(code: str | None) -> bool:
+    """True se il codice è la sentinella «tutta Italia»."""
+    return code == NATIONAL
+
+
 def region(code: str | None = None) -> dict:
-    """Dict della regione (default Abruzzo). Aggiunge sempre 'code'."""
+    """Dict della regione (default Abruzzo). Aggiunge sempre 'code'.
+    Con la sentinella NATIONAL ritorna una pseudo-regione «Italia»."""
+    if code == NATIONAL:
+        return {"code": NATIONAL, "nome": "Italia", "latlon": (41.90, 12.50),
+                "airports": [], "trends_kw": "Italia", "bdi": "Italia",
+                "wiki": {"it": "Italia", "en": "Italy", "de": "Italien", "nl": "Italië"}}
     code = code if code in REGIONS else DEFAULT_REGION
     r = dict(REGIONS[code])
     r["code"] = code
     return r
 
 
-def region_names() -> dict:
-    """code -> nome, ordinato per nome (per i selettori)."""
-    return {c: REGIONS[c]["nome"] for c in sorted(REGIONS, key=lambda c: REGIONS[c]["nome"])}
+def region_names(include_national: bool = True) -> dict:
+    """code -> nome, ordinato per nome (per i selettori).
+    Con include_national, «Italia» è la PRIMA voce."""
+    names = {NATIONAL: NATIONAL_LABEL} if include_national else {}
+    for c in sorted(REGIONS, key=lambda c: REGIONS[c]["nome"]):
+        names[c] = REGIONS[c]["nome"]
+    return names

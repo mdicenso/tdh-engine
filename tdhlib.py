@@ -68,6 +68,11 @@ CSS = f"""<style>
   .stApp {{ background-color: #f1f5f9; }}
   /* sidebar scura (schiarita per leggibilità) */
   [data-testid="stSidebar"] {{ background-color: #334155; border-right: 1px solid #1e293b; }}
+  /* porta i controlli (selettore Regione, modalità, periodo) SOPRA il menù di navigazione */
+  [data-testid="stSidebar"] > div:first-child {{ display: flex; flex-direction: column; }}
+  [data-testid="stSidebarHeader"] {{ order: 0; }}
+  [data-testid="stSidebarUserContent"] {{ order: 1; }}
+  [data-testid="stSidebarNav"] {{ order: 2; border-top: 1px solid #475569; margin-top: 6px; padding-top: 6px; }}
   [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
   [data-testid="stSidebar"] p, [data-testid="stSidebar"] label,
   [data-testid="stSidebar"] [data-testid="stCaptionContainer"],
@@ -614,9 +619,13 @@ def chart_wiki(yr_range=None, code: str | None = None) -> go.Figure:
 def get_context(region_code: str | None = None) -> dict:
     """Ritorna il contesto della modalità corrente per la REGIONE attiva (dati + ctx per i tool)."""
     region_code = region_code or st.session_state.get("region_code", RG.DEFAULT_REGION)
+    # In modalità «Italia» (vista d'insieme) il motore per-regione non ha un target nazionale
+    # diretto (arriverà nello Step B): usiamo l'Abruzzo come stand-in per non far crashare il
+    # caricamento globale. Le pagine motore restano comunque "guardate" lato app.
+    eng_code = RG.DEFAULT_REGION if RG.is_national(region_code) else region_code
     mode = st.session_state.get("mode", MODE_REAL)
     if MODE_REAL in mode or "Reale" in mode:
-        R = compute_real(region_code)
+        R = compute_real(eng_code)
         return {"mode": "real", "R": R, "region": region_code}
     ranked, rows = compute_synthetic()
     return {"mode": "synthetic", "ranked": ranked, "rows": rows, "region": region_code}

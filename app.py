@@ -27,8 +27,8 @@ st.set_page_config(page_title="Turism Data Hub", page_icon="⛰️", layout="wid
                    initial_sidebar_state="expanded")
 L.inject_css()
 
-# Regione attiva: sempre presente in session_state (default Abruzzo).
-st.session_state.setdefault("region_code", L.RG.DEFAULT_REGION)
+# Regione attiva: sempre presente in session_state (default «Italia» = vista d'insieme).
+st.session_state.setdefault("region_code", L.RG.NATIONAL)
 # Riconcilia un'eventuale selezione regione fatta cliccando la mappa d'Italia:
 # va applicata PRIMA che il selectbox «region_code» venga istanziato.
 if st.session_state.get("_map_region"):
@@ -816,8 +816,24 @@ pg = st.navigation({
         st.Page(page_gestione_dati, title="Gestione dati", icon=":material/database:"),
     ],
 })
+# Pagine che hanno senso a livello NAZIONALE (vista d'insieme «Italia») senza una regione.
+NATIONAL_OK = {"Home", "Italia", "Confronto regioni", "Mercati per paese",
+               "Operatori (demo)", "Assistente", "Architettura", "Gestione dati"}
+
+_rc = st.session_state.get("region_code", L.RG.NATIONAL)
 if pg.title != "Home":
-    _rc = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     L.hero(f"<b>📍 {L.RG.region(_rc)['nome']}</b> · allocazione del budget promozionale sui mercati esteri",
            "Dati reali" if is_real else "Dati sintetici")
-pg.run()
+
+if L.RG.is_national(_rc) and pg.title not in NATIONAL_OK:
+    # In modalità «Italia» le pagine di dettaglio per regione non mostrano di nascosto
+    # una regione di default: invitano a sceglierne una o a usare le viste d'insieme.
+    st.info(
+        "🇮🇹 **Stai vedendo l'Italia.** Questa pagina mostra il **dettaglio per regione**.\n\n"
+        "• Scegli una **regione** dal selettore in alto a sinistra per vedere i suoi dati, **oppure**\n"
+        "• resta sulla vista d'insieme con **Italia** (mappa cliccabile) e **Confronto regioni**.",
+        icon=":material/travel_explore:")
+    st.caption("La vista nazionale **aggregata** di questa pagina (presenze/struttura/occupazione Italia) "
+               "arriverà nello Step B.")
+else:
+    pg.run()
