@@ -338,8 +338,30 @@ def bdi_region_long():
     return df.pivot_table(index=["date", "code"], columns="metric", values="value").reset_index()
 
 
+def bdi_national_annual():
+    """Spesa straniera ANNUALE per TUTTA Italia = somma delle regioni visitate (BdI).
+    Deduplica il Trentino, che nei dati è duplicato su Bolzano (ITD1) e Trento (ITD2)."""
+    df = bdi_region_long()
+    if df is None or df.empty:
+        return None
+    reps = {codes[0] for codes in _BDI_REG_COL.values()}  # un codice per colonna-regione (no doppio Trentino)
+    d = df[df["code"].isin(reps)].copy()
+    if d.empty:
+        return None
+    # nazionale per trimestre = somma sulle regioni; poi aggregato per anno
+    qn = d.groupby("date").agg(spesa=("spesa", "sum"), notti=("notti", "sum"),
+                               viaggiatori=("viaggiatori", "sum")).reset_index()
+    qn["anno"] = qn["date"].dt.year
+    return qn.groupby("anno").agg(spesa=("spesa", "sum"), notti=("notti", "sum"),
+                                  viaggiatori=("viaggiatori", "sum"),
+                                  trimestri=("date", "count")).reset_index()
+
+
 def bdi_region_annual(code: str):
-    """Aggregato ANNUALE (spesa M€, notti/viaggiatori in migliaia) per la regione."""
+    """Aggregato ANNUALE (spesa M€, notti/viaggiatori in migliaia) per la regione,
+    oppure il totale Italia se è selezionata la vista nazionale."""
+    if RG.is_national(code):
+        return bdi_national_annual()
     df = bdi_region_long()
     if df is None or df.empty:
         return None
@@ -1381,9 +1403,9 @@ def compute_provinces(code: str | None = None) -> dict:
 @st.cache_data(show_spinner="Carico le presenze per struttura (ISTAT)…")
 def compute_structure(code: str | None = None) -> dict:
     from tourism_wedge.real_sources import fetch_istat_presences
-    code = code or RG.DEFAULT_REGION
-    hot = fetch_istat_presences(area=code, accom="HOTELLIKE", country="WORLD").rename(columns={"presences": "alberghiero"})
-    oth = fetch_istat_presences(area=code, accom="OTHER", country="WORLD").rename(columns={"presences": "extra"})
+    area = RG.istat_area(code)
+    hot = fetch_istat_presences(area=area, accom="HOTELLIKE", country="WORLD").rename(columns={"presences": "alberghiero"})
+    oth = fetch_istat_presences(area=area, accom="OTHER", country="WORLD").rename(columns={"presences": "extra"})
     panel = hot.merge(oth, on="date", how="outer").sort_values("date")
     return {"alberghiero": float(hot.tail(12)["alberghiero"].sum()),
             "extra": float(oth.tail(12)["extra"].sum()), "panel": panel}
@@ -1460,10 +1482,10 @@ def chart_structure_trend(panel) -> go.Figure:
 @st.cache_data(show_spinner="Calcolo l'occupazione (ISTAT)…")
 def compute_occupancy(code: str | None = None) -> dict:
     from tourism_wedge.real_sources import fetch_istat_presences, fetch_istat_capacity
-    code = code or RG.DEFAULT_REGION
+    area = RG.istat_area(code)
     try:
-        beds = fetch_istat_capacity(area=code)
-        tot = fetch_istat_presences(area=code, country="WORLD")
+        beds = fetch_istat_capacity(area=area)
+        tot = fetch_istat_presences(area=area, country="WORLD")
     except Exception:  # noqa: BLE001 — ISTAT instabile/serie assente
         return {"available": False}
     beds_map = dict(zip(beds["anno"].astype(int), beds["letti"].astype(float)))
@@ -1492,7 +1514,7 @@ def region_overview(code: str) -> dict:
     """Presenze mensili (totale + stranieri) e capacità della regione richiesta.
     Funziona per tutte le 20 regioni (ISTAT per NUTS2). Cache per-regione."""
     info = RG.region(code)
-    area = info["code"]
+    area = RG.istat_area(code)
     stran = RS.fetch_istat_presences(area=area, country="WRL_X_ITA", start="2019-01")
     tot = RS.fetch_istat_presences(area=area, country="WORLD", start="2019-01")
     df = (stran.rename(columns={"presences": "stranieri"})
@@ -1537,8 +1559,11 @@ def regions_spend_ranking() -> list[dict]:
 
 
 def region_spend(code: str):
-    """(spesa_M, rank, totale_regioni) per la regione richiesta, o None."""
+    """(spesa_M, rank, totale_regioni) per la regione richiesta, o None.
+    Per la vista nazionale: (totale_Italia, None, n_regioni) — rank=None = «Italia»."""
     rk = regions_spend_ranking()
+    if RG.is_national(code):
+        return (sum(r["spesa_M"] for r in rk), None, len(rk)) if rk else None
     bdi = RG.region(code)["bdi"]
     hit = next((r for r in rk if RG.REGIONS[r["code"]]["bdi"] == bdi), None)
     return (hit["spesa_M"], hit["rank"], len(rk)) if hit else None

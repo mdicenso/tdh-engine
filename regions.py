@@ -120,6 +120,12 @@ def is_national(code: str | None) -> bool:
     return code == NATIONAL
 
 
+def istat_area(code: str | None) -> str:
+    """Codice REF_AREA per ISTAT: «IT» (totale Italia) per la sentinella nazionale,
+    altrimenti il NUTS2 della regione. (Verificato: ISTAT accetta area='IT'.)"""
+    return "IT" if code == NATIONAL else (code or DEFAULT_REGION)
+
+
 def region(code: str | None = None) -> dict:
     """Dict della regione (default Abruzzo). Aggiunge sempre 'code'.
     Con la sentinella NATIONAL ritorna una pseudo-regione «Italia»."""

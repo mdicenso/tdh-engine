@@ -144,9 +144,13 @@ def page_italia():
 def page_regione():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     info = L.RG.region(code)
-    st.header(f":material/public: {info['nome']} — quadro regionale")
-    st.caption("**Multi-regione**: dati ISTAT reali per la regione selezionata (pagina **Italia**). "
-               "Alcune viste descrittive sono ancora in migrazione al multi-regione.")
+    nazionale = L.RG.is_national(code)
+    st.header(f":material/public: {info['nome']} — quadro {'nazionale' if nazionale else 'regionale'}")
+    if nazionale:
+        st.caption("**Vista d'insieme nazionale**: totale Italia da ISTAT (area «IT»). "
+                   "Scegli una regione dal selettore per il dettaglio territoriale.")
+    else:
+        st.caption("**Multi-regione**: dati ISTAT reali per la regione selezionata (pagina **Italia**).")
     try:
         ov = L.region_overview(code)
     except Exception as e:  # noqa: BLE001
@@ -163,12 +167,19 @@ def page_regione():
         c2.metric(f"Posti letto ({ov['anno_letti']})", f"{ov['letti']:,}".replace(",", "."))
     sp = L.region_spend(code)
     if sp:
+        delta = "totale Italia" if sp[1] is None else f"#{sp[1]} su {sp[2]} regioni"
         c3.metric("Spesa straniera 2024 (BdI)", f"{sp[0]:,.0f} M€".replace(",", "."),
-                  delta=f"#{sp[1]} su {sp[2]} regioni", delta_color="off")
-    c4.metric("Aeroporti", ", ".join(info["airports"]) if info["airports"] else "—")
+                  delta=delta, delta_color="off")
+    if nazionale:
+        c4.metric("Regioni coperte", f"{len(L.RG.REGIONS)}")
+    else:
+        c4.metric("Aeroporti", ", ".join(info["airports"]) if info["airports"] else "—")
     st.plotly_chart(L.chart_region_presences(df), use_container_width=True)
-    st.caption(f"NUTS2 **{info['code']}** · keyword Trends «{info['trends_kw']}» · "
-               f"Wikipedia «{info['wiki'].get('it')}» · BdI «{info['bdi']}»")
+    if nazionale:
+        st.caption("Totale Italia (ISTAT area «IT») · spesa BdI = somma delle regioni visitate")
+    else:
+        st.caption(f"NUTS2 **{info['code']}** · keyword Trends «{info['trends_kw']}» · "
+                   f"Wikipedia «{info['wiki'].get('it')}» · BdI «{info['bdi']}»")
 
 
 def page_confronto_regioni():
@@ -817,8 +828,10 @@ pg = st.navigation({
     ],
 })
 # Pagine che hanno senso a livello NAZIONALE (vista d'insieme «Italia») senza una regione.
+# Step B: le descrittive Regione/Struttura/Occupazione/Spesa usano il totale Italia (ISTAT area="IT").
 NATIONAL_OK = {"Home", "Italia", "Confronto regioni", "Mercati per paese",
-               "Operatori (demo)", "Assistente", "Architettura", "Gestione dati"}
+               "Operatori (demo)", "Assistente", "Architettura", "Gestione dati",
+               "Regione", "Per struttura", "Occupazione", "Spesa turistica"}
 
 _rc = st.session_state.get("region_code", L.RG.NATIONAL)
 if pg.title != "Home":
