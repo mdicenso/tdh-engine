@@ -513,6 +513,47 @@ def origin_markets_coverage() -> dict:
             "quota_pct": (sum10 / naz_M * 100 if naz_M else None)}
 
 
+# Registro variabili per il TREND storico di un mercato d'origine (chiave · etichetta · unità · decimali)
+MARKET_VARS = [
+    ("spesa_it_M", "Spesa in Italia", "M€", 0),
+    ("turisti_k", "Turisti", "migliaia", 0),
+    ("spesa_per_turista", "Spesa per turista", "€", 0),
+    ("out_eur_mld", "Spesa all'estero (totale)", "mld€", 1),
+    ("quota_pct", "Quota Italia", "%", 1),
+]
+MARKET_VAR_LABEL = {k: lab for k, lab, _u, _d in MARKET_VARS}
+MARKET_VAR_UNIT = {k: u for k, _l, u, _d in MARKET_VARS}
+MARKET_VAR_DEC = {k: d for k, _l, _u, d in MARKET_VARS}
+
+
+@st.cache_data(show_spinner="Carico la serie storica del mercato…")
+def origin_market_panel(code: str) -> pd.DataFrame:
+    """Serie storica ANNUALE di un mercato d'origine (anno × variabili): spesa in Italia,
+    turisti, spesa/turista (BdI, anni completi), spesa all'estero (Eurostat/WB) e quota Italia."""
+    long = bdi_country_long()
+    if long is None or long.empty:
+        return pd.DataFrame()
+    long = long.copy()
+    long["anno"] = long["date"].dt.year
+    a = (long[long["code"] == code].groupby("anno")
+         .agg(spesa=("spesa", "sum"), viaggiatori=("viaggiatori", "sum"), q=("date", "count")).reset_index())
+    a = a[a["q"] >= 4]
+    if a.empty:
+        return pd.DataFrame()
+    df = pd.DataFrame(index=a["anno"].astype(int))
+    df["spesa_it_M"] = a.set_index("anno")["spesa"]
+    df["turisti_k"] = a.set_index("anno")["viaggiatori"]
+    df["spesa_per_turista"] = df["spesa_it_M"] * 1e6 / (df["turisti_k"] * 1e3)
+    out = outbound_long()
+    if out is not None and not out.empty:
+        o = out[out["code"] == code].set_index("anno")["spesa_out_eur_m"]
+        if not o.empty:
+            df["out_eur_mld"] = o / 1000
+            df["quota_pct"] = df["spesa_it_M"] / o * 100
+    df.index.name = "anno"
+    return df.sort_index()
+
+
 def chart_origin_spesa_italia(rows: list[dict]) -> go.Figure:
     """Grafico 1 (area Mercati d'origine): spesa in Italia per paese (M€), barre orizzontali."""
     s = sorted(rows, key=lambda r: r["spesa_it_M"])
@@ -1728,9 +1769,11 @@ def region_annual_panel(code: str) -> pd.DataFrame:
     return df[cols]
 
 
-def chart_region_indexed(df: pd.DataFrame, keys: list[str]) -> go.Figure:
+def chart_region_indexed(df: pd.DataFrame, keys: list[str], labels: dict | None = None) -> go.Figure:
     """Linee a INDICE (base 100 = primo anno della finestra) per le variabili scelte:
-    confronta i TREND relativi a prescindere dall'unità (es. turisti vs spesa/turista)."""
+    confronta i TREND relativi a prescindere dall'unità (es. turisti vs spesa/turista).
+    `labels` mappa chiave→etichetta (default: variabili Regione)."""
+    labels = labels or REGION_VAR_LABEL
     palette = ["#0e7490", "#f59e0b", "#7c3aed", "#059669", "#dc2626",
                "#2563eb", "#db2777", "#65a30d", "#0891b2", "#ca8a04"]
     fig = go.Figure()
@@ -1741,7 +1784,7 @@ def chart_region_indexed(df: pd.DataFrame, keys: list[str]) -> go.Figure:
         if s.empty or not s.iloc[0]:
             continue
         fig.add_trace(go.Scatter(x=s.index.astype(int), y=s / s.iloc[0] * 100,
-                                 name=REGION_VAR_LABEL.get(k, k), mode="lines+markers",
+                                 name=labels.get(k, k), mode="lines+markers",
                                  line=dict(color=palette[i % len(palette)], width=2)))
     fig.add_hline(y=100, line=dict(color="#94a3b8", dash="dot"))
     fig.update_yaxes(title="indice (base 100 = primo anno)")

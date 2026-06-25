@@ -346,6 +346,51 @@ def page_mercati_origine():
                 f"({cov['sum10_M'] / 1000:.1f} mld € su {cov['naz_M'] / 1000:.1f} mld €, {cov['anno']}); "
                 "il restante ~36% sono altri mercati (Paesi Bassi, Belgio, Nordici, Cina…).")
 
+    # ── Trend storico per singolo mercato d'origine ──
+    st.divider()
+    st.subheader(":material/timeline: Trend storico per mercato")
+    st.caption("Come si muove nel tempo un singolo paese: spesa in Italia, turisti, spesa per turista e "
+               "quota catturata dall'Italia. La **tabella** dà i valori assoluti, il **grafico a indici** "
+               "(base 100) confronta i trend a prescindere dall'unità.")
+    nomi = {r["code"]: r["paese"] for r in rows}
+    mc1, mc2 = st.columns([1.4, 1])
+    sel_code = mc1.selectbox("Paese", [r["code"] for r in rows],
+                             format_func=lambda c: nomi[c], key="orig_mk_code")
+    win = mc2.selectbox("Periodo", ["Ultimi 5 anni", "Ultimi 10 anni", "Tutti gli anni"],
+                        index=1, key="orig_mk_win")
+    mp = L.origin_market_panel(sel_code)
+    if mp.empty:
+        st.info("Serie storica non disponibile per questo paese.")
+    else:
+        _nw = {"Ultimi 5 anni": 5, "Ultimi 10 anni": 10}
+        dfm = mp if win == "Tutti gli anni" else mp.tail(_nw[win])
+        avail = [k for k in mp.columns if mp[k].notna().any()]
+        default_sel = [k for k in ("spesa_it_M", "spesa_per_turista") if k in avail] or avail[:2]
+        sel = st.multiselect("Variabili da confrontare", avail, default=default_sel, key="orig_mk_vars",
+                             format_func=lambda k: L.MARKET_VAR_LABEL[k] + (f" ({L.MARKET_VAR_UNIT[k]})"
+                                                                            if L.MARKET_VAR_UNIT[k] != "n" else ""))
+        if sel:
+            st.subheader(f"Tabella 2 — {nomi[sel_code]}: serie storica")
+            show = pd.DataFrame({"Anno": dfm.index.astype(int)})
+            for k in sel:
+                dec = L.MARKET_VAR_DEC[k]
+                show[L.MARKET_VAR_LABEL[k]] = [("—" if pd.isna(v) else f"{v:,.{dec}f}".replace(",", "X").replace(".", ",").replace("X", "."))
+                                               for v in dfm[k]]
+            st.dataframe(show, hide_index=True, use_container_width=True)
+            deltas = []
+            for k in sel:
+                s = dfm[k].dropna()
+                if len(s) >= 2 and s.iloc[0]:
+                    deltas.append(f"**{L.MARKET_VAR_LABEL[k]}** {(s.iloc[-1] / s.iloc[0] - 1) * 100:+.0f}% "
+                                  f"({int(s.index[0])}→{int(s.index[-1])})")
+            if deltas:
+                st.caption("Variazione nel periodo — " + " · ".join(deltas))
+            st.subheader(f"Grafico 3 — {nomi[sel_code]}: andamento (indici base 100)")
+            st.plotly_chart(L.chart_region_indexed(dfm, sel, labels=L.MARKET_VAR_LABEL),
+                            use_container_width=True)
+            st.caption("Spesa, turisti e spesa/turista = Banca d'Italia; spesa all'estero e quota = Eurostat/World Bank. "
+                       "La quota può fermarsi prima (outbound di UK ed extra-UE meno recente).")
+
 
 def page_confronto_regioni():
     st.header(":material/bar_chart: Confronto tra regioni")
