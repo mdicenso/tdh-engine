@@ -116,6 +116,7 @@ def page_sintesi():
         </div>""", unsafe_allow_html=True)
 
     st.markdown("#### Ranking (opportunità per mercato)")
+    st.subheader("Grafico 1 — Ranking dei mercati")
     st.plotly_chart(L.chart_ranking_bar(summary), use_container_width=True)
 
 
@@ -124,6 +125,7 @@ def page_italia():
     st.caption("Seleziona la regione di interesse: **clicca la mappa** oppure usa il menu qui sotto. "
                "Il colore indica la spesa dei turisti stranieri (Banca d'Italia 2024).")
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    st.subheader("Grafico 1 — Mappa d'Italia (spesa straniera per regione)")
     ev = st.plotly_chart(L.chart_italy_map(highlight=code), use_container_width=True,
                          on_select="rerun", selection_mode="points", key="italy_map_home")
     sel = None
@@ -183,6 +185,7 @@ def page_regione():
         dfm = df
     else:
         dfm = df[df["date"] >= df["date"].max() - pd.DateOffset(years=_nwin[win])]
+    st.subheader("Grafico 1 — Presenze mensili (totale e straniere)")
     st.plotly_chart(L.chart_region_presences(dfm), use_container_width=True)
     if nazionale:
         st.caption("Totale Italia (ISTAT area «IT») · spesa BdI = somma delle regioni visitate")
@@ -216,6 +219,7 @@ def page_regione():
         dec = L.REGION_VAR_DEC[k]
         show[L.REGION_VAR_LABEL[k]] = [("—" if pd.isna(v) else f"{v:,.{dec}f}".replace(",", "."))
                                        for v in dfp[k]]
+    st.subheader("Tabella 1 — Valori annuali per variabile")
     st.dataframe(show, hide_index=True, use_container_width=True)
     deltas = []
     for k in sel:
@@ -225,6 +229,7 @@ def page_regione():
                           f"({int(s.index[0])}→{int(s.index[-1])})")
     if deltas:
         st.caption("Variazione nel periodo — " + " · ".join(deltas))
+    st.subheader("Grafico 2 — Indici (base 100)")
     st.plotly_chart(L.chart_region_indexed(dfp, sel), use_container_width=True)
     st.caption("⚠️ Spesa, pernottamenti e viaggiatori = **solo turisti stranieri** (Banca d'Italia); "
                "le presenze sono **totali** (ISTAT). La spesa per turista è quindi sul perimetro straniero.")
@@ -254,6 +259,7 @@ def page_regione():
         if proj is None:
             st.info("Serie mensile insufficiente per il modello stagionale (servono ~2 anni).")
         else:
+            st.subheader("Grafico 3 — Proiezione")
             st.plotly_chart(L.chart_projection_monthly(proj, L.REGION_VAR_LABEL[fvar],
                             L.REGION_VAR_UNIT[fvar]), use_container_width=True)
             if proj["fc_ann"]:
@@ -277,6 +283,7 @@ def page_regione():
         if proj is None:
             st.info("Servono almeno 3 anni di dati per proiettare questa variabile.")
         else:
+            st.subheader("Grafico 3 — Proiezione")
             st.plotly_chart(L.chart_projection(proj, L.REGION_VAR_LABEL[fvar], L.REGION_VAR_UNIT[fvar]),
                             use_container_width=True)
             dec = L.REGION_VAR_DEC[fvar]
@@ -345,10 +352,12 @@ def page_confronto_regioni():
     st.caption("Classifica di **tutte le regioni** per spesa dei turisti stranieri (Banca d'Italia 2024). "
                "La regione attiva è evidenziata. La selezione si fa nella pagina **Italia**.")
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    st.subheader("Grafico 1 — Classifica regioni per spesa straniera")
     st.plotly_chart(L.chart_regions_ranking(highlight=code), use_container_width=True)
     rk = L.regions_spend_ranking()
     df = pd.DataFrame([{"#": r["rank"], "Regione": r["regione"],
                         "Spesa straniera 2024 (M€)": round(r["spesa_M"])} for r in rk])
+    st.subheader("Tabella 1 — Spesa straniera per regione")
     st.dataframe(df, hide_index=True, use_container_width=True)
     st.caption("Nota BdI: Bolzano e Trento sono aggregati come «Trentino Alto Adige».")
 
@@ -356,8 +365,10 @@ def page_confronto_regioni():
 def page_mappa():
     st.header(":material/map: Mappa dei mercati")
     st.caption("Colore = raccomandazione · dimensione bolla = score · linea = flusso verso la destinazione")
+    st.subheader("Grafico 1 — Mappa dei mercati")
     st.plotly_chart(L.chart_map(summary), use_container_width=True)
     with st.expander("Ranking in forma di barre"):
+        st.subheader("Grafico 2 — Ranking in barre")
         st.plotly_chart(L.chart_ranking_bar(summary), use_container_width=True)
 
 
@@ -367,16 +378,18 @@ def page_ranking():
     tbl = pd.DataFrame([{"#": s["rank"], "Mercato": s["market"], "Raccomandazione": s["reco"],
                          **({"Forza": s["forza"], "Momentum %": s["momentum"]} if is_real else {}),
                          "Score": round(s["score"])} for s in summary])
+    st.subheader("Tabella 1 — Ranking mercati")
     L.aggrid_table(tbl, height=300, reco_col="Raccomandazione", key="rank_grid")
+    st.subheader("Grafico 1 — Ranking in barre")
     st.plotly_chart(L.chart_ranking_bar(summary), use_container_width=True)
     if is_real:
-        st.subheader("Valore economico per mercato")
+        st.subheader("Grafico 2 — Valore economico per mercato")
         st.caption("Spesa media per viaggiatore (Banca d'Italia, 2024) — peso economico reale usato nel ranking.")
         st.plotly_chart(L.chart_value_bar(summary), use_container_width=True)
         _rc = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
         fig_conn = L.chart_connectivity(_rc)
         if fig_conn is not None:
-            st.subheader(f"Connettività aerea diretta — {L.RG.region(_rc)['nome']}")
+            st.subheader(f"Grafico 3 — Connettività aerea diretta — {L.RG.region(_rc)['nome']}")
             st.caption("Passeggeri 2024 verso gli aeroporti della regione (Eurostat avia_par) — "
                        "fattibilità reale nel ranking. 0 = nessun volo diretto da quel mercato.")
             st.plotly_chart(fig_conn, use_container_width=True)
@@ -391,6 +404,7 @@ def page_ranking():
                 st.markdown("**Salute mercato** · fiducia dei consumatori")
                 hdf = pd.DataFrame([{"Mercato": k, "Fiducia (saldo)": v["conf"],
                                      "Trend ~6 mesi": v["label"]} for k, v in health.items()])
+                st.subheader("Tabella 2 — Salute dei mercati")
                 st.dataframe(hdf, hide_index=True, use_container_width=True)
                 st.caption("DE/AT/NL (Eurostat). Saldo negativo = pessimismo; conta soprattutto il trend.")
         with hc2:
@@ -398,6 +412,7 @@ def page_ranking():
             fig_fl = L.chart_flights_monthly() if _rc2 == L.RG.DEFAULT_REGION else None
             if fig_fl is not None:
                 st.markdown("**Accessibilità aerea nel tempo** · Pescara")
+                st.subheader("Grafico 4 — Voli per mercato")
                 st.plotly_chart(fig_fl, use_container_width=True)
             else:
                 st.markdown("**Accessibilità per mercato** (vedi grafico sopra)")
@@ -417,6 +432,7 @@ def page_forecast():
             st.info("A livello aggregato la stagionalità domina: il modello non batte la naive. "
                     "Per il **numero** si usa il riferimento stagionale (confidenza bassa); "
                     "il valore decisionale è nel **ranking**.")
+        st.subheader("Grafico 1 — Forecast presenze")
         st.plotly_chart(L.chart_forecast(R["history"], R["forecast"], "presenze straniere"),
                         use_container_width=True)
         with st.expander("Lettura dei coefficienti del modello aggregato"):
@@ -428,6 +444,7 @@ def page_forecast():
         sel = st.selectbox("Mercato:", [s["market"] for s in summary])
         code = next(c for c, r in rows.items() if r["name"] == sel)
         Rr = rows[code]
+        st.subheader("Grafico 1 — Forecast presenze")
         st.plotly_chart(L.chart_forecast(Rr["history"][["date", "presences"]], Rr["forecast"], "presenze"),
                         use_container_width=True)
         with st.expander("Lettura dei coefficienti"):
@@ -455,6 +472,7 @@ def page_dettaglio():
                        f"· {h['label']} — contesto decisionale, non previsione.")
         else:
             st.caption(":material/thermostat: Salute mercato: fiducia consumatori non disponibile per questo mercato (solo DE/AT/NL).")
+        st.subheader("Grafico 1 — Interesse di ricerca")
         st.plotly_chart(L.chart_search(ctx["R"]["panel"], s["code"]), use_container_width=True)
     else:
         rows = ctx["rows"]
@@ -485,10 +503,12 @@ def page_allocatore():
         adf = pd.DataFrame([{"Mercato": a["market"], "Raccomandazione": a["reco"],
                              "Quota %": round(a["quota_pct"]), "€": round(a["quota_eur"])}
                             for a in alloc if a["quota_eur"] > 0])
+        st.subheader("Tabella 1 — Allocazione del budget")
         L.aggrid_table(adf, height=300, reco_col="Raccomandazione", key="alloc_grid")
     with gcol:
         any_alloc = any(a["quota_eur"] > 0 for a in alloc)
         if any_alloc:
+            st.subheader("Grafico 1 — Ripartizione del budget")
             st.plotly_chart(L.chart_allocation(alloc), use_container_width=True)
         else:
             st.warning("Nessun mercato idoneo con le categorie selezionate.")
@@ -502,6 +522,7 @@ def page_timing():
     if panel is None:
         st.info("Dati di ricerca non disponibili.")
         return
+    st.subheader("Grafico 1 — Stagionalità per mercato")
     st.plotly_chart(L.chart_seasonal_heatmap(panel, summary), use_container_width=True)
     st.caption("Più scuro = mese di picco dell'interesse per quel mercato (normalizzato per riga).")
 
@@ -517,11 +538,11 @@ def page_gestione_dati():
     st.header(":material/database: Gestione dati")
     st.caption("Dati presenti, candidati in valutazione (con nulla osta), copertura temporale e caricamento file.")
 
-    st.subheader(":material/table: Tabella Dati Presenti")
+    st.subheader(":material/table: Tabella 1 — Dati Presenti")
     st.caption("Tutte le fonti attualmente in uso dal motore: reali, candidati approvati e file caricati.")
     L.aggrid_table(pd.DataFrame(L.present_sources(), columns=L.SRC_COLS), height=320, key="present_grid")
 
-    st.subheader(":material/science: Tabella dei Dati in Valutazione")
+    st.subheader(":material/science: Tabella 2 — Dati in Valutazione")
     st.caption("Fonti candidate proposte per il TDH. Verifica la disponibilità, valida la descrizione "
                "e dai il **nulla osta** per caricarle.")
     pend = L.pending_candidates()
@@ -558,7 +579,7 @@ def page_gestione_dati():
                     else:
                         st.error(res.get("msg", "caricamento fallito"))
 
-    st.subheader(":material/grid_view: Copertura dati — Nazionale · Regionale · Provinciale")
+    st.subheader(":material/grid_view: Tabella 3 — Copertura dati (Nazionale · Regionale · Provinciale)")
     st.caption("Cosa abbiamo a ciascun livello geografico (✅ disponibile · 🟡 parziale · ❌ assente). "
                "Serve a vedere i **buchi** da coprire per il portale multi-regione.")
     st.dataframe(pd.DataFrame(L.coverage_matrix(), columns=L.COVERAGE_COLS),
@@ -566,7 +587,7 @@ def page_gestione_dati():
     st.caption("🔴 Buchi principali: presenze **per paese a livello regionale**, **anagrafica strutture**, "
                "spesa per paese regionale, accessibilità ferroviaria regionale.")
 
-    st.subheader(":material/sync: Stato e aggiornamento delle fonti")
+    st.subheader(":material/sync: Tabella 4 — Stato e aggiornamento delle fonti")
     lr = U.last_run_info()
     cap = ("Giudizio istantaneo dalla cache — 🟢 fresco · 🟡 da controllare · "
            "🔴 probabile dato nuovo · ⚪ ignoto. Il controllo *live* riscarica e conferma cosa è cambiato.")
@@ -606,7 +627,7 @@ def page_gestione_dati():
         st.caption("In locale l'aggiornamento resta sul tuo PC. Per portarlo anche sull'app online "
                    "serve un `git push` (oppure ci penserà la schedulazione automatica — Fase 2).")
 
-    st.subheader("Copertura temporale delle serie")
+    st.subheader("Grafico 1 — Copertura temporale delle serie")
     st.caption("Le serie hanno archi temporali diversi: ecco da quando a quando ciascuna è disponibile.")
     st.plotly_chart(L.chart_coverage(L.series_coverage()), use_container_width=True)
 
@@ -628,7 +649,7 @@ def page_gestione_dati():
                        + (f" · {rec['righe']} righe" if rec["righe"] is not None else ""))
             st.rerun()
 
-    st.subheader("File caricati")
+    st.subheader("Tabella 5 — File caricati")
     reg = L.load_registry()
     if not reg:
         st.info("Nessun file caricato finora.")
@@ -695,7 +716,7 @@ def page_architettura():
     st.subheader("Architettura a 5 livelli")
     for nome, desc in A["livelli"]:
         st.markdown(f"**{nome}** — {desc}")
-    st.subheader("Sorgenti dati")
+    st.subheader("Tabella 1 — Sorgenti dati")
     L.aggrid_table(pd.DataFrame(A["sorgenti"]), height=360, key="arch_src")
     st.caption("🟢 Attiva (già nel motore) · 🟡 Pianificata · ⚪ Da valutare")
     cR, cP = st.columns(2)
@@ -724,12 +745,14 @@ def page_province():
         return
     fig_map = L.chart_province_map(P["rows"])
     if fig_map is not None:
+        st.subheader("Grafico 1 — Mappa delle presenze per provincia")
         st.plotly_chart(fig_map, use_container_width=True)
-    st.subheader("Riepilogo per provincia")
+    st.subheader("Tabella 1 — Riepilogo per provincia")
     tbl = pd.DataFrame([{"Provincia": r["provincia"], "Presenze": round(r["presenze"]),
                          "Stranieri": round(r["stranieri"]),
                          "Quota stranieri %": round(r["quota_stranieri"])} for r in P["rows"]])
     L.aggrid_table(tbl, height=190, key="prov_grid")
+    st.subheader("Grafico 2 — Presenze per provincia (italiani/stranieri)")
     st.plotly_chart(L.chart_province_bar(P["rows"]), use_container_width=True)
 
     yr = st.session_state.get("yr_range", (2019, 2024))
@@ -744,7 +767,7 @@ def page_province():
         pf, label = panel[panel["date"] >= cutoff], preset.lower()
     else:
         pf, label = L.filter_years(panel, yr), f"{yr[0]}–{yr[1]}"
-    st.subheader(f"Trend mensile per provincia · {label}")
+    st.subheader(f"Grafico 3 — Trend mensile per provincia · {label}")
     st.plotly_chart(L.chart_province_trend(pf, rangeslider=True), use_container_width=True)
     st.caption("Usa il menu per i preset rapidi, oppure trascina la barra/il cursore sul grafico "
                "per restringere l'intervallo a mano.")
@@ -765,9 +788,10 @@ def page_struttura():
     c1.metric("Alberghiero (12 mesi)", f"{S['alberghiero']:,.0f}".replace(",", "."))
     c2.metric("Extra-alberghiero", f"{S['extra']:,.0f}".replace(",", "."))
     c3.metric("Quota alberghiero", f"{S['alberghiero'] / tot * 100:.0f}%" if tot else "—")
+    st.subheader("Grafico 1 — Alberghiero vs extra-alberghiero")
     st.plotly_chart(L.chart_structure_donut(S), use_container_width=True)
     yr = st.session_state.get("yr_range", (2019, 2024))
-    st.subheader(f"Trend mensile · {yr[0]}–{yr[1]}")
+    st.subheader(f"Grafico 2 — Trend mensile · {yr[0]}–{yr[1]}")
     st.plotly_chart(L.chart_structure_trend(L.filter_years(S["panel"], yr)), use_container_width=True)
 
 
@@ -792,8 +816,9 @@ def page_occupazione():
     yr = st.session_state.get("yr_range", (2019, 2024))
     pan = L.filter_years(O["panel"], yr)
     st.caption(f"Periodo selezionato: {yr[0]}–{yr[1]}")
+    st.subheader("Grafico 1 — Occupazione lorda")
     st.plotly_chart(L.chart_occupancy(pan), use_container_width=True)
-    st.subheader("Stagionalità dell'occupazione")
+    st.subheader("Grafico 2 — Stagionalità dell'occupazione")
     st.plotly_chart(L.chart_occupancy_season(pan), use_container_width=True)
     st.caption("Indice di utilizzazione lorda: presenze rapportate alla capacità teorica (posti letto × giorni del mese).")
 
@@ -810,16 +835,16 @@ def page_operatori():
     c4.metric("Tasso conversione", f"{d['conversione']}%")
     a, b = st.columns(2)
     with a:
-        st.subheader("Canali di acquisizione")
+        st.subheader("Grafico 1 — Canali di acquisizione")
         st.plotly_chart(L.chart_demo_channels(d["canali"]), use_container_width=True)
     with b:
-        st.subheader("Funnel di prenotazione")
+        st.subheader("Grafico 2 — Funnel di prenotazione")
         st.plotly_chart(L.chart_demo_funnel(d["funnel"]), use_container_width=True)
-    st.subheader("Affluenza prevista — prossimi 7 giorni")
+    st.subheader("Grafico 3 — Affluenza prevista (prossimi 7 giorni)")
     st.plotly_chart(L.chart_demo_weekly(d["weekly"]), use_container_width=True)
     e, f = st.columns(2)
     with e:
-        st.subheader("Recensioni")
+        st.subheader("Grafico 4 — Recensioni")
         st.plotly_chart(L.chart_demo_reviews(d["recensioni"]), use_container_width=True)
     with f:
         st.subheader("Cosa cercano i turisti")
@@ -850,21 +875,21 @@ def page_spesa():
     c3.metric("Durata media", f"{durata:.1f} notti")
     c4.metric("Spesa per notte", f"€ {spnotte:.0f}")
     yr = st.session_state.get("yr_range", (2019, 2024))
-    st.subheader(f"Spesa straniera in {nome} · {yr[0]}–{yr[1]}")
+    st.subheader(f"Grafico 1 — Spesa straniera in {nome} · {yr[0]}–{yr[1]}")
     fig_sp = L.chart_region_spend(code, yr)
     if fig_sp is not None:
         st.plotly_chart(fig_sp, use_container_width=True)
     ext = L.bdi_extended()
     if ext:
-        st.subheader("Confronto regioni — spesa turisti stranieri 2024")
+        st.subheader("Grafico 2 — Confronto regioni (spesa stranieri 2024)")
         st.plotly_chart(L.chart_regions_spend(ext), use_container_width=True)
         cA, cB = st.columns(2)
         with cA:
-            st.subheader("Per motivo del viaggio")
+            st.subheader("Grafico 3 — Per motivo del viaggio")
             st.caption("Dato nazionale (turisti stranieri in Italia)")
             st.plotly_chart(L.chart_bdi_motivo(ext), use_container_width=True)
         with cB:
-            st.subheader("Per tipo di struttura")
+            st.subheader("Grafico 4 — Per tipo di struttura")
             st.caption("Dato nazionale (turisti stranieri in Italia)")
             st.plotly_chart(L.chart_bdi_struttura(ext), use_container_width=True)
 
@@ -879,6 +904,7 @@ def page_mercati_paese():
         st.info("Dati Banca d'Italia per paese non disponibili.")
         return
     metric = st.radio("Metrica:", ["notti", "spesa", "viaggiatori"], horizontal=True)
+    st.subheader("Grafico 1 — Mercati per paese nel tempo")
     st.plotly_chart(L.chart_bdi_country(metric), use_container_width=True)
     last = int(g["anno"].max())
     cur = g[g["anno"] == last].set_index("code")
@@ -891,6 +917,7 @@ def page_mercati_paese():
             yoy = (v / p - 1) * 100 if (p and p != 0) else None
             rows.append({"Mercato": code, f"{metric.capitalize()} {last}": round(v),
                          "var. % a/a": (f"{yoy:+.0f}%" if yoy is not None else "—")})
+    st.subheader("Tabella 1 — Mercati per paese (ultimo anno)")
     st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
     st.caption("Unità BdI: notti e viaggiatori in migliaia, spesa in milioni di €. "
                "Mercati: Germania, Austria, Regno Unito, Svizzera, USA, Francia, Spagna.")
@@ -903,9 +930,9 @@ def page_online():
     st.caption(f"Google Trends (per paese) e Wikipedia pageviews (per lingua) per **{nome}** anticipano gli arrivi. "
                "Wikipedia è per LINGUA, quindi DE/AT/CH condividono il tedesco e GB/US l'inglese.")
     yr = st.session_state.get("yr_range", (2019, 2024))
-    st.subheader(f"Wikipedia — interesse per «{nome}» per lingua · {yr[0]}–{yr[1]}")
+    st.subheader(f"Grafico 1 — Wikipedia — interesse per «{nome}» per lingua · {yr[0]}–{yr[1]}")
     st.plotly_chart(L.chart_wiki(yr, code), use_container_width=True)
-    st.subheader("Corroborazione del segnale per mercato")
+    st.subheader("Tabella 1 — Corroborazione del segnale per mercato")
     if is_real:
         L.aggrid_table(pd.DataFrame(L.online_interest(summary, code)), height=240, key="online_grid")
         st.caption("Concordanza = Google Trends e Wikipedia indicano la stessa direzione → segnale più robusto.")
