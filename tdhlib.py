@@ -387,7 +387,8 @@ def chart_region_spend(code: str, yr_range=None) -> go.Figure | None:
 
 
 # --- Banca d'Italia per PAESE di origine (nazionale, trimestrale 1997-2025) ---
-_BDI_COLMAP = {4: "DE", 5: "FR", 6: "AT", 7: "ES", 9: "GB", 10: "CH", 11: "RU", 13: "US"}
+_BDI_COLMAP = {4: "DE", 5: "FR", 6: "AT", 7: "ES", 9: "GB", 10: "CH", 11: "RU",
+               13: "US", 14: "CA", 17: "JP"}
 _BDI_SHEETS = {"notti": "TS1-N-S", "spesa": "TS1-S-S", "viaggiatori": "TS1-V-S"}
 BDI_MARKETS = ["DE", "AT", "GB", "CH", "US", "FR", "ES"]
 
@@ -435,6 +436,109 @@ def bdi_country_annual():
     g = df.groupby(["anno", "code"]).agg(
         notti=("notti", "sum"), spesa=("spesa", "sum"), viaggiatori=("viaggiatori", "sum")).reset_index()
     return g[g["code"].isin(BDI_MARKETS)]
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# MERCATI D'ORIGINE — i 10 paesi da cui arrivano i turisti stranieri.
+#   spesa in Italia + n. turisti (Banca d'Italia, TS1 per paese, completi al 2025)
+#   spesa per turismo all'estero = taglia del mercato (World Bank ST.INT.XPND.CD)
+#   quota Italia = spesa in Italia ÷ spesa outbound (stesso anno, cambio EUR/USD stimato)
+# ════════════════════════════════════════════════════════════════════════════
+_EUR_USD = 1.10  # cambio medio indicativo per convertire l'outbound World Bank (USD) in €
+
+
+@st.cache_data(show_spinner=False)
+def wb_outbound_long() -> pd.DataFrame:
+    """Spesa turismo outbound (World Bank), letta dalla cache: code, iso3, paese, anno, spesa_out_usd."""
+    try:
+        return ECS.fetch_wb_tourism_expenditure()
+    except Exception:  # noqa: BLE001
+        return pd.DataFrame()
+
+
+@st.cache_data(show_spinner="Assemblo i mercati d'origine…")
+def origin_markets_table() -> list[dict]:
+    """Riga per ciascuno dei 10 paesi d'origine: spesa in Italia, turisti, spesa/turista (BdI,
+    ultimo anno completo), spesa outbound (World Bank, ultimo anno disp.) e quota Italia.
+    Ordinata per spesa in Italia decrescente."""
+    long = bdi_country_long()
+    if long is None or long.empty:
+        return []
+    long = long.copy()
+    long["anno"] = long["date"].dt.year
+    ann = (long.groupby(["code", "anno"])
+           .agg(spesa=("spesa", "sum"), notti=("notti", "sum"),
+                viaggiatori=("viaggiatori", "sum"), q=("date", "count")).reset_index())
+    ann = ann[ann["q"] >= 4]                       # solo anni completi (4 trimestri)
+    wb = wb_outbound_long()
+    rows = []
+    for code, (iso3, nome) in ECS.ORIGIN_COUNTRIES.items():
+        a = ann[ann["code"] == code].sort_values("anno")
+        if a.empty:
+            continue
+        last = a.iloc[-1]
+        spesa_it, turisti, notti, yr = (float(last["spesa"]), float(last["viaggiatori"]),
+                                        float(last["notti"]), int(last["anno"]))
+        spt = spesa_it * 1e6 / (turisti * 1e3) if turisti else None
+        out_usd = out_yr = out_eur_mld = quota = None
+        if wb is not None and not wb.empty:
+            w = wb[wb["code"] == code].sort_values("anno")
+            if not w.empty:
+                out_usd, out_yr = float(w.iloc[-1]["spesa_out_usd"]), int(w.iloc[-1]["anno"])
+                out_eur_mld = out_usd / _EUR_USD / 1e9
+                same = a[a["anno"] == out_yr]                  # quota su anno comune
+                sp_same = float(same["spesa"].iloc[0]) if not same.empty else spesa_it
+                out_eur_m = out_usd / _EUR_USD / 1e6
+                quota = sp_same / out_eur_m * 100 if out_eur_m else None
+        rows.append({"code": code, "paese": nome, "anno_bdi": yr, "spesa_it_M": spesa_it,
+                     "turisti_k": turisti, "notti_k": notti, "spesa_per_turista": spt,
+                     "out_eur_mld": out_eur_mld, "out_anno": out_yr, "quota_pct": quota})
+    rows.sort(key=lambda r: -r["spesa_it_M"])
+    return rows
+
+
+def origin_markets_coverage() -> dict:
+    """Quanto i 10 paesi coprono del totale nazionale (riconciliazione con la «riga gialla»).
+    Ritorna {sum10_M, naz_M, quota_pct, anno}."""
+    rows = origin_markets_table()
+    if not rows:
+        return {}
+    sum10 = sum(r["spesa_it_M"] for r in rows)
+    naz = bdi_national_annual()
+    naz_M = anno = None
+    if naz is not None and not naz.empty:
+        full = naz[naz["trimestri"] >= 4]
+        last = (full if not full.empty else naz).iloc[-1]
+        naz_M, anno = float(last["spesa"]), int(last["anno"])
+    return {"sum10_M": sum10, "naz_M": naz_M, "anno": anno,
+            "quota_pct": (sum10 / naz_M * 100 if naz_M else None)}
+
+
+def chart_origin_spesa_italia(rows: list[dict]) -> go.Figure:
+    """Grafico 1 (area Mercati d'origine): spesa in Italia per paese (M€), barre orizzontali."""
+    s = sorted(rows, key=lambda r: r["spesa_it_M"])
+    fig = go.Figure(go.Bar(x=[r["spesa_it_M"] for r in s], y=[r["paese"] for r in s],
+                           orientation="h", marker_color="#0e7490",
+                           hovertemplate="<b>%{y}</b><br>%{x:,.0f} M€<extra></extra>"))
+    fig.update_xaxes(title="spesa dei turisti in Italia (M€)")
+    return _layout(fig, h=380)
+
+
+def chart_origin_share(rows: list[dict]) -> go.Figure:
+    """Grafico 2 (area Mercati d'origine): taglia del mercato (outbound, mld €) vs quota Italia (%).
+    Bolla = spesa in Italia. Solo i paesi con outbound disponibile."""
+    pts = [r for r in rows if r["out_eur_mld"] and r["quota_pct"] is not None]
+    if not pts:
+        return _layout(go.Figure(), h=380)
+    fig = go.Figure(go.Scatter(
+        x=[r["out_eur_mld"] for r in pts], y=[r["quota_pct"] for r in pts], mode="markers+text",
+        text=[r["paese"] for r in pts], textposition="top center",
+        marker=dict(size=[max(12, (r["spesa_it_M"] / 200)) for r in pts], color="#f59e0b",
+                    line=dict(color="#b45309", width=1)),
+        hovertemplate="<b>%{text}</b><br>outbound %{x:,.0f} mld€<br>quota Italia %{y:.1f}%<extra></extra>"))
+    fig.update_xaxes(title="taglia del mercato — spesa turismo all'estero (mld €)")
+    fig.update_yaxes(title="quota catturata dall'Italia (%)", ticksuffix="%")
+    return _layout(fig, h=400)
 
 
 def chart_bdi_country(metric: str = "notti") -> go.Figure | None:

@@ -293,6 +293,53 @@ def page_regione():
                        "R² alto = trend regolare; R² basso = serie più rumorosa, proiezione più incerta.")
 
 
+def page_mercati_origine():
+    st.header(":material/travel_explore: Mercati d'origine — i 10 paesi")
+    st.caption("Da dove arrivano i turisti stranieri: **quanto spendono in Italia**, **quanti sono** e "
+               "**quanto vale il loro mercato** (spesa per turismo all'estero). Dato nazionale.")
+    rows = L.origin_markets_table()
+    if not rows:
+        st.info("Dati Banca d'Italia per paese non disponibili.")
+        return
+    cov = L.origin_markets_coverage()
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Spesa dei 10 paesi in Italia", f"{cov['sum10_M'] / 1000:.1f} mld €".replace(".", ","))
+    if cov.get("quota_pct"):
+        c2.metric(f"Copertura sul totale stranieri ({cov['anno']})", f"{cov['quota_pct']:.0f}%",
+                  help="Quota della spesa straniera nazionale coperta dai 10 paesi; il resto sono altri mercati.")
+    c3.metric("Turisti (somma 10 paesi)",
+              f"{sum(r['turisti_k'] for r in rows) / 1000:.1f} mln".replace(".", ","))
+
+    st.subheader("Tabella 1 — I 10 mercati d'origine")
+    tbl = pd.DataFrame([{
+        "Paese": r["paese"],
+        "Spesa in Italia (M€)": f"{r['spesa_it_M']:,.0f}".replace(",", "."),
+        "Turisti (mln)": f"{r['turisti_k'] / 1000:.1f}".replace(".", ","),
+        "Spesa/turista (€)": (f"{r['spesa_per_turista']:,.0f}".replace(",", ".") if r["spesa_per_turista"] else "—"),
+        "Spesa estero (mld €)": (f"{r['out_eur_mld']:,.0f}".replace(",", ".") + f" ({r['out_anno']})"
+                                 if r["out_eur_mld"] else "n/d"),
+        "Quota Italia %": (f"{r['quota_pct']:.1f}".replace(".", ",") if r["quota_pct"] is not None else "n/d"),
+    } for r in rows])
+    st.dataframe(tbl, hide_index=True, use_container_width=True)
+    st.caption(f"Spesa in Italia, turisti e spesa/turista: **Banca d'Italia** (ultimo anno completo, {rows[0]['anno_bdi']}). "
+               "Spesa estero (taglia del mercato): **World Bank** ST.INT.XPND.CD (anno indicato per paese; "
+               "Spagna e Regno Unito non coperti dalla serie → n/d). Quota Italia = spesa in Italia ÷ spesa estero "
+               "sullo stesso anno (cambio €/$ ≈ 1,10).")
+
+    st.subheader("Grafico 1 — Spesa dei turisti in Italia, per paese")
+    st.plotly_chart(L.chart_origin_spesa_italia(rows), use_container_width=True)
+
+    st.subheader("Grafico 2 — Taglia del mercato vs quota catturata dall'Italia")
+    st.plotly_chart(L.chart_origin_share(rows), use_container_width=True)
+    st.caption("Bolla = spesa in Italia. In alto = l'Italia cattura una quota alta del mercato (es. Austria, "
+               "Svizzera, vicinanza); a destra = mercati grandi su cui c'è margine di crescita.")
+
+    if cov.get("quota_pct"):
+        st.info(f"🔎 I 10 paesi coprono il **{cov['quota_pct']:.0f}%** della spesa straniera totale in Italia "
+                f"({cov['sum10_M'] / 1000:.1f} mld € su {cov['naz_M'] / 1000:.1f} mld €, {cov['anno']}); "
+                "il restante ~36% sono altri mercati (Paesi Bassi, Belgio, Nordici, Cina…).")
+
+
 def page_confronto_regioni():
     st.header(":material/bar_chart: Confronto tra regioni")
     st.caption("Classifica di **tutte le regioni** per spesa dei turisti stranieri (Banca d'Italia 2024). "
@@ -911,6 +958,7 @@ pg = st.navigation({
         st.Page(page_home, title="Home", icon=":material/home:", default=True),
         st.Page(page_italia, title="Italia", icon=":material/map:"),
         st.Page(page_regione, title="Regione", icon=":material/public:"),
+        st.Page(page_mercati_origine, title="Mercati d'origine", icon=":material/travel_explore:"),
         SINTESI_PAGE,
         st.Page(page_confronto_regioni, title="Confronto regioni", icon=":material/bar_chart:"),
     ],
@@ -940,7 +988,7 @@ pg = st.navigation({
 })
 # Pagine che hanno senso a livello NAZIONALE (vista d'insieme «Italia») senza una regione.
 # Step B: le descrittive Regione/Struttura/Occupazione/Spesa usano il totale Italia (ISTAT area="IT").
-NATIONAL_OK = {"Home", "Italia", "Confronto regioni", "Mercati per paese",
+NATIONAL_OK = {"Home", "Italia", "Confronto regioni", "Mercati per paese", "Mercati d'origine",
                "Operatori (demo)", "Assistente", "Architettura", "Gestione dati",
                "Regione", "Per struttura", "Occupazione", "Spesa turistica"}
 
