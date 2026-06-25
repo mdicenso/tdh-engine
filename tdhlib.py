@@ -444,14 +444,12 @@ def bdi_country_annual():
 #   spesa per turismo all'estero = taglia del mercato (World Bank ST.INT.XPND.CD)
 #   quota Italia = spesa in Italia ÷ spesa outbound (stesso anno, cambio EUR/USD stimato)
 # ════════════════════════════════════════════════════════════════════════════
-_EUR_USD = 1.10  # cambio medio indicativo per convertire l'outbound World Bank (USD) in €
-
-
 @st.cache_data(show_spinner=False)
-def wb_outbound_long() -> pd.DataFrame:
-    """Spesa turismo outbound (World Bank), letta dalla cache: code, iso3, paese, anno, spesa_out_usd."""
+def outbound_long() -> pd.DataFrame:
+    """Spesa per turismo all'estero UNIFICATA in M€ (Eurostat per i reporter europei +
+    World Bank per gli extra-UE): code, paese, anno, spesa_out_eur_m, fonte."""
     try:
-        return ECS.fetch_wb_tourism_expenditure()
+        return ECS.fetch_outbound_expenditure()
     except Exception:  # noqa: BLE001
         return pd.DataFrame()
 
@@ -470,7 +468,7 @@ def origin_markets_table() -> list[dict]:
            .agg(spesa=("spesa", "sum"), notti=("notti", "sum"),
                 viaggiatori=("viaggiatori", "sum"), q=("date", "count")).reset_index())
     ann = ann[ann["q"] >= 4]                       # solo anni completi (4 trimestri)
-    wb = wb_outbound_long()
+    out = outbound_long()
     rows = []
     for code, (iso3, nome) in ECS.ORIGIN_COUNTRIES.items():
         a = ann[ann["code"] == code].sort_values("anno")
@@ -480,19 +478,20 @@ def origin_markets_table() -> list[dict]:
         spesa_it, turisti, notti, yr = (float(last["spesa"]), float(last["viaggiatori"]),
                                         float(last["notti"]), int(last["anno"]))
         spt = spesa_it * 1e6 / (turisti * 1e3) if turisti else None
-        out_usd = out_yr = out_eur_mld = quota = None
-        if wb is not None and not wb.empty:
-            w = wb[wb["code"] == code].sort_values("anno")
-            if not w.empty:
-                out_usd, out_yr = float(w.iloc[-1]["spesa_out_usd"]), int(w.iloc[-1]["anno"])
-                out_eur_mld = out_usd / _EUR_USD / 1e9
-                same = a[a["anno"] == out_yr]                  # quota su anno comune
-                sp_same = float(same["spesa"].iloc[0]) if not same.empty else spesa_it
-                out_eur_m = out_usd / _EUR_USD / 1e6
-                quota = sp_same / out_eur_m * 100 if out_eur_m else None
+        out_eur_mld = out_yr = out_fonte = quota = None
+        w = out[out["code"] == code].sort_values("anno") if out is not None and not out.empty else None
+        if w is not None and not w.empty:
+            last_o = w.iloc[-1]
+            out_eur_m, out_yr, out_fonte = (float(last_o["spesa_out_eur_m"]),
+                                            int(last_o["anno"]), str(last_o["fonte"]))
+            out_eur_mld = out_eur_m / 1000
+            same = a[a["anno"] == out_yr]                       # quota su anno comune
+            sp_same = float(same["spesa"].iloc[0]) if not same.empty else spesa_it
+            quota = sp_same / out_eur_m * 100 if out_eur_m else None
         rows.append({"code": code, "paese": nome, "anno_bdi": yr, "spesa_it_M": spesa_it,
                      "turisti_k": turisti, "notti_k": notti, "spesa_per_turista": spt,
-                     "out_eur_mld": out_eur_mld, "out_anno": out_yr, "quota_pct": quota})
+                     "out_eur_mld": out_eur_mld, "out_anno": out_yr, "out_fonte": out_fonte,
+                     "quota_pct": quota})
     rows.sort(key=lambda r: -r["spesa_it_M"])
     return rows
 
@@ -1163,10 +1162,17 @@ def builtin_sources() -> list[dict]:
         rows.append(_row("Wikipedia pageviews", "Visualizzazioni pagina della regione per lingua (2° segnale leading)",
                          "Wikimedia · Pageviews API", "https://wikimedia.org/api/rest_v1/", "mensile", A,
                          _csv_rows(wk), _fmt_mtime(wk)))
+    etd = ".cache/eurostat_travel_debit.csv"
+    if os.path.exists(etd):
+        rows.append(_row("Spesa turismo all'estero — UE/EFTA",
+                         "Spesa dei residenti per turismo all'estero (taglia del mercato), paesi UE/EFTA, in M€",
+                         "Eurostat · bop_its6_det (travel, debit)",
+                         "https://ec.europa.eu/eurostat/databrowser/view/bop_its6_det",
+                         "annuale", A, _csv_rows(etd), _fmt_mtime(etd)))
     wbx = ".cache/wb_tourism_expenditure.csv"
     if os.path.exists(wbx):
-        rows.append(_row("Spesa turismo outbound (mercati)",
-                         "Spesa per turismo all'estero dei 10 paesi d'origine (taglia del mercato; current US$)",
+        rows.append(_row("Spesa turismo all'estero — extra-UE",
+                         "Spesa per turismo all'estero dei mercati extra-UE (USA, Canada, Giappone, Russia; US$)",
                          "World Bank · ST.INT.XPND.CD",
                          "https://data.worldbank.org/indicator/ST.INT.XPND.CD",
                          "annuale", A, _csv_rows(wbx), _fmt_mtime(wbx)))

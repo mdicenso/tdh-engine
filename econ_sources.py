@@ -194,6 +194,75 @@ def fetch_wb_tourism_expenditure(start: int = 2008, end: int = 2024, cache_dir: 
     return df
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# EUROSTAT — spesa per turismo all'estero dei reporter europei (BoP "Travel" debit,
+# partner = mondo). Più aggiornata del World Bank (fino al 2025) e già in milioni di €.
+# Dataset bop_its6_det, voce SD (travel), flusso DEB, partner WRL_REST.
+# Fonte: https://ec.europa.eu/eurostat/databrowser/view/bop_its6_det
+# ─────────────────────────────────────────────────────────────────────────────
+# reporter europei coperti: codice BdI -> codice geo Eurostat (UK = Regno Unito)
+_EUROSTAT_REPORTER = {"DE": "DE", "FR": "FR", "AT": "AT", "ES": "ES", "CH": "CH", "GB": "UK"}
+_EUR_USD = 1.10  # cambio medio indicativo per convertire l'outbound World Bank (USD) in €
+
+
+def fetch_eurostat_travel_debit(start: int = 2010, cache_dir: str = ".cache",
+                                cache_name: str = "eurostat_travel_debit.csv",
+                                refresh: bool = False) -> pd.DataFrame:
+    """Spesa per turismo all'estero (BoP voce Travel, lato Debit, partner mondo) in M€,
+    per i reporter europei. Ritorna DataFrame: code(BdI), anno, spesa_out_eur_m."""
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, cache_name)
+    if os.path.exists(cache_path) and not refresh:
+        return pd.read_csv(cache_path)
+    geos = sorted(set(_EUROSTAT_REPORTER.values()))
+    qg = "".join(f"&geo={g}" for g in geos)
+    url = (f"{EUROSTAT}/bop_its6_det?format=JSON&lang=EN&freq=A&bop_item=SD&stk_flow=DEB"
+           f"&currency=MIO_EUR&partner=WRL_REST{qg}&sinceTimePeriod={start}")
+    d = json.loads(urllib.request.urlopen(urllib.request.Request(url, headers=_UA), timeout=90).read())
+    geo2code = {g: c for c, g in _EUROSTAT_REPORTER.items()}
+    ids, size = d["id"], d["size"]
+    strides = [1] * len(size)
+    for i in range(len(size) - 2, -1, -1):
+        strides[i] = strides[i + 1] * size[i + 1]
+    gi = {v: k for k, v in d["dimension"]["geo"]["category"]["index"].items()}
+    ti = {v: k for k, v in d["dimension"]["time"]["category"]["index"].items()}
+    gp, tp = ids.index("geo"), ids.index("time")
+    rows = []
+    for flat, val in d.get("value", {}).items():
+        f = int(flat)
+        g = gi[(f // strides[gp]) % size[gp]]
+        yr = ti[(f // strides[tp]) % size[tp]]
+        code = geo2code.get(g)
+        if code and val is not None:
+            rows.append({"code": code, "anno": int(yr), "spesa_out_eur_m": float(val)})
+    df = pd.DataFrame(rows).sort_values(["code", "anno"]).reset_index(drop=True) if rows else pd.DataFrame()
+    if not df.empty:
+        df.to_csv(cache_path, index=False)
+    return df
+
+
+def fetch_outbound_expenditure(refresh: bool = False) -> pd.DataFrame:
+    """Spesa per turismo all'estero UNIFICATA in M€ per i 10 mercati d'origine:
+    Eurostat (DE/FR/AT/ES/CH/GB, recente) + World Bank convertito (US/CA/JP/RU).
+    Ritorna DataFrame: code, paese, anno, spesa_out_eur_m, fonte."""
+    eu = fetch_eurostat_travel_debit(refresh=refresh)
+    wb = fetch_wb_tourism_expenditure(refresh=refresh)
+    rows = []
+    for _, r in (eu.iterrows() if eu is not None and not eu.empty else []):
+        code = r["code"]
+        rows.append({"code": code, "paese": ORIGIN_COUNTRIES[code][1], "anno": int(r["anno"]),
+                     "spesa_out_eur_m": float(r["spesa_out_eur_m"]), "fonte": "Eurostat"})
+    if wb is not None and not wb.empty:
+        for _, r in wb.iterrows():
+            code = r["code"]
+            if code in _EUROSTAT_REPORTER:      # già coperto (meglio) da Eurostat
+                continue
+            rows.append({"code": code, "paese": ORIGIN_COUNTRIES[code][1], "anno": int(r["anno"]),
+                         "spesa_out_eur_m": float(r["spesa_out_usd"]) / _EUR_USD / 1e6,
+                         "fonte": "World Bank"})
+    return pd.DataFrame(rows).sort_values(["code", "anno"]).reset_index(drop=True) if rows else pd.DataFrame()
+
+
 if __name__ == "__main__":
     try:
         import truststore

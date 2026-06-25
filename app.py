@@ -328,10 +328,10 @@ def page_mercati_origine():
         "Quota Italia %": (f"{r['quota_pct']:.1f}".replace(".", ",") if r["quota_pct"] is not None else "n/d"),
     } for r in rows])
     st.dataframe(tbl, hide_index=True, use_container_width=True)
-    st.caption(f"Spesa in Italia, turisti e spesa/turista: **Banca d'Italia** (ultimo anno completo, {rows[0]['anno_bdi']}). "
-               "Spesa estero (taglia del mercato): **World Bank** ST.INT.XPND.CD (anno indicato per paese; "
-               "Spagna e Regno Unito non coperti dalla serie → n/d). Quota Italia = spesa in Italia ÷ spesa estero "
-               "sullo stesso anno (cambio €/$ ≈ 1,10).")
+    st.caption(f"Spesa in Italia, turisti, spesa/turista: **Banca d'Italia** (ultimo anno completo, {rows[0]['anno_bdi']}). "
+               "Spesa estero (taglia del mercato): **Eurostat** BoP «travel» lato debiti per i paesi UE/EFTA "
+               "(in M€, fino al 2025) e **World Bank** per gli extra-UE (USA, Canada, Giappone, Russia; "
+               "convertito in €, ~2020). Quota Italia = spesa in Italia ÷ spesa estero sullo stesso anno.")
 
     st.subheader("Grafico 1 — Spesa dei turisti in Italia, per paese")
     st.plotly_chart(L.chart_origin_spesa_italia(rows), use_container_width=True)
