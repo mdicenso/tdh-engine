@@ -1840,6 +1840,60 @@ def project_var(panel: pd.DataFrame, key: str, horizon: int = 2, drop_covid: boo
             "slope": float(m.params[1]), "r2": float(r2), "robust": bool(robust)}
 
 
+# ── TIER 2 · partial pooling tra regioni + riconciliazione gerarchica ─────────
+#   Idea (dallo studio): le serie annuali per singola regione sono corte/rumorose; stimare
+#   il trend in isolamento è instabile. Il PARTIAL POOLING (modello a effetti casuali, stima
+#   empirical-Bayes) restringe la pendenza di ogni regione verso la media nazionale, di più
+#   dove la stima della singola regione è incerta. La RICONCILIAZIONE rende coerenti i livelli
+#   della gerarchia Italia↔regioni (il totale = somma delle regioni, per costruzione bottom-up).
+
+def annual_slope_se(years, vals) -> tuple[float, float] | None:
+    """Pendenza annua (OLS) della serie e suo errore standard. None se <3 punti validi."""
+    import numpy as np
+    import statsmodels.api as sm
+    x = np.asarray(years, float)
+    y = np.asarray(vals, float)
+    ok = np.isfinite(x) & np.isfinite(y)
+    if ok.sum() < 3:
+        return None
+    m = sm.OLS(y[ok], sm.add_constant(x[ok])).fit()
+    return float(m.params[1]), float(m.bse[1])
+
+
+def partial_pool_slopes(slopes: dict) -> dict:
+    """Empirical-Bayes / James-Stein su pendenze regionali.
+    `slopes`: {code: (pendenza, errore_standard)}. Restituisce, per regione,
+    pendenza grezza, pendenza ristretta (shrunk), peso w (1=fido la regione, 0=tutta media),
+    più la media nazionale `mu` e la varianza tra regioni `tau2` (metodo dei momenti)."""
+    import numpy as np
+    codes = [c for c, v in slopes.items() if v is not None and np.isfinite(v[0]) and np.isfinite(v[1])]
+    if len(codes) < 3:
+        return {"by_code": {}, "mu": float("nan"), "tau2": float("nan"), "n": len(codes)}
+    b = np.array([slopes[c][0] for c in codes], float)
+    s2 = np.array([slopes[c][1] for c in codes], float) ** 2
+    mu = float(np.mean(b))
+    tau2 = max(0.0, float(np.var(b, ddof=1) - np.mean(s2)))  # varianza "vera" tra regioni
+    out = {}
+    for c, bi, s2i in zip(codes, b, s2):
+        w = tau2 / (tau2 + s2i) if (tau2 + s2i) > 0 else 0.0
+        out[c] = {"raw": float(bi), "shrunk": float(mu + w * (bi - mu)),
+                  "weight": float(w), "se": float(np.sqrt(s2i))}
+    return {"by_code": out, "mu": mu, "tau2": tau2, "n": len(codes)}
+
+
+def reconcile_bottom_up(region_fc: dict, national_fc: float | None = None) -> dict:
+    """Riconciliazione gerarchica BOTTOM-UP: il totale coerente è la somma delle regioni
+    (coerente per costruzione). Se è data una previsione nazionale indipendente
+    (`national_fc`, top-down), riporta lo scostamento % tra le due viste (incoerenza)."""
+    import numpy as np
+    vals = {c: float(v) for c, v in region_fc.items() if v is not None and np.isfinite(v)}
+    bottom_up = float(sum(vals.values()))
+    gap = ((bottom_up / national_fc - 1) * 100
+           if national_fc and np.isfinite(national_fc) and national_fc != 0 else float("nan"))
+    return {"bottom_up_total": bottom_up, "national_top_down": national_fc,
+            "gap_pct": gap, "n_regioni": len(vals), "per_regione": vals}
+
+
 def chart_projection(proj: dict, label: str, unit: str = "") -> go.Figure:
     """Storico + trend fittato + proiezione con banda di previsione 80% (unità assolute)."""
     hx, hy = proj["hist_years"], proj["hist_vals"]
@@ -1981,9 +2035,28 @@ def _fc_seas_sarimax(train: pd.DataFrame, fut: pd.DataFrame):
             _pseudo_r2(y, m.fittedvalues))
 
 
+def _fc_seas_ucm(train: pd.DataFrame, fut: pd.DataFrame):
+    """TIER 2 · modello a STATO LATENTE (UnobservedComponents): livello e trend stocastici
+    + stagionalità stocastica 12, con dummy COVID esogena. È un modello strutturale che
+    scompone la serie in componenti interpretabili (livello/trend/stagione) e dà incertezza
+    nativa; gestisce bene serie con regime che cambia lentamente."""
+    import numpy as np
+    import statsmodels.api as sm
+    y = train["value"].to_numpy(float)
+    ex = train[["covid"]].to_numpy(float)
+    exf = fut[["covid"]].to_numpy(float)
+    m = sm.tsa.UnobservedComponents(y, level="local linear trend", seasonal=12,
+                                    exog=ex).fit(disp=False)
+    pr = m.get_prediction(start=len(y), end=len(y) + len(fut) - 1, exog=exf)
+    ci = np.asarray(pr.conf_int(alpha=0.2))
+    return (np.asarray(pr.predicted_mean), ci[:, 0], ci[:, 1],
+            _pseudo_r2(y, m.fittedvalues))
+
+
 _SEASONAL_METHODS = {"OLS stagionale": _fc_seas_ols,
                      "ETS (Holt-Winters)": _fc_seas_ets,
-                     "SARIMAX": _fc_seas_sarimax}
+                     "SARIMAX": _fc_seas_sarimax,
+                     "Stato latente (UCM)": _fc_seas_ucm}
 
 
 def _backtest_seasonal(d: pd.DataFrame, holdout: int = 12) -> dict:

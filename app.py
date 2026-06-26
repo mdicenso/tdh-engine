@@ -143,6 +143,13 @@ def page_italia():
                "sulla mappa o usa il **menu 📍 Regione** nella barra laterale (vale per tutte le pagine).")
 
 
+@st.cache_data(show_spinner="Confronto i modelli di proiezione (OLS · ETS · SARIMAX · stato latente)…")
+def _seasonal_proj_cached(code: str, fvar: str, horizon: int):
+    """Proiezione stagionale con selezione del modello, in cache: i 4 modelli (di cui due
+    state-space) vengono rifittati solo quando cambiano regione/variabile/orizzonte."""
+    return L.project_seasonal_best(L.region_monthly_series(code, fvar), horizon)
+
+
 def page_regione():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     info = L.RG.region(code)
@@ -255,7 +262,7 @@ def page_regione():
 
     _fmt = lambda v: f"{v:,.0f}".replace(",", ".")  # noqa: E731
     if method.startswith("Stagionale"):
-        proj = L.project_seasonal_best(L.region_monthly_series(code, fvar), horizon)
+        proj = _seasonal_proj_cached(code, fvar, horizon)
         if proj is None:
             st.info("Serie mensile insufficiente per il modello stagionale (servono ~2 anni).")
         else:
