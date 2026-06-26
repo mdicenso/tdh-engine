@@ -1,0 +1,342 @@
+code,date,name
+DE,2024-01-01,Neujahr
+DE,2024-01-06,Heilige Drei Könige
+DE,2024-03-08,Internationaler Frauentag
+DE,2024-03-29,Karfreitag
+DE,2024-03-31,Ostersonntag
+DE,2024-04-01,Ostermontag
+DE,2024-05-01,Tag der Arbeit
+DE,2024-05-09,Christi Himmelfahrt
+DE,2024-05-19,Pfingstsonntag
+DE,2024-05-20,Pfingstmontag
+DE,2024-05-30,Fronleichnam
+DE,2024-08-15,Mariä Himmelfahrt
+DE,2024-09-20,Weltkindertag
+DE,2024-10-03,Tag der Deutschen Einheit
+DE,2024-10-31,Reformationstag
+DE,2024-11-01,Allerheiligen
+DE,2024-11-20,Buß- und Bettag
+DE,2024-12-25,Erster Weihnachtstag
+DE,2024-12-26,Zweiter Weihnachtstag
+AT,2024-01-01,Neujahr
+AT,2024-01-06,Heilige Drei Könige
+AT,2024-03-19,Josefstag
+AT,2024-03-31,Ostersonntag
+AT,2024-04-01,Ostermontag
+AT,2024-05-01,Staatsfeiertag
+AT,2024-05-04,Florianitag
+AT,2024-05-09,Christi Himmelfahrt
+AT,2024-05-19,Pfingstsonntag
+AT,2024-05-20,Pfingstmontag
+AT,2024-05-30,Fronleichnam
+AT,2024-08-15,Maria Himmelfahrt
+AT,2024-09-24,Rupertitag
+AT,2024-10-26,Nationalfeiertag
+AT,2024-11-01,Allerheiligen
+AT,2024-11-11,Martinstag
+AT,2024-11-15,Leopolditag
+AT,2024-12-08,Mariä Empfängnis
+AT,2024-12-25,Weihnachten
+AT,2024-12-26,Stefanitag
+GB,2024-01-01,New Year's Day
+GB,2024-01-02,2 January
+GB,2024-03-18,Saint Patrick's Day
+GB,2024-03-29,Good Friday
+GB,2024-04-01,Easter Monday
+GB,2024-05-06,Early May Bank Holiday
+GB,2024-05-27,Spring Bank Holiday
+GB,2024-07-12,Battle of the Boyne
+GB,2024-08-05,Summer Bank Holiday
+GB,2024-08-26,Summer Bank Holiday
+GB,2024-12-02,Saint Andrew's Day
+GB,2024-12-25,Christmas Day
+GB,2024-12-26,Boxing Day
+US,2024-01-01,New Year's Day
+US,2024-01-15,"Martin Luther King, Jr. Day"
+US,2024-02-12,Lincoln's Birthday
+US,2024-02-19,Washington's Birthday
+US,2024-03-29,Good Friday
+US,2024-03-29,Good Friday
+US,2024-05-08,Truman Day
+US,2024-05-27,Memorial Day
+US,2024-06-19,Juneteenth National Independence Day
+US,2024-07-04,Independence Day
+US,2024-09-02,Labor Day
+US,2024-10-14,Columbus Day
+US,2024-10-14,Columbus Day
+US,2024-10-14,Indigenous Peoples' Day
+US,2024-11-11,Veterans Day
+US,2024-11-28,Thanksgiving Day
+US,2024-12-25,Christmas Day
+NL,2024-01-01,Nieuwjaarsdag
+NL,2024-03-29,Goede Vrijdag
+NL,2024-03-31,Eerste Paasdag
+NL,2024-04-01,Tweede Paasdag
+NL,2024-04-27,Koningsdag
+NL,2024-05-05,Bevrijdingsdag
+NL,2024-05-09,Hemelvaartsdag
+NL,2024-05-19,Eerste Pinksterdag
+NL,2024-05-20,Tweede Pinksterdag
+NL,2024-12-25,Eerste Kerstdag
+NL,2024-12-26,Tweede Kerstdag
+CH,2024-01-01,Neujahr
+CH,2024-01-02,Berchtoldstag
+CH,2024-01-06,Heilige Drei Könige
+CH,2024-01-06,Heilige Drei Könige
+CH,2024-03-01,Jahrestag der Ausrufung der Republik
+CH,2024-03-19,Josefstag
+CH,2024-03-19,Josefstag
+CH,2024-03-29,Karfreitag
+CH,2024-04-01,Ostermontag
+CH,2024-04-01,Ostermontag
+CH,2024-04-04,Näfelser Fahrt
+CH,2024-05-01,Tag der Arbeit
+CH,2024-05-01,Tag der Arbeit
+CH,2024-05-09,Auffahrt
+CH,2024-05-20,Pfingstmontag
+CH,2024-05-20,Pfingstmontag
+CH,2024-05-30,Fronleichnam
+CH,2024-05-30,Fronleichnam
+CH,2024-06-29,Peter und Paul
+CH,2024-08-01,Bundesfeier
+CH,2024-08-15,Maria Himmelfahrt
+CH,2024-08-15,Maria Himmelfahrt
+CH,2024-09-05,Jeûne genevois
+CH,2024-09-15,"Eidgenössischer Dank-, Buss- und Bettag"
+CH,2024-09-16,Bettagsmontag
+CH,2024-11-01,Allerheiligen
+CH,2024-11-01,Allerheiligen
+CH,2024-12-08,Mariä Empfängnis
+CH,2024-12-08,Mariä Empfängnis
+CH,2024-12-25,Weihnachten
+CH,2024-12-26,Stephanstag
+CH,2024-12-26,Stephanstag
+CH,2024-12-31,Restauration de la République
+DE,2025-01-01,Neujahr
+DE,2025-01-06,Heilige Drei Könige
+DE,2025-03-08,Internationaler Frauentag
+DE,2025-04-18,Karfreitag
+DE,2025-04-20,Ostersonntag
+DE,2025-04-21,Ostermontag
+DE,2025-05-01,Tag der Arbeit
+DE,2025-05-08,Tag der Befreiung
+DE,2025-05-29,Christi Himmelfahrt
+DE,2025-06-08,Pfingstsonntag
+DE,2025-06-09,Pfingstmontag
+DE,2025-06-19,Fronleichnam
+DE,2025-08-15,Mariä Himmelfahrt
+DE,2025-09-20,Weltkindertag
+DE,2025-10-03,Tag der Deutschen Einheit
+DE,2025-10-31,Reformationstag
+DE,2025-11-01,Allerheiligen
+DE,2025-11-19,Buß- und Bettag
+DE,2025-12-25,Erster Weihnachtstag
+DE,2025-12-26,Zweiter Weihnachtstag
+AT,2025-01-01,Neujahr
+AT,2025-01-06,Heilige Drei Könige
+AT,2025-03-19,Josefstag
+AT,2025-04-20,Ostersonntag
+AT,2025-04-21,Ostermontag
+AT,2025-05-01,Staatsfeiertag
+AT,2025-05-04,Florianitag
+AT,2025-05-29,Christi Himmelfahrt
+AT,2025-06-08,Pfingstsonntag
+AT,2025-06-09,Pfingstmontag
+AT,2025-06-19,Fronleichnam
+AT,2025-08-15,Maria Himmelfahrt
+AT,2025-09-24,Rupertitag
+AT,2025-10-26,Nationalfeiertag
+AT,2025-11-01,Allerheiligen
+AT,2025-11-11,Martinstag
+AT,2025-11-15,Leopolditag
+AT,2025-12-08,Mariä Empfängnis
+AT,2025-12-25,Weihnachten
+AT,2025-12-26,Stefanitag
+GB,2025-01-01,New Year's Day
+GB,2025-01-02,2 January
+GB,2025-03-17,Saint Patrick's Day
+GB,2025-04-18,Good Friday
+GB,2025-04-21,Easter Monday
+GB,2025-05-05,Early May Bank Holiday
+GB,2025-05-26,Spring Bank Holiday
+GB,2025-07-14,Battle of the Boyne
+GB,2025-08-04,Summer Bank Holiday
+GB,2025-08-25,Summer Bank Holiday
+GB,2025-12-01,Saint Andrew's Day
+GB,2025-12-25,Christmas Day
+GB,2025-12-26,Boxing Day
+US,2025-01-01,New Year's Day
+US,2025-01-20,"Martin Luther King, Jr. Day"
+US,2025-02-12,Lincoln's Birthday
+US,2025-02-17,Washington's Birthday
+US,2025-04-18,Good Friday
+US,2025-04-18,Good Friday
+US,2025-05-08,Truman Day
+US,2025-05-26,Memorial Day
+US,2025-06-19,Juneteenth National Independence Day
+US,2025-07-04,Independence Day
+US,2025-09-01,Labor Day
+US,2025-10-13,Columbus Day
+US,2025-10-13,Columbus Day
+US,2025-10-13,Indigenous Peoples' Day
+US,2025-11-11,Veterans Day
+US,2025-11-27,Thanksgiving Day
+US,2025-12-25,Christmas Day
+NL,2025-01-01,Nieuwjaarsdag
+NL,2025-04-18,Goede Vrijdag
+NL,2025-04-20,Eerste Paasdag
+NL,2025-04-21,Tweede Paasdag
+NL,2025-04-26,Koningsdag
+NL,2025-05-05,Bevrijdingsdag
+NL,2025-05-29,Hemelvaartsdag
+NL,2025-06-08,Eerste Pinksterdag
+NL,2025-06-09,Tweede Pinksterdag
+NL,2025-12-25,Eerste Kerstdag
+NL,2025-12-26,Tweede Kerstdag
+CH,2025-01-01,Neujahr
+CH,2025-01-02,Berchtoldstag
+CH,2025-01-06,Heilige Drei Könige
+CH,2025-01-06,Heilige Drei Könige
+CH,2025-03-01,Jahrestag der Ausrufung der Republik
+CH,2025-03-19,Josefstag
+CH,2025-03-19,Josefstag
+CH,2025-04-04,Näfelser Fahrt
+CH,2025-04-18,Karfreitag
+CH,2025-04-21,Ostermontag
+CH,2025-04-21,Ostermontag
+CH,2025-05-01,Tag der Arbeit
+CH,2025-05-01,Tag der Arbeit
+CH,2025-05-29,Auffahrt
+CH,2025-06-09,Pfingstmontag
+CH,2025-06-09,Pfingstmontag
+CH,2025-06-19,Fronleichnam
+CH,2025-06-19,Fronleichnam
+CH,2025-06-29,Peter und Paul
+CH,2025-08-01,Bundesfeier
+CH,2025-08-15,Maria Himmelfahrt
+CH,2025-08-15,Maria Himmelfahrt
+CH,2025-09-11,Jeûne genevois
+CH,2025-09-21,"Eidgenössischer Dank-, Buss- und Bettag"
+CH,2025-09-22,Bettagsmontag
+CH,2025-11-01,Allerheiligen
+CH,2025-11-01,Allerheiligen
+CH,2025-12-08,Mariä Empfängnis
+CH,2025-12-08,Mariä Empfängnis
+CH,2025-12-25,Weihnachten
+CH,2025-12-26,Stephanstag
+CH,2025-12-26,Stephanstag
+CH,2025-12-31,Restauration de la République
+DE,2026-01-01,Neujahr
+DE,2026-01-06,Heilige Drei Könige
+DE,2026-03-08,Internationaler Frauentag
+DE,2026-04-03,Karfreitag
+DE,2026-04-05,Ostersonntag
+DE,2026-04-06,Ostermontag
+DE,2026-05-01,Tag der Arbeit
+DE,2026-05-14,Christi Himmelfahrt
+DE,2026-05-24,Pfingstsonntag
+DE,2026-05-25,Pfingstmontag
+DE,2026-06-04,Fronleichnam
+DE,2026-08-15,Mariä Himmelfahrt
+DE,2026-09-20,Weltkindertag
+DE,2026-10-03,Tag der Deutschen Einheit
+DE,2026-10-31,Reformationstag
+DE,2026-11-01,Allerheiligen
+DE,2026-11-18,Buß- und Bettag
+DE,2026-12-25,Erster Weihnachtstag
+DE,2026-12-26,Zweiter Weihnachtstag
+AT,2026-01-01,Neujahr
+AT,2026-01-06,Heilige Drei Könige
+AT,2026-03-19,Josefstag
+AT,2026-04-05,Ostersonntag
+AT,2026-04-06,Ostermontag
+AT,2026-05-01,Staatsfeiertag
+AT,2026-05-04,Florianitag
+AT,2026-05-14,Christi Himmelfahrt
+AT,2026-05-24,Pfingstsonntag
+AT,2026-05-25,Pfingstmontag
+AT,2026-06-04,Fronleichnam
+AT,2026-08-15,Maria Himmelfahrt
+AT,2026-09-24,Rupertitag
+AT,2026-10-26,Nationalfeiertag
+AT,2026-11-01,Allerheiligen
+AT,2026-11-11,Martinstag
+AT,2026-11-15,Leopolditag
+AT,2026-12-08,Mariä Empfängnis
+AT,2026-12-25,Weihnachten
+AT,2026-12-26,Stefanitag
+GB,2026-01-01,New Year's Day
+GB,2026-01-02,2 January
+GB,2026-03-17,Saint Patrick's Day
+GB,2026-04-03,Good Friday
+GB,2026-04-06,Easter Monday
+GB,2026-05-04,Early May Bank Holiday
+GB,2026-05-25,Spring Bank Holiday
+GB,2026-06-15,World Cup Bank Holiday
+GB,2026-07-13,Battle of the Boyne
+GB,2026-08-03,Summer Bank Holiday
+GB,2026-08-31,Summer Bank Holiday
+GB,2026-11-30,Saint Andrew's Day
+GB,2026-12-25,Christmas Day
+GB,2026-12-28,Boxing Day
+US,2026-01-01,New Year's Day
+US,2026-01-19,"Martin Luther King, Jr. Day"
+US,2026-02-12,Lincoln's Birthday
+US,2026-02-16,Washington's Birthday
+US,2026-04-03,Good Friday
+US,2026-04-03,Good Friday
+US,2026-05-08,Truman Day
+US,2026-05-25,Memorial Day
+US,2026-06-19,Juneteenth National Independence Day
+US,2026-07-03,Independence Day
+US,2026-09-07,Labor Day
+US,2026-10-12,Columbus Day
+US,2026-10-12,Columbus Day
+US,2026-10-12,Indigenous Peoples' Day
+US,2026-11-11,Veterans Day
+US,2026-11-26,Thanksgiving Day
+US,2026-12-25,Christmas Day
+NL,2026-01-01,Nieuwjaarsdag
+NL,2026-04-03,Goede Vrijdag
+NL,2026-04-05,Eerste Paasdag
+NL,2026-04-06,Tweede Paasdag
+NL,2026-04-27,Koningsdag
+NL,2026-05-05,Bevrijdingsdag
+NL,2026-05-14,Hemelvaartsdag
+NL,2026-05-24,Eerste Pinksterdag
+NL,2026-05-25,Tweede Pinksterdag
+NL,2026-12-25,Eerste Kerstdag
+NL,2026-12-26,Tweede Kerstdag
+CH,2026-01-01,Neujahr
+CH,2026-01-02,Berchtoldstag
+CH,2026-01-06,Heilige Drei Könige
+CH,2026-01-06,Heilige Drei Könige
+CH,2026-03-01,Jahrestag der Ausrufung der Republik
+CH,2026-03-19,Josefstag
+CH,2026-03-19,Josefstag
+CH,2026-04-03,Karfreitag
+CH,2026-04-04,Näfelser Fahrt
+CH,2026-04-06,Ostermontag
+CH,2026-04-06,Ostermontag
+CH,2026-05-01,Tag der Arbeit
+CH,2026-05-01,Tag der Arbeit
+CH,2026-05-14,Auffahrt
+CH,2026-05-25,Pfingstmontag
+CH,2026-05-25,Pfingstmontag
+CH,2026-06-04,Fronleichnam
+CH,2026-06-04,Fronleichnam
+CH,2026-06-29,Peter und Paul
+CH,2026-08-01,Bundesfeier
+CH,2026-08-15,Maria Himmelfahrt
+CH,2026-08-15,Maria Himmelfahrt
+CH,2026-09-10,Jeûne genevois
+CH,2026-09-20,"Eidgenössischer Dank-, Buss- und Bettag"
+CH,2026-09-21,Bettagsmontag
+CH,2026-11-01,Allerheiligen
+CH,2026-11-01,Allerheiligen
+CH,2026-12-08,Mariä Empfängnis
+CH,2026-12-08,Mariä Empfängnis
+CH,2026-12-25,Weihnachten
+CH,2026-12-26,Stephanstag
+CH,2026-12-26,Stephanstag
+CH,2026-12-31,Restauration de la République
