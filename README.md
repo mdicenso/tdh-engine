@@ -63,9 +63,12 @@ Spina dorsale: modello lineare **OLS** (stagionalità esplicita + trend + dummy 
 con **barriera di onestà** — si prevede solo se si batte la *naive stagionale* nel backtest.
 
 **Tier 1 — sfidanti nelle proiezioni** (`tdhlib.project_seasonal_best`): per ogni serie
-gareggiano OLS · **ETS/Holt-Winters** · **SARIMAX** · **stato latente (UnobservedComponents)**
-e si tiene il modello con l'errore di backtest più basso (skill riportato vs naive). Il trend
-annuale (`project_var`) ha l'opzione **robusta** (Huber) per gli outlier tipo COVID.
+gareggiano 6 motori — OLS · **ETS/Holt-Winters** · **SARIMAX** · **stato latente (UnobservedComponents)**
+· **Theta** · **STL+ARIMA** — e si tiene quello con l'errore più basso in un backtest
+**rolling-origin** (più finestre mobili da 12 mesi → scelta affidabile, non frutto di una sola
+finestra fortunata). La Scheda Regione mostra la **classifica** dei motori (MAE medio, skill vs
+naive, finestre vinte). Il trend annuale (`project_var`) ha l'opzione **robusta** (Huber) per gli
+outlier tipo COVID.
 
 **Tier 2 — struttura tra regioni**: **partial pooling** empirical-Bayes
 (`partial_pool_slopes`) per stabilizzare le serie corte verso la media nazionale, e

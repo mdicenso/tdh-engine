@@ -276,23 +276,31 @@ def page_regione():
                 vp = f" · {(m / base_v - 1) * 100:+.0f}% vs {last_y}" if base_v else ""
                 st.success(f"**{L.REGION_VAR_LABEL[fvar]}** — proiezione **{ny}** (somma 12 mesi): "
                            f"~**{_fmt(m)}** (intervallo {_fmt(lo)}–{_fmt(hi)}, 80%){vp}")
-            # esito della gara fra modelli (barriera di onestà vs naive stagionale)
+            # esito della gara fra 6 motori (barriera di onestà vs naive, backtest a ritroso)
             bt = proj.get("backtest") or {}
             naive_tag = ("batte la naive stagionale" if proj.get("beats_naive")
-                         else "NON batte la naive: scelto solo come miglior approssimazione")
+                         else "NON batte la naive: scelto come miglior approssimazione")
+            _r2 = proj.get("r2")
+            r2s = f", R²={_r2:.2f}" if isinstance(_r2, (int, float)) and _r2 == _r2 else ""
+            nfolds = bt.get("_folds")
             st.caption(f"Modello scelto automaticamente: **{proj.get('method', 'OLS stagionale')}** "
-                       f"({naive_tag}). R²={proj['r2']:.2f}, intervallo 80%. La banda annuale è la "
-                       "somma dei mesi (indicativa).")
+                       f"({naive_tag}){r2s}, intervallo 80%. La banda annuale è la somma dei mesi (indicativa).")
             if bt:
-                rows = [{"Modello": k, "Errore backtest (MAE)": round(v["mae"]),
+                win = proj.get("method")
+                rows = [{"Scelto": "✓" if k == win else "",
+                         "Modello": k,
+                         "MAE (medio)": round(v["mae"]),
                          "Skill vs naive": (f"{v['skill']:+.1f}%" if v.get("skill") == v.get("skill") else "—"),
+                         "Finestre vinte": (f"{v.get('wins', 0)}/{nfolds}" if nfolds else "—"),
                          "Batte naive": "sì" if v.get("beats_naive") else "no"}
-                        for k, v in bt.items() if k != "_naive_mae" and v.get("mae") == v.get("mae")]
-                with st.expander("Confronto modelli (backtest a 12 mesi)"):
+                        for k, v in bt.items() if not k.startswith("_") and v.get("mae") == v.get("mae")]
+                rows.sort(key=lambda r: r["MAE (medio)"])
+                with st.expander(f"🏆 Classifica modelli (backtest a ritroso · {nfolds or 1} finestre)"):
                     st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
-                    st.caption("Naive stagionale = ripetere lo stesso mese dell'anno prima "
-                               f"(MAE {round(bt.get('_naive_mae', float('nan')))}). "
-                               "Lo «skill» è la riduzione % dell'errore rispetto alla naive.")
+                    st.caption("Backtest *rolling-origin*: ogni motore prevede a ritroso più finestre da "
+                               "12 mesi; si tiene quello con l'errore medio (MAE) più basso, serie per serie. "
+                               f"Naive stagionale = stesso mese dell'anno prima (MAE {round(bt.get('_naive_mae', float('nan')))}). "
+                               "«Skill» = riduzione % dell'errore vs naive; «Finestre vinte» = in quante finestre quel motore è stato il migliore.")
     else:
         bc1, bc2, bc3 = st.columns([1.3, 1, 1])
         _base = {"Ultimi 5 anni": 5, "Ultimi 10 anni": 10, "Tutto lo storico": None}

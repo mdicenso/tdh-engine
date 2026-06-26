@@ -1531,8 +1531,9 @@ def tdh_architecture() -> dict:
             "mese) + trend + dummy COVID. Ogni coefficiente è leggibile in italiano corrente.",
             "**Barriera di onestà** — si prevede un numero solo se il modello batte la *naive stagionale* "
             "(ripetere lo stesso periodo dell'anno prima) in un backtest; altrimenti «segnale insufficiente».",
-            "**Sfidanti** (si tiene il migliore nel backtest, serie per serie): ETS/Holt-Winters, SARIMAX, "
-            "modello a stato latente (UnobservedComponents); + opzione di trend **robusto** (Huber) per gli outlier.",
+            "**Sfidanti** (si tiene il migliore, serie per serie): ETS/Holt-Winters, SARIMAX, stato latente "
+            "(UCM), Theta, STL+ARIMA — scelti con backtest **rolling-origin** (più finestre mobili, scelta "
+            "affidabile); + opzione di trend **robusto** (Huber) per gli outlier.",
             "**Tra regioni** — *partial pooling* (empirical-Bayes): stabilizza le serie corte tirando il "
             "trend di ogni regione verso la media nazionale; + riconciliazione Italia↔regioni (i totali tornano).",
             "**Confine** — è un **ranking decisionale** (forza anticipatrice × momentum × valore × "
@@ -2018,12 +2019,13 @@ def project_seasonal(series: pd.DataFrame, horizon_years: int = 2) -> dict | Non
             "hist_ann": hist_ann, "fc_ann": fc_ann, "r2": float(model.rsquared)}
 
 
-# ── TIER 1 · sfidanti statistici dentro la barriera di onestà ─────────────────
-#   ETS (Holt-Winters) e SARIMAX competono con il modello stagionale OLS attuale.
-#   Si tiene quello con l'errore di backtest (holdout 12 mesi) più basso e si riporta
-#   lo skill vs la naive stagionale. Tutto in statsmodels — nessuna nuova dipendenza.
-#   Ogni candidato è in try/except: se uno non converge, esce dalla gara; l'OLS
-#   stagionale resta sempre come fallback garantito (il metodo già validato).
+# ── Sfidanti statistici dentro la barriera di onestà ──────────────────────────
+#   Sei motori competono con il modello stagionale OLS: ETS (Holt-Winters), SARIMAX,
+#   stato latente (UCM), Theta, STL+ARIMA. Si tiene quello con l'errore più basso in un
+#   backtest ROLLING-ORIGIN (più finestre mobili da 12 mesi → scelta affidabile), e si
+#   riporta lo skill vs la naive stagionale. Tutto in statsmodels — nessuna nuova dipendenza.
+#   Ogni candidato è in try/except: se uno non converge, esce dalla gara; l'OLS stagionale
+#   resta sempre come fallback garantito (il metodo già validato).
 
 def _seasonal_design(series: pd.DataFrame) -> pd.DataFrame:
     """Pannello mensile con month/t/covid (stessa specifica di project_seasonal)."""
@@ -2100,44 +2102,103 @@ def _fc_seas_ucm(train: pd.DataFrame, fut: pd.DataFrame):
             _pseudo_r2(y, m.fittedvalues))
 
 
+def _fc_seas_theta(train: pd.DataFrame, fut: pd.DataFrame):
+    """Metodo THETA (Assimakopoulos-Nikolopoulos): semplice e robusto, spesso vincente su
+    serie stagionali quando ETS/ARIMA faticano. Intervalli nativi. Niente esogene."""
+    import numpy as np
+    from statsmodels.tsa.forecasting.theta import ThetaModel
+    ser = pd.Series(train["value"].to_numpy(float),
+                    index=pd.PeriodIndex(train["date"], freq="M"))
+    m = ThetaModel(ser, period=12).fit()
+    nf = len(fut)
+    fc = np.asarray(m.forecast(nf), float)
+    pi = m.prediction_intervals(nf, alpha=0.2)
+    return fc, pi["lower"].to_numpy(), pi["upper"].to_numpy(), float("nan")
+
+
+def _fc_seas_stl(train: pd.DataFrame, fut: pd.DataFrame):
+    """STL + ARIMA: scompone stagionalità/trend con STL e modella il resto con un ARIMA.
+    Utile quando la stagionalità è marcata ma il resto ha una dinamica propria."""
+    import numpy as np
+    from statsmodels.tsa.arima.model import ARIMA
+    from statsmodels.tsa.forecasting.stl import STLForecast
+    ser = pd.Series(train["value"].to_numpy(float),
+                    index=pd.PeriodIndex(train["date"], freq="M"))
+    m = STLForecast(ser, ARIMA, model_kwargs=dict(order=(1, 1, 1)), period=12).fit()
+    nf = len(fut)
+    sf = m.get_prediction(len(ser), len(ser) + nf - 1).summary_frame(alpha=0.2)
+    return (sf["mean"].to_numpy(), sf["mean_ci_lower"].to_numpy(),
+            sf["mean_ci_upper"].to_numpy(), float("nan"))
+
+
 _SEASONAL_METHODS = {"OLS stagionale": _fc_seas_ols,
                      "ETS (Holt-Winters)": _fc_seas_ets,
                      "SARIMAX": _fc_seas_sarimax,
-                     "Stato latente (UCM)": _fc_seas_ucm}
+                     "Stato latente (UCM)": _fc_seas_ucm,
+                     "Theta": _fc_seas_theta,
+                     "STL + ARIMA": _fc_seas_stl}
 
 
-def _backtest_seasonal(d: pd.DataFrame, holdout: int = 12) -> dict:
-    """Backtest temporale: addestra su tutto tranne gli ultimi `holdout` mesi e misura
-    l'errore (MAE) di ogni candidato sull'holdout, confrontandolo con la naive stagionale."""
+def _backtest_seasonal(d: pd.DataFrame, horizon: int = 12, folds: int = 3,
+                       min_train: int = 24) -> dict:
+    """Backtest ROLLING-ORIGIN: per fino a `folds` origini mobili, addestra fino all'origine
+    e prevede i `horizon` mesi successivi; media l'errore (MAE) di ogni motore sulle finestre
+    e lo confronta con la naive stagionale. Riporta anche quante finestre ha vinto ciascuno.
+    Più finestre = scelta del motore più affidabile (non frutto di una sola finestra fortunata)."""
     import numpy as np
-    if len(d) < holdout + 24:  # servono ~2 anni di train + l'holdout
+    n = len(d)
+    origins = [n - k * horizon for k in range(folds, 0, -1) if n - k * horizon >= min_train]
+    if not origins:  # storia corta: ripiega su una singola finestra
+        origins = [n - horizon] if n >= min_train + horizon else []
+    if not origins:
         return {}
-    train, test = d.iloc[:-holdout].copy(), d.iloc[-holdout:].copy()
-    actual = test["value"].to_numpy(float)
     full = d.set_index("date")["value"]
-    naive = np.array([full.get(dt - pd.DateOffset(years=1), np.nan) for dt in test["date"]])
-    mask = ~np.isnan(naive)
-    mae_naive = float(np.mean(np.abs(actual[mask] - naive[mask]))) if mask.any() else float("nan")
-    out = {"_naive_mae": mae_naive}
-    for name, fn in _SEASONAL_METHODS.items():
-        try:
-            mean = np.asarray(fn(train, test)[0], float)[:len(actual)]
-            mae = float(np.mean(np.abs(actual - mean)))
-            skill = (1 - mae / mae_naive) * 100 if (mae_naive and np.isfinite(mae_naive)) else float("nan")
+    agg = {name: [] for name in _SEASONAL_METHODS}
+    wins = {name: 0 for name in _SEASONAL_METHODS}
+    naive_maes = []
+    for cut in origins:
+        train, test = d.iloc[:cut], d.iloc[cut:cut + horizon]
+        if test.empty:
+            continue
+        actual = test["value"].to_numpy(float)
+        naive = np.array([full.get(dt - pd.DateOffset(years=1), np.nan) for dt in test["date"]])
+        mask = ~np.isnan(naive)
+        naive_maes.append(float(np.mean(np.abs(actual[mask] - naive[mask]))) if mask.any() else np.nan)
+        fold_mae = {}
+        for name, fn in _SEASONAL_METHODS.items():
+            try:
+                mean = np.asarray(fn(train, test)[0], float)[:len(actual)]
+                mae = float(np.mean(np.abs(actual - mean)))
+            except Exception:  # noqa: BLE001 — motore fuori gara in questa finestra
+                mae = float("nan")
+            fold_mae[name] = mae
+            if np.isfinite(mae):
+                agg[name].append(mae)
+        finite = {k: v for k, v in fold_mae.items() if np.isfinite(v)}
+        if finite:
+            wins[min(finite, key=finite.get)] += 1
+    naive_mae = float(np.nanmean(naive_maes)) if naive_maes else float("nan")
+    out = {"_naive_mae": naive_mae, "_folds": len(origins)}
+    for name in _SEASONAL_METHODS:
+        if agg[name]:
+            mae = float(np.mean(agg[name]))
+            skill = (1 - mae / naive_mae) * 100 if (naive_mae and np.isfinite(naive_mae)) else float("nan")
             out[name] = {"mae": mae, "skill": skill,
-                         "beats_naive": bool(np.isfinite(skill) and skill > 0)}
-        except Exception as e:  # noqa: BLE001 — candidato fuori gara, non blocca il resto
-            out[name] = {"mae": float("nan"), "skill": float("nan"),
-                         "beats_naive": False, "error": type(e).__name__}
+                         "beats_naive": bool(np.isfinite(skill) and skill > 0),
+                         "wins": wins[name], "n_folds": len(agg[name])}
+        else:
+            out[name] = {"mae": float("nan"), "skill": float("nan"), "beats_naive": False,
+                         "wins": 0, "n_folds": 0}
     return out
 
 
 def project_seasonal_best(series: pd.DataFrame, horizon_years: int = 2,
-                          holdout: int = 12) -> dict | None:
-    """Proiezione mensile che SCEGLIE il modello: OLS stagionale vs ETS vs SARIMAX,
-    selezionato per minor errore di backtest e confrontato con la naive stagionale.
-    Stesso contratto di output di project_seasonal (hist/fut/hist_ann/fc_ann/r2) + i
-    metadati della gara (method/beats_naive/backtest), così grafici e UI non cambiano."""
+                          folds: int = 3) -> dict | None:
+    """Proiezione mensile che SCEGLIE il modello tra 6 motori (OLS · ETS · SARIMAX · stato
+    latente · Theta · STL+ARIMA), selezionato per minor errore in un backtest ROLLING-ORIGIN
+    (più finestre mobili) e confrontato con la naive stagionale. Stesso contratto di output di
+    project_seasonal (hist/fut/hist_ann/fc_ann/r2) + i metadati della gara (method/beats_naive/
+    backtest, con finestre vinte), così grafici e UI non cambiano."""
     import numpy as np
     if series is None or len(series.dropna()) < 24:
         return None
@@ -2148,7 +2209,7 @@ def project_seasonal_best(series: pd.DataFrame, horizon_years: int = 2,
     fut = pd.DataFrame({"date": fut_dates, "month": fut_dates.month,
                         "t": last_t + np.arange(1, n + 1), "covid": 0})
 
-    bt = _backtest_seasonal(d, holdout=holdout)
+    bt = _backtest_seasonal(d, horizon=12, folds=folds)
     ranked = sorted(((k, bt[k]["mae"]) for k in _SEASONAL_METHODS
                      if k in bt and np.isfinite(bt[k].get("mae", np.nan))),
                     key=lambda kv: kv[1])
