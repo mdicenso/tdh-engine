@@ -58,8 +58,24 @@ tourism_wedge/
 run_wedge.py   orchestrazione + output leggibile + JSON
 ```
 
-## Prossimo giro: SARIMAX
-Quando la storia regge in sala, si varia il solo `engine.fit_market`:
-sostituire l'OLS con `statsmodels` SARIMAX (search e fx come regressori esogeni,
-stagionalità nel termine stagionale). Interfaccia, adattatori, strato decisionale
-e formato di output restano identici — cambia solo il cuore di stima.
+## Motore statistico (stato attuale)
+Spina dorsale: modello lineare **OLS** (stagionalità esplicita + trend + dummy COVID)
+con **barriera di onestà** — si prevede solo se si batte la *naive stagionale* nel backtest.
+
+**Tier 1 — sfidanti nelle proiezioni** (`tdhlib.project_seasonal_best`): per ogni serie
+gareggiano OLS · **ETS/Holt-Winters** · **SARIMAX** · **stato latente (UnobservedComponents)**
+e si tiene il modello con l'errore di backtest più basso (skill riportato vs naive). Il trend
+annuale (`project_var`) ha l'opzione **robusta** (Huber) per gli outlier tipo COVID.
+
+**Tier 2 — struttura tra regioni**: **partial pooling** empirical-Bayes
+(`partial_pool_slopes`) per stabilizzare le serie corte verso la media nazionale, e
+**riconciliazione** gerarchica Italia↔regioni (`reconcile_bottom_up`). Calcolo offline in
+`tier2_structural.py` → artefatto `.cache/tier2_pooled_trends.json`, letto dalla Scheda Regione.
+
+**Evidenza**: i bake-off (`bakeoff.py`, `bakeoff_natl.py`) sui dati reali mostrano che i modelli
+complessi NON battono di norma la naive stagionale (segnale ~95% autoregressivo) → la complessità
+si attiva solo se supera il backtest. Analisi completa: `@_scorciatoie/TDH_Studio_Modelli.docx`.
+
+Confine invariato: **ranking decisionale**, NON stima causale della spesa promozionale.
+
+> Regola di progetto: ad ogni modifica che cambia comportamento/metodo, aggiornare questo README.

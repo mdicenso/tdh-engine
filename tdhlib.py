@@ -1526,6 +1526,20 @@ def tdh_architecture() -> dict:
             "**Non sostitutivo** — il TDH si appoggia sopra i sistemi esistenti come layer di integrazione.",
             "**PDND** — sorgenti nazionali senza convenzioni bilaterali (art. 50-ter CAD).",
         ],
+        "motore_statistico": [
+            "**Spina dorsale** — modello lineare trasparente (OLS): stagionalità esplicita (effetti di "
+            "mese) + trend + dummy COVID. Ogni coefficiente è leggibile in italiano corrente.",
+            "**Barriera di onestà** — si prevede un numero solo se il modello batte la *naive stagionale* "
+            "(ripetere lo stesso periodo dell'anno prima) in un backtest; altrimenti «segnale insufficiente».",
+            "**Sfidanti** (si tiene il migliore nel backtest, serie per serie): ETS/Holt-Winters, SARIMAX, "
+            "modello a stato latente (UnobservedComponents); + opzione di trend **robusto** (Huber) per gli outlier.",
+            "**Tra regioni** — *partial pooling* (empirical-Bayes): stabilizza le serie corte tirando il "
+            "trend di ogni regione verso la media nazionale; + riconciliazione Italia↔regioni (i totali tornano).",
+            "**Confine** — è un **ranking decisionale** (forza anticipatrice × momentum × valore × "
+            "fattibilità), NON una stima causale della spesa promozionale.",
+            "*Evidenza:* sui dati reali i modelli complessi non battono di norma la naive stagionale → la "
+            "complessità si attiva solo se supera il backtest (vedi script `bakeoff.py` e il documento di studio).",
+        ],
     }
 
 

@@ -818,6 +818,9 @@ def page_architettura():
     st.subheader("Tabella 1 — Sorgenti dati")
     L.aggrid_table(pd.DataFrame(A["sorgenti"]), height=360, key="arch_src")
     st.caption("🟢 Attiva (già nel motore) · 🟡 Pianificata · ⚪ Da valutare")
+    st.subheader("Motore statistico")
+    for m in A["motore_statistico"]:
+        st.markdown(f"- {m}")
     cR, cP = st.columns(2)
     with cR:
         st.subheader("Roadmap")
