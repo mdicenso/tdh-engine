@@ -24,5 +24,8 @@ data/update_state.json
 # documentazione interna/amministrativa (solo locale, non sul repo)
 Admin/
 
+# scorciatoie locali (lanciatori .cmd con percorsi del PC, solo locali)
+@_scorciatoie/
+
 # NB: la cartella .cache/ NON è ignorata: contiene i dati (ISTAT/BdI/Eurostat/
 # Wikipedia/Trends/GeoJSON) che fanno girare l'app in cloud senza rifare le fetch.

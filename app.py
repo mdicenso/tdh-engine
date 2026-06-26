@@ -255,7 +255,7 @@ def page_regione():
 
     _fmt = lambda v: f"{v:,.0f}".replace(",", ".")  # noqa: E731
     if method.startswith("Stagionale"):
-        proj = L.project_seasonal(L.region_monthly_series(code, fvar), horizon)
+        proj = L.project_seasonal_best(L.region_monthly_series(code, fvar), horizon)
         if proj is None:
             st.info("Serie mensile insufficiente per il modello stagionale (servono ~2 anni).")
         else:
@@ -269,17 +269,34 @@ def page_regione():
                 vp = f" · {(m / base_v - 1) * 100:+.0f}% vs {last_y}" if base_v else ""
                 st.success(f"**{L.REGION_VAR_LABEL[fvar]}** — proiezione **{ny}** (somma 12 mesi): "
                            f"~**{_fmt(m)}** (intervallo {_fmt(lo)}–{_fmt(hi)}, 80%){vp}")
-            st.caption(f"Motore stagionale ISTAT: C(mese) + trend + dummy COVID (2020-03→2021-12), "
-                       f"R²={proj['r2']:.2f}, intervallo di previsione 80%. La banda annuale è la somma "
-                       "dei mesi (indicativa).")
+            # esito della gara fra modelli (barriera di onestà vs naive stagionale)
+            bt = proj.get("backtest") or {}
+            naive_tag = ("batte la naive stagionale" if proj.get("beats_naive")
+                         else "NON batte la naive: scelto solo come miglior approssimazione")
+            st.caption(f"Modello scelto automaticamente: **{proj.get('method', 'OLS stagionale')}** "
+                       f"({naive_tag}). R²={proj['r2']:.2f}, intervallo 80%. La banda annuale è la "
+                       "somma dei mesi (indicativa).")
+            if bt:
+                rows = [{"Modello": k, "Errore backtest (MAE)": round(v["mae"]),
+                         "Skill vs naive": (f"{v['skill']:+.1f}%" if v.get("skill") == v.get("skill") else "—"),
+                         "Batte naive": "sì" if v.get("beats_naive") else "no"}
+                        for k, v in bt.items() if k != "_naive_mae" and v.get("mae") == v.get("mae")]
+                with st.expander("Confronto modelli (backtest a 12 mesi)"):
+                    st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+                    st.caption("Naive stagionale = ripetere lo stesso mese dell'anno prima "
+                               f"(MAE {round(bt.get('_naive_mae', float('nan')))}). "
+                               "Lo «skill» è la riduzione % dell'errore rispetto alla naive.")
     else:
-        bc1, bc2 = st.columns([1.3, 1])
+        bc1, bc2, bc3 = st.columns([1.3, 1, 1])
         _base = {"Ultimi 5 anni": 5, "Ultimi 10 anni": 10, "Tutto lo storico": None}
         base_lbl = bc1.selectbox("Base del trend", list(_base), index=0, key="reg_fc_base",
                                  help="Su quanti anni stimare la retta. «Ultimi 5» segue il regime recente.")
         drop_covid = bc2.checkbox("Escludi 2020", value=True, key="reg_fc_covid",
                                   help="Esclude l'anomalia COVID dal calcolo del trend.")
-        proj = L.project_var(panel, fvar, horizon, drop_covid, n_years=_base[base_lbl])
+        robust = bc3.checkbox("Robusto", value=False, key="reg_fc_robust",
+                              help="Regressione robusta di Huber: pesa di meno gli anni anomali "
+                                   "(outlier) invece di farli inclinare la retta. Utile se non escludi il 2020.")
+        proj = L.project_var(panel, fvar, horizon, drop_covid, n_years=_base[base_lbl], robust=robust)
         if proj is None:
             st.info("Servono almeno 3 anni di dati per proiettare questa variabile.")
         else:
@@ -295,8 +312,9 @@ def page_regione():
             st.success(f"**{L.REGION_VAR_LABEL[fvar]}** — proiezione **{ny}**: ~**{fdec(nv)}** "
                        f"{L.REGION_VAR_UNIT[fvar] if L.REGION_VAR_UNIT[fvar] != 'n' else ''} "
                        f"(intervallo {fdec(lo)}–{fdec(hi)}, 80%) · {var_pct:+.0f}% vs {proj['hist_years'][-1]}")
+            _kind = "regressione robusta di Huber" if proj.get("robust") else "minimi quadrati (OLS)"
             st.caption(f"Trend stimato sugli anni {proj['hist_years'][0]}–{proj['hist_years'][-1]} "
-                       f"(R²={proj['r2']:.2f}{' · 2020 escluso' if drop_covid else ''}). "
+                       f"con {_kind} (R²={proj['r2']:.2f}{' · 2020 escluso' if drop_covid else ''}). "
                        "R² alto = trend regolare; R² basso = serie più rumorosa, proiezione più incerta.")
 
 

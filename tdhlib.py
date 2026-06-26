@@ -1793,11 +1793,14 @@ def chart_region_indexed(df: pd.DataFrame, keys: list[str], labels: dict | None 
 
 
 def project_var(panel: pd.DataFrame, key: str, horizon: int = 2, drop_covid: bool = True,
-                n_years: int | None = 5) -> dict | None:
-    """Proiezione a trend LINEARE (OLS) della variabile annuale `key` su `horizon` anni,
-    con intervallo di previsione all'80%. `n_years` limita la BASE del trend agli ultimi N
-    anni (None = tutto lo storico): utile quando c'è un cambio di regime (es. salto post-COVID
-    della spesa/turista). `drop_covid` esclude il 2020 prima di contare gli anni."""
+                n_years: int | None = 5, robust: bool = False) -> dict | None:
+    """Proiezione a trend LINEARE della variabile annuale `key` su `horizon` anni, con
+    intervallo di previsione all'80%. `n_years` limita la BASE del trend agli ultimi N anni
+    (None = tutto lo storico): utile quando c'è un cambio di regime (es. salto post-COVID
+    della spesa/turista). `drop_covid` esclude il 2020 prima di contare gli anni.
+    `robust=True` (Tier 1): stima con regressione robusta di Huber (statsmodels RLM), che
+    pesa di meno gli anni anomali (outlier tipo COVID) invece di lasciarli inclinare la retta;
+    la banda 80% deriva dalla scala robusta dei residui."""
     import numpy as np
     import statsmodels.api as sm
     if panel is None or panel.empty or key not in panel:
@@ -1811,17 +1814,30 @@ def project_var(panel: pd.DataFrame, key: str, horizon: int = 2, drop_covid: boo
     if len(s) < 3:
         return None
     x, y = s.index.values.astype(float), s.values.astype(float)
-    m = sm.OLS(y, sm.add_constant(x)).fit()
     last = int(s.index.max())
     fut = list(range(last + 1, last + 1 + int(horizon)))
-    Xf = sm.add_constant(np.array(fut, dtype=float), has_constant="add")
-    pr = m.get_prediction(Xf).summary_frame(alpha=0.2)  # 80% → obs_ci = intervallo di previsione
+    X, Xf = sm.add_constant(x), sm.add_constant(np.array(fut, dtype=float), has_constant="add")
+    if robust:
+        m = sm.RLM(y, X, M=sm.robust.norms.HuberT()).fit()
+        fit_vals, fc_mean = m.predict(X), m.predict(Xf)
+        # banda 80% ≈ ±z(0.9)·scala robusta, allargata in estrapolazione (leverage)
+        xbar = x.mean(); Sxx = float(((x - xbar) ** 2).sum()) or 1.0
+        widen = np.sqrt(1.0 + (np.array(fut, float) - xbar) ** 2 / Sxx)
+        half = 1.2816 * float(m.scale) * widen
+        fc_lo, fc_hi = fc_mean - half, fc_mean + half
+        r2 = _pseudo_r2(y, fit_vals)
+    else:
+        m = sm.OLS(y, X).fit()
+        fit_vals, fc_mean = m.predict(X), m.predict(Xf)
+        pr = m.get_prediction(Xf).summary_frame(alpha=0.2)  # 80% → obs_ci = intervallo di previsione
+        fc_mean = pr["mean"].to_numpy()
+        fc_lo, fc_hi = pr["obs_ci_lower"].to_numpy(), pr["obs_ci_upper"].to_numpy()
+        r2 = float(m.rsquared)
     return {"hist_years": [int(v) for v in s.index], "hist_vals": [float(v) for v in y],
-            "fit_vals": [float(v) for v in m.predict(sm.add_constant(x))],
-            "fut_years": fut, "fc_mean": [float(v) for v in pr["mean"]],
-            "fc_lo": [float(v) for v in pr["obs_ci_lower"]],
-            "fc_hi": [float(v) for v in pr["obs_ci_upper"]],
-            "slope": float(m.params[1]), "r2": float(m.rsquared)}
+            "fit_vals": [float(v) for v in fit_vals],
+            "fut_years": fut, "fc_mean": [float(v) for v in fc_mean],
+            "fc_lo": [float(v) for v in fc_lo], "fc_hi": [float(v) for v in fc_hi],
+            "slope": float(m.params[1]), "r2": float(r2), "robust": bool(robust)}
 
 
 def chart_projection(proj: dict, label: str, unit: str = "") -> go.Figure:
@@ -1899,6 +1915,144 @@ def project_seasonal(series: pd.DataFrame, horizon_years: int = 2) -> dict | Non
               for y, r in fa.iterrows() if r["n"] >= 12}
     return {"hist": d[["date", "value"]], "fut": fut[["date", "mean", "lo", "hi"]],
             "hist_ann": hist_ann, "fc_ann": fc_ann, "r2": float(model.rsquared)}
+
+
+# ── TIER 1 · sfidanti statistici dentro la barriera di onestà ─────────────────
+#   ETS (Holt-Winters) e SARIMAX competono con il modello stagionale OLS attuale.
+#   Si tiene quello con l'errore di backtest (holdout 12 mesi) più basso e si riporta
+#   lo skill vs la naive stagionale. Tutto in statsmodels — nessuna nuova dipendenza.
+#   Ogni candidato è in try/except: se uno non converge, esce dalla gara; l'OLS
+#   stagionale resta sempre come fallback garantito (il metodo già validato).
+
+def _seasonal_design(series: pd.DataFrame) -> pd.DataFrame:
+    """Pannello mensile con month/t/covid (stessa specifica di project_seasonal)."""
+    import numpy as np
+    d = series.dropna().sort_values("date").reset_index(drop=True).copy()
+    d["month"] = d["date"].dt.month
+    d["t"] = np.arange(len(d))
+    d["covid"] = ((d["date"] >= pd.Timestamp("2020-03-01")) &
+                  (d["date"] <= pd.Timestamp("2021-12-01"))).astype(int)
+    return d
+
+
+def _pseudo_r2(y, fitted) -> float:
+    import numpy as np
+    y = np.asarray(y, float); fitted = np.asarray(fitted, float)
+    ss_tot = float(np.sum((y - y.mean()) ** 2))
+    ss_res = float(np.sum((y - fitted) ** 2))
+    return float(1 - ss_res / ss_tot) if ss_tot else float("nan")
+
+
+def _fc_seas_ols(train: pd.DataFrame, fut: pd.DataFrame):
+    """Modello attuale: value ~ C(mese) + trend + dummy COVID, intervallo 80%."""
+    import statsmodels.formula.api as smf
+    m = smf.ols("value ~ C(month) + t + covid", data=train).fit()
+    pr = m.get_prediction(fut).summary_frame(alpha=0.2)
+    return (pr["mean"].to_numpy(), pr["obs_ci_lower"].to_numpy(),
+            pr["obs_ci_upper"].to_numpy(), float(m.rsquared))
+
+
+def _fc_seas_ets(train: pd.DataFrame, fut: pd.DataFrame):
+    """ETS / Holt-Winters additivo con stagionalità 12 e trend smorzato."""
+    import numpy as np
+    from statsmodels.tsa.exponential_smoothing.ets import ETSModel
+    ser = pd.Series(train["value"].to_numpy(float),
+                    index=pd.PeriodIndex(train["date"], freq="M"))
+    m = ETSModel(ser, error="add", trend="add", seasonal="add",
+                 seasonal_periods=12, damped_trend=True).fit(disp=False)
+    nf = len(fut)
+    sf = m.get_prediction(start=len(ser), end=len(ser) + nf - 1).summary_frame(alpha=0.2)
+    return (sf["mean"].to_numpy(), sf["pi_lower"].to_numpy(),
+            sf["pi_upper"].to_numpy(), _pseudo_r2(ser.to_numpy(), m.fittedvalues))
+
+
+def _fc_seas_sarimax(train: pd.DataFrame, fut: pd.DataFrame):
+    """SARIMAX (1,0,0)(0,1,1)[12] con dummy COVID come regressore esogeno."""
+    import numpy as np
+    from statsmodels.tsa.statespace.sarimax import SARIMAX
+    y = train["value"].to_numpy(float)
+    ex = train[["covid"]].to_numpy(float)
+    exf = fut[["covid"]].to_numpy(float)
+    m = SARIMAX(y, exog=ex, order=(1, 0, 0), seasonal_order=(0, 1, 1, 12),
+                enforce_stationarity=False, enforce_invertibility=False).fit(disp=False)
+    pr = m.get_prediction(start=len(y), end=len(y) + len(fut) - 1, exog=exf)
+    ci = np.asarray(pr.conf_int(alpha=0.2))
+    return (np.asarray(pr.predicted_mean), ci[:, 0], ci[:, 1],
+            _pseudo_r2(y, m.fittedvalues))
+
+
+_SEASONAL_METHODS = {"OLS stagionale": _fc_seas_ols,
+                     "ETS (Holt-Winters)": _fc_seas_ets,
+                     "SARIMAX": _fc_seas_sarimax}
+
+
+def _backtest_seasonal(d: pd.DataFrame, holdout: int = 12) -> dict:
+    """Backtest temporale: addestra su tutto tranne gli ultimi `holdout` mesi e misura
+    l'errore (MAE) di ogni candidato sull'holdout, confrontandolo con la naive stagionale."""
+    import numpy as np
+    if len(d) < holdout + 24:  # servono ~2 anni di train + l'holdout
+        return {}
+    train, test = d.iloc[:-holdout].copy(), d.iloc[-holdout:].copy()
+    actual = test["value"].to_numpy(float)
+    full = d.set_index("date")["value"]
+    naive = np.array([full.get(dt - pd.DateOffset(years=1), np.nan) for dt in test["date"]])
+    mask = ~np.isnan(naive)
+    mae_naive = float(np.mean(np.abs(actual[mask] - naive[mask]))) if mask.any() else float("nan")
+    out = {"_naive_mae": mae_naive}
+    for name, fn in _SEASONAL_METHODS.items():
+        try:
+            mean = np.asarray(fn(train, test)[0], float)[:len(actual)]
+            mae = float(np.mean(np.abs(actual - mean)))
+            skill = (1 - mae / mae_naive) * 100 if (mae_naive and np.isfinite(mae_naive)) else float("nan")
+            out[name] = {"mae": mae, "skill": skill,
+                         "beats_naive": bool(np.isfinite(skill) and skill > 0)}
+        except Exception as e:  # noqa: BLE001 — candidato fuori gara, non blocca il resto
+            out[name] = {"mae": float("nan"), "skill": float("nan"),
+                         "beats_naive": False, "error": type(e).__name__}
+    return out
+
+
+def project_seasonal_best(series: pd.DataFrame, horizon_years: int = 2,
+                          holdout: int = 12) -> dict | None:
+    """Proiezione mensile che SCEGLIE il modello: OLS stagionale vs ETS vs SARIMAX,
+    selezionato per minor errore di backtest e confrontato con la naive stagionale.
+    Stesso contratto di output di project_seasonal (hist/fut/hist_ann/fc_ann/r2) + i
+    metadati della gara (method/beats_naive/backtest), così grafici e UI non cambiano."""
+    import numpy as np
+    if series is None or len(series.dropna()) < 24:
+        return None
+    d = _seasonal_design(series)
+    n = int(horizon_years) * 12
+    last_t = int(d["t"].iloc[-1])
+    fut_dates = pd.date_range(d["date"].max() + pd.DateOffset(months=1), periods=n, freq="MS")
+    fut = pd.DataFrame({"date": fut_dates, "month": fut_dates.month,
+                        "t": last_t + np.arange(1, n + 1), "covid": 0})
+
+    bt = _backtest_seasonal(d, holdout=holdout)
+    ranked = sorted(((k, bt[k]["mae"]) for k in _SEASONAL_METHODS
+                     if k in bt and np.isfinite(bt[k].get("mae", np.nan))),
+                    key=lambda kv: kv[1])
+    winner = ranked[0][0] if ranked else "OLS stagionale"
+    try:
+        mean, lo, hi, r2 = _SEASONAL_METHODS[winner](d, fut)
+    except Exception:  # noqa: BLE001 — fallback inossidabile all'OLS già validato
+        winner = "OLS stagionale"
+        mean, lo, hi, r2 = _fc_seas_ols(d, fut)
+
+    fut["mean"] = np.asarray(mean, float)
+    fut["lo"] = np.clip(np.asarray(lo, float), 0, None)
+    fut["hi"] = np.asarray(hi, float)
+
+    ha = d.assign(anno=d["date"].dt.year).groupby("anno")["value"].agg(["sum", "count"])
+    hist_ann = {int(y): float(r["sum"]) for y, r in ha.iterrows() if r["count"] >= 12}
+    fa = fut.assign(anno=fut["date"].dt.year).groupby("anno").agg(
+        mean=("mean", "sum"), lo=("lo", "sum"), hi=("hi", "sum"), n=("mean", "count"))
+    fc_ann = {int(y): (float(r["mean"]), float(r["lo"]), float(r["hi"]))
+              for y, r in fa.iterrows() if r["n"] >= 12}
+    return {"hist": d[["date", "value"]], "fut": fut[["date", "mean", "lo", "hi"]],
+            "hist_ann": hist_ann, "fc_ann": fc_ann, "r2": float(r2),
+            "method": winner, "beats_naive": bool(bt.get(winner, {}).get("beats_naive", False)),
+            "backtest": bt}
 
 
 def chart_projection_monthly(proj: dict, label: str, unit: str = "") -> go.Figure:
