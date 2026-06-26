@@ -324,6 +324,35 @@ def page_regione():
                        f"con {_kind} (R²={proj['r2']:.2f}{' · 2020 escluso' if drop_covid else ''}). "
                        "R² alto = trend regolare; R² basso = serie più rumorosa, proiezione più incerta.")
 
+    # ── Tier 2 · stabilizzazione tra regioni + coerenza (artefatto precalcolato, istantaneo) ──
+    pooled = L.pooled_trend_for(code, fvar)
+    if pooled and pooled["raw"] is not None:
+        with st.expander("📊 Confronto tra regioni — trend stabilizzato (Tier 2)"):
+            raw, shr, w, mu = pooled["raw"], pooled["shrunk"], pooled["weight"], pooled["mu"]
+            st.markdown(
+                f"**Crescita storica annua** (ultimi {pooled['window']} anni, in %/anno):\n\n"
+                f"- grezza, solo questa regione: **{raw:+.1f}%**\n"
+                f"- **stabilizzata tra regioni: {shr:+.1f}%**  ·  media nazionale {mu:+.1f}%")
+            if w >= 0.66:
+                nota = (f"Serie di questa regione solida (peso {w:.2f}): il trend stabilizzato "
+                        "resta vicino a quello grezzo.")
+            elif w >= 0.33:
+                nota = (f"Serie parzialmente rumorosa (peso {w:.2f}): il trend viene tirato un po' "
+                        "verso la media nazionale.")
+            else:
+                nota = (f"Serie corta/rumorosa (peso {w:.2f}): il trend grezzo è poco affidabile e "
+                        "viene tirato quasi del tutto verso la media nazionale.")
+            st.caption("Partial pooling (empirical-Bayes): condivide il segnale fra le 21 regioni e "
+                       "restringe il trend di ciascuna verso la media nazionale, di più dove la stima è "
+                       "incerta. " + nota)
+            rec = pooled.get("recon")
+            if rec and isinstance(rec.get("gap_pct"), (int, float)) and rec["gap_pct"] == rec["gap_pct"]:
+                st.caption(f"**Coerenza Italia↔regioni** (presenze straniere, +1 anno): la somma delle "
+                           f"proiezioni regionali (bottom-up) è **{rec['gap_pct']:+.1f}%** rispetto al "
+                           "nazionale diretto (top-down). La vista coerente da pubblicare è il bottom-up "
+                           "(i totali tornano per costruzione).")
+            st.caption("Valori precalcolati dallo script `tier2_structural.py` (lettura istantanea).")
+
 
 def page_mercati_origine():
     st.header(":material/travel_explore: Mercati d'origine — i 10 paesi")

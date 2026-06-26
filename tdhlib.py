@@ -1894,6 +1894,39 @@ def reconcile_bottom_up(region_fc: dict, national_fc: float | None = None) -> di
             "gap_pct": gap, "n_regioni": len(vals), "per_regione": vals}
 
 
+@st.cache_data(show_spinner=False)
+def load_tier2_artifact() -> dict | None:
+    """Legge l'artefatto PRECALCOLATO del Tier 2 (`.cache/tier2_pooled_trends.json`):
+    trend pooled per regione + riconciliazione. Lettura istantanea (lo genera lo script
+    offline `tier2_structural.py`). None se assente: l'app funziona comunque."""
+    import json
+    import os
+    p = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".cache", "tier2_pooled_trends.json")
+    if not os.path.exists(p):
+        return None
+    try:
+        with open(p, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def pooled_trend_for(code: str, key: str) -> dict | None:
+    """Info di partial pooling per (regione, variabile) dall'artefatto: crescita grezza vs
+    stabilizzata (%/anno), peso della regione, media nazionale; + riconciliazione se `presenze_str`.
+    None se la variabile non è nell'artefatto o la regione manca."""
+    art = load_tier2_artifact()
+    if not art:
+        return None
+    pt = (art.get("pooled_trends") or {}).get(key)
+    bc = (pt.get("by_code") or {}).get(code) if pt else None
+    if not bc:
+        return None
+    return {"raw": bc.get("raw"), "shrunk": bc.get("shrunk"), "weight": bc.get("weight"),
+            "mu": pt.get("mu"), "window": art.get("window"),
+            "recon": art.get("reconciliation_presenze_str") if key == "presenze_str" else None}
+
+
 def chart_projection(proj: dict, label: str, unit: str = "") -> go.Figure:
     """Storico + trend fittato + proiezione con banda di previsione 80% (unità assolute)."""
     hx, hy = proj["hist_years"], proj["hist_vals"]
