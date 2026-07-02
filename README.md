@@ -81,4 +81,48 @@ si attiva solo se supera il backtest. Analisi completa: `@_scorciatoie/TDH_Studi
 
 Confine invariato: **ranking decisionale**, NON stima causale della spesa promozionale.
 
+## Stile / UI (tdhlib.py)
+Il tema è centralizzato in `tdhlib.py`: variabile `CSS` (iniettata da `inject_css()` una volta
+sola in `app.py` dopo `set_page_config`) + `_layout()` per i grafici Plotly. Redesign con
+gerarchia tipografica (h1/h2/h3 distinti, h2 con accent teal), metric card con ombra e bordo
+superiore, grafici con `paper_bgcolor` trasparente integrato sullo sfondo `#f1f5f9`, sidebar
+scura. Helper opzionale `section_header(title, subtitle, icon)` per le intestazioni di sezione
+(in alternativa a `st.subheader`). Palette: `#0e7490` teal primario, `#f59e0b` amber, `#f1f5f9`
+sfondo.
+
+Tabelle "Gestione dati": la colonna **Righe** passa per `fmt_count_col()` che la rende
+uniforme a stringa (numeri con separatore migliaia, `—` per le fonti live senza file). Serve
+a evitare il mix int/placeholder che rompeva la serializzazione Arrow di `st.dataframe`.
+
+Griglia dei grafici: `_layout()` riconosce le **barre orizzontali** (`go.Bar` con
+`orientation="h"`) e inverte la griglia — linee guida **verticali** sull'asse degli importi
+(così ogni barra corrisponde al suo valore), niente linee orizzontali tra le categorie. I
+grafici temporali/verticali restano con griglia orizzontale.
+
+Selettore anno (ultimi 3 anni completi) su tre pagine, tutte sulla stessa sorgente multi-anno
+`regions_spend_ranking_year(year)` / `bdi_region_years()` (da `bdi_region_long`, serie BdI
+regionale trimestrale 1997–oggi; il 2024 coincide con `bdi_extended`):
+- **Confronto regioni**: classifica regioni per spesa straniera dell'anno scelto.
+- **Italia**: la mappa (`chart_italy_map(highlight, year)`) si **ricolora** per l'anno scelto.
+- **Spesa turistica**: il *Grafico 2 — Confronto regioni* usa `chart_regions_ranking(highlight, year)`
+  (evidenzia la **regione attiva**, non più «Abruzzo» cablato). Rimossa la vecchia
+  `chart_regions_spend` (dead code, sostituita da quella anno-parametrica).
+
+Pagina **Provincia** ("Cosa è successo"): struttura DOVE → COSA È CAMBIATO → QUANDO. Mappa +
+tabella con **peso %** sul totale regionale e nota di concentrazione; **variazione % a/a** per
+provincia (`province_yoy` + `chart_province_yoy`, ultimi 12 mesi vs 12 precedenti, sul totale);
+**heatmap stagionale** mese×provincia normalizzata al picco (`chart_province_seasonality`);
+trend mensile con toggle **Totali/Straniere**. `compute_provinces` ora restituisce anche
+`panel_str` (serie mensile straniera per provincia, dove ISTAT la espone). Limiti dati: posti
+letto/struttura/occupazione non disponibili a livello provinciale (solo regionale).
+
+Stesso schema narrativo (adattato, senza dimensione spaziale) esteso alle pagine descrittive:
+- **Struttura**: COM'È COMPOSTO (metriche + donut) → COSA È CAMBIATO (variazione % a/a per
+  segmento) → QUANDO (stagionalità per segmento) → trend mensile. Riusa i grafici *generici*
+  `province_yoy` e `chart_province_seasonality` (lavorano su qualsiasi pannello `date` + N
+  colonne), passando un pannello con colonne rinominate `Alberghiero`/`Extra-alberghiero`.
+- **Occupazione**: QUANT'È (livello + **variazione a/a in punti percentuali** come `delta` della
+  metrica, ultimi 12 mesi vs 12 precedenti) → COSA È CAMBIATO (trend occupazione lorda) → QUANDO
+  (stagionalità). Il delta è in *punti* (non %) perché l'occupazione è già un tasso.
+
 > Regola di progetto: ad ogni modifica che cambia comportamento/metodo, aggiornare questo README.

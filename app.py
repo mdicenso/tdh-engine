@@ -123,10 +123,14 @@ def page_sintesi():
 def page_italia():
     st.header(":material/public: Italia")
     st.caption("Seleziona la regione di interesse: **clicca la mappa** oppure usa il menu qui sotto. "
-               "Il colore indica la spesa dei turisti stranieri (Banca d'Italia 2024).")
+               "Il colore indica la spesa dei turisti stranieri (Banca d'Italia); scegli l'**anno** qui sotto.")
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
-    st.subheader("Grafico 1 — Mappa d'Italia (spesa straniera per regione)")
-    ev = st.plotly_chart(L.chart_italy_map(highlight=code), use_container_width=True,
+    last3 = L.bdi_region_years()[-3:]          # ultimi 3 anni completi (4 trimestri)
+    opzioni = list(reversed(last3)) or [2024]  # più recente in cima
+    sel_year = st.selectbox("📅 Anno di riferimento", opzioni, index=0, key="italia_anno",
+                            help="Colora la mappa con la spesa straniera dell'anno scelto (BdI).")
+    st.subheader(f"Grafico 1 — Mappa d'Italia (spesa straniera per regione · {sel_year})")
+    ev = st.plotly_chart(L.chart_italy_map(highlight=code, year=sel_year), use_container_width=True,
                          on_select="rerun", selection_mode="points", key="italy_map_home")
     sel = None
     try:
@@ -456,15 +460,22 @@ def page_mercati_origine():
 
 def page_confronto_regioni():
     st.header(":material/bar_chart: Confronto tra regioni")
-    st.caption("Classifica di **tutte le regioni** per spesa dei turisti stranieri (Banca d'Italia 2024). "
-               "La regione attiva è evidenziata. La selezione si fa nella pagina **Italia**.")
+    st.caption("Classifica di **tutte le regioni** per spesa dei turisti stranieri (Banca d'Italia). "
+               "Scegli l'**anno di riferimento** qui sotto. La regione attiva è evidenziata; "
+               "la selezione si fa nella pagina **Italia**.")
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
-    st.subheader("Grafico 1 — Classifica regioni per spesa straniera")
-    st.plotly_chart(L.chart_regions_ranking(highlight=code), use_container_width=True)
-    rk = L.regions_spend_ranking()
+
+    last3 = L.bdi_region_years()[-3:]          # ultimi 3 anni completi (4 trimestri)
+    opzioni = list(reversed(last3)) or [2024]  # più recente in cima
+    sel_year = st.selectbox("📅 Anno di riferimento", opzioni, index=0, key="cfr_anno",
+                            help="Sono disponibili gli ultimi 3 anni con tutti i trimestri completi.")
+
+    st.subheader(f"Grafico 1 — Classifica regioni per spesa straniera · {sel_year}")
+    st.plotly_chart(L.chart_regions_ranking(highlight=code, year=sel_year), use_container_width=True)
+    rk = L.regions_spend_ranking_year(sel_year)
     df = pd.DataFrame([{"#": r["rank"], "Regione": r["regione"],
-                        "Spesa straniera 2024 (M€)": round(r["spesa_M"])} for r in rk])
-    st.subheader("Tabella 1 — Spesa straniera per regione")
+                        f"Spesa straniera {sel_year} (M€)": round(r["spesa_M"])} for r in rk])
+    st.subheader(f"Tabella 1 — Spesa straniera per regione · {sel_year}")
     st.dataframe(df, hide_index=True, use_container_width=True)
     st.caption("Nota BdI: Bolzano e Trento sono aggregati come «Trentino Alto Adige».")
 
@@ -647,7 +658,8 @@ def page_gestione_dati():
 
     st.subheader(":material/table: Tabella 1 — Dati Presenti")
     st.caption("Tutte le fonti attualmente in uso dal motore: reali, candidati approvati e file caricati.")
-    L.aggrid_table(pd.DataFrame(L.present_sources(), columns=L.SRC_COLS), height=320, key="present_grid")
+    L.aggrid_table(L.fmt_count_col(pd.DataFrame(L.present_sources(), columns=L.SRC_COLS)),
+                   height=320, key="present_grid")
 
     st.subheader(":material/science: Tabella 2 — Dati in Valutazione")
     st.caption("Fonti candidate proposte per il TDH. Verifica la disponibilità, valida la descrizione "
@@ -656,7 +668,8 @@ def page_gestione_dati():
     if not pend:
         st.success("Nessun candidato in attesa: tutte le fonti proposte sono già state approvate.")
     else:
-        L.aggrid_table(pd.DataFrame(pend, columns=L.SRC_COLS), height=150, key="pending_grid")
+        L.aggrid_table(L.fmt_count_col(pd.DataFrame(pend, columns=L.SRC_COLS)),
+                       height=150, key="pending_grid")
         approved_ids = {cid for cid, s in L.candidates_state().items() if s.get("approved")}
         for c in L.CANDIDATES:
             if c["id"] in approved_ids:
@@ -703,9 +716,10 @@ def page_gestione_dati():
     st.caption(cap)
     _stat = U.status_all()
     st.dataframe(
-        pd.DataFrame(_stat)[["stato", "fonte", "cadenza", "ultimo_dato", "righe", "scaricato"]]
-        .rename(columns={"stato": "Stato", "fonte": "Fonte", "cadenza": "Cadenza",
-                         "ultimo_dato": "Ultimo dato", "righe": "Righe", "scaricato": "Scaricato"}),
+        L.fmt_count_col(
+            pd.DataFrame(_stat)[["stato", "fonte", "cadenza", "ultimo_dato", "righe", "scaricato"]]
+            .rename(columns={"stato": "Stato", "fonte": "Fonte", "cadenza": "Cadenza",
+                             "ultimo_dato": "Ultimo dato", "righe": "Righe", "scaricato": "Scaricato"})),
         hide_index=True, use_container_width=True)
 
     if st.button(":material/sync: Controlla aggiornamenti (live)",
@@ -842,9 +856,14 @@ def page_architettura():
 
 def page_province():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    if L.RG.is_national(code):  # le province non esistono per «tutta Italia»: mostro la regione di default
+        code = L.RG.DEFAULT_REGION
+        st.info(f"La vista per provincia è **regionale**: sto mostrando **{L.RG.region(code)['nome']}**. "
+                "Scegli un'altra regione dal selettore 📍 in alto a sinistra.")
     nome = L.RG.region(code)["nome"]
     st.header(":material/place: Presenze per provincia")
-    st.caption(f"Distribuzione territoriale delle presenze in **{nome}** — dati ISTAT (multi-regione), ultimi 12 mesi.")
+    st.caption(f"Quadro territoriale di **{nome}** — dati ISTAT (multi-regione): **dove** si concentra il "
+               "turismo, **come** sta cambiando e **quando** lavora ciascuna provincia.")
     try:
         P = L.compute_provinces(code)
     except Exception as e:  # noqa: BLE001
@@ -853,55 +872,111 @@ def page_province():
     if not P["rows"]:
         st.warning(f"ISTAT non ha restituito dati provinciali per {nome} (può essere instabilità ISTAT: riprova).")
         return
+
+    # ─────────── DOVE: mappa + tabella con peso % e concentrazione ───────────
     fig_map = L.chart_province_map(P["rows"])
     if fig_map is not None:
         st.subheader("Grafico 1 — Mappa delle presenze per provincia")
         st.plotly_chart(fig_map, use_container_width=True)
-    st.subheader("Tabella 1 — Riepilogo per provincia")
-    tbl = pd.DataFrame([{"Provincia": r["provincia"], "Presenze": round(r["presenze"]),
-                         "Stranieri": round(r["stranieri"]),
-                         "Quota stranieri %": round(r["quota_stranieri"])} for r in P["rows"]])
-    L.aggrid_table(tbl, height=190, key="prov_grid")
-    st.subheader("Grafico 2 — Presenze per provincia (italiani/stranieri)")
-    st.plotly_chart(L.chart_province_bar(P["rows"]), use_container_width=True)
 
-    yr = st.session_state.get("yr_range", (2019, 2024))
-    panel = P["panel"]
-    last = panel["date"].max()
-    preset = st.selectbox("Periodo del trend:",
-                          ["Slider barra laterale", "Ultimo mese", "Ultimi 12 mesi",
-                           "Ultimi 2 anni", "Ultimi 5 anni"], index=2)
-    _mesi = {"Ultimo mese": 1, "Ultimi 12 mesi": 12, "Ultimi 2 anni": 24, "Ultimi 5 anni": 60}
-    if preset in _mesi:
-        cutoff = last - pd.DateOffset(months=_mesi[preset] - 1)
-        pf, label = panel[panel["date"] >= cutoff], preset.lower()
+    tot_reg = sum(r["presenze"] for r in P["rows"]) or 1
+    st.subheader("Tabella 1 — Riepilogo per provincia (ultimi 12 mesi)")
+    tbl = pd.DataFrame([{
+        "Provincia": r["provincia"],
+        "Presenze": round(r["presenze"]),
+        "Peso %": round(r["presenze"] / tot_reg * 100, 1),
+        "Stranieri": (round(r["stranieri"]) if pd.notna(r["stranieri"]) else None),
+        "Quota stranieri %": (round(r["quota_stranieri"]) if pd.notna(r["quota_stranieri"]) else None),
+    } for r in P["rows"]])
+    L.aggrid_table(tbl, height=190, key="prov_grid")
+    top = P["rows"][0]
+    topn = min(3, len(P["rows"]))
+    share_top = sum(r["presenze"] for r in P["rows"][:topn]) / tot_reg * 100
+    st.caption(f"Concentrazione: **{top['provincia']}** da sola vale **{top['presenze'] / tot_reg * 100:.0f}%** "
+               f"del totale regionale; le prime {topn} province insieme **{share_top:.0f}%**.")
+
+    # ─────────── COSA È CAMBIATO: variazione % anno su anno ───────────
+    yoy = L.province_yoy(P["panel"])
+    if yoy:
+        st.subheader("Grafico 2 — Variazione % anno su anno per provincia")
+        st.caption("Presenze degli ultimi 12 mesi rispetto ai 12 precedenti. 🟢 crescita · 🔴 calo.")
+        st.plotly_chart(L.chart_province_yoy(yoy), use_container_width=True)
     else:
-        pf, label = L.filter_years(panel, yr), f"{yr[0]}–{yr[1]}"
-    st.subheader(f"Grafico 3 — Trend mensile per provincia · {label}")
-    st.plotly_chart(L.chart_province_trend(pf, rangeslider=True), use_container_width=True)
-    st.caption("Usa il menu per i preset rapidi, oppure trascina la barra/il cursore sul grafico "
-               "per restringere l'intervallo a mano.")
+        st.info("Serie troppo corta per la variazione anno su anno (servono almeno 24 mesi).")
+
+    # ─────────── QUANDO: stagionalità (heatmap mese × provincia) ───────────
+    st.subheader("Grafico 3 — Stagionalità per provincia")
+    st.caption("Per ogni provincia il **mese di picco = 100%**: si confronta *quando* lavora ciascuna "
+               "(es. costa d'estate vs montagna d'inverno), a parità di scala e indipendentemente dalla dimensione.")
+    st.plotly_chart(L.chart_province_seasonality(P["panel"]), use_container_width=True)
+
+    # ─────────── Trend mensile (totali o straniere) ───────────
+    st.subheader("Grafico 4 — Trend mensile per provincia")
+    src = st.radio("Presenze:", ["Totali", "Straniere"], horizontal=True, key="prov_trend_src")
+    panel_src = P["panel"] if src == "Totali" else P.get("panel_str")
+    if src == "Straniere" and (panel_src is None or panel_src.empty or len(panel_src.columns) <= 1):
+        st.info("ISTAT non espone la serie mensile **straniera** per le province di questa regione. "
+                "Gli stranieri restano disponibili come totale a 12 mesi (Tabella 1).")
+    else:
+        yr = st.session_state.get("yr_range", (2019, 2024))
+        last = panel_src["date"].max()
+        preset = st.selectbox("Periodo del trend:",
+                              ["Slider barra laterale", "Ultimo mese", "Ultimi 12 mesi",
+                               "Ultimi 2 anni", "Ultimi 5 anni"], index=2, key="prov_trend_preset")
+        _mesi = {"Ultimo mese": 1, "Ultimi 12 mesi": 12, "Ultimi 2 anni": 24, "Ultimi 5 anni": 60}
+        if preset in _mesi:
+            cutoff = last - pd.DateOffset(months=_mesi[preset] - 1)
+            pf = panel_src[panel_src["date"] >= cutoff]
+        else:
+            pf = L.filter_years(panel_src, yr)
+        st.plotly_chart(L.chart_province_trend(pf, rangeslider=True), use_container_width=True)
+        st.caption(("Serie **straniera**. " if src == "Straniere" else "")
+                   + "Usa il menu per i preset rapidi, oppure trascina la barra/il cursore sul grafico "
+                   "per restringere l'intervallo a mano.")
 
 
 def page_struttura():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     nome = L.RG.region(code)["nome"]
     st.header(":material/hotel: Presenze per tipologia di struttura")
-    st.caption(f"Alberghiero vs extra-alberghiero in **{nome}** — dati ISTAT, ultimi 12 mesi.")
+    st.caption(f"Composizione dell'offerta in **{nome}** — dati ISTAT: **com'è composta**, **come** sta "
+               "cambiando e **quando** lavora ciascun segmento.")
     try:
         S = L.compute_structure(code)
     except Exception as e:  # noqa: BLE001
         st.error(f"Dati struttura non disponibili per {nome}: {type(e).__name__} (ISTAT instabile: riprova).")
         return
+
+    # etichette leggibili per i grafici generici (yoy + stagionalità)
+    pretty = S["panel"].rename(columns={"alberghiero": "Alberghiero", "extra": "Extra-alberghiero"})
+
+    # ─────────── COM'È COMPOSTO: metriche + donut ───────────
     tot = S["alberghiero"] + S["extra"]
     c1, c2, c3 = st.columns(3)
     c1.metric("Alberghiero (12 mesi)", f"{S['alberghiero']:,.0f}".replace(",", "."))
     c2.metric("Extra-alberghiero", f"{S['extra']:,.0f}".replace(",", "."))
     c3.metric("Quota alberghiero", f"{S['alberghiero'] / tot * 100:.0f}%" if tot else "—")
-    st.subheader("Grafico 1 — Alberghiero vs extra-alberghiero")
+    st.subheader("Grafico 1 — Alberghiero vs extra-alberghiero (ultimi 12 mesi)")
     st.plotly_chart(L.chart_structure_donut(S), use_container_width=True)
+
+    # ─────────── COSA È CAMBIATO: variazione % anno su anno per segmento ───────────
+    yoy = L.province_yoy(pretty)
+    if yoy:
+        st.subheader("Grafico 2 — Variazione % anno su anno per segmento")
+        st.caption("Presenze degli ultimi 12 mesi rispetto ai 12 precedenti, per segmento. 🟢 crescita · 🔴 calo.")
+        st.plotly_chart(L.chart_province_yoy(yoy), use_container_width=True)
+    else:
+        st.info("Serie troppo corta per la variazione anno su anno (servono almeno 24 mesi).")
+
+    # ─────────── QUANDO: stagionalità per segmento ───────────
+    st.subheader("Grafico 3 — Stagionalità per segmento")
+    st.caption("Per ogni segmento il **mese di picco = 100%**: si confronta *quando* lavora l'alberghiero "
+               "rispetto all'extra-alberghiero, a parità di scala.")
+    st.plotly_chart(L.chart_province_seasonality(pretty), use_container_width=True)
+
+    # ─────────── Trend mensile ───────────
     yr = st.session_state.get("yr_range", (2019, 2024))
-    st.subheader(f"Grafico 2 — Trend mensile · {yr[0]}–{yr[1]}")
+    st.subheader(f"Grafico 4 — Trend mensile · {yr[0]}–{yr[1]}")
     st.plotly_chart(L.chart_structure_trend(L.filter_years(S["panel"], yr)), use_container_width=True)
 
 
@@ -909,7 +984,8 @@ def page_occupazione():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     nome = L.RG.region(code)["nome"]
     st.header(":material/king_bed: Tasso di occupazione (reale)")
-    st.caption(f"Utilizzazione lorda dei posti letto in **{nome}** = presenze ÷ (posti letto × giorni del mese). Dati ISTAT.")
+    st.caption(f"Utilizzazione lorda dei posti letto in **{nome}** = presenze ÷ (posti letto × giorni del mese). "
+               "Dati ISTAT: **quant'è**, **come** sta cambiando e **quando**.")
     try:
         O = L.compute_occupancy(code)
     except Exception as e:  # noqa: BLE001
@@ -919,16 +995,26 @@ def page_occupazione():
         st.info(f"⏳ Dati di **capacità ricettiva** ISTAT per {nome} non ancora disponibili (ISTAT lento/instabile). "
                 "Ricarica tra poco, o premi **:material/sync: Dati** nella barra laterale.")
         return
+
+    # ─────────── QUANT'È: livello attuale + variazione a/a in punti percentuali ───────────
+    p = O["panel"].sort_values("date")
+    occ_cur = O["occ_media12"]
+    occ_prev = float(p.iloc[-24:-12]["occ"].mean()) if len(p) >= 24 else None
     c1, c2, c3 = st.columns(3)
-    c1.metric("Occupazione media (12 mesi)", f"{O['occ_media12']:.0f}%")
+    c1.metric("Occupazione media (12 mesi)", f"{occ_cur:.0f}%",
+              delta=(f"{occ_cur - occ_prev:+.1f} p.p. a/a" if occ_prev is not None else None))
     c2.metric(f"Posti letto ({nome})", f"{O['letti_ultimo']:,}".replace(",", "."))
     c3.metric("Anno capacità", O["anno_letti"])
+    if occ_prev is not None:
+        st.caption(f"**Cosa è cambiato**: {occ_cur - occ_prev:+.1f} punti percentuali rispetto ai 12 mesi "
+                   f"precedenti ({occ_prev:.0f}% → {occ_cur:.0f}%).")
+
     yr = st.session_state.get("yr_range", (2019, 2024))
     pan = L.filter_years(O["panel"], yr)
     st.caption(f"Periodo selezionato: {yr[0]}–{yr[1]}")
-    st.subheader("Grafico 1 — Occupazione lorda")
+    st.subheader("Grafico 1 — Come sta cambiando: occupazione lorda mese per mese")
     st.plotly_chart(L.chart_occupancy(pan), use_container_width=True)
-    st.subheader("Grafico 2 — Stagionalità dell'occupazione")
+    st.subheader("Grafico 2 — Quando: stagionalità dell'occupazione")
     st.plotly_chart(L.chart_occupancy_season(pan), use_container_width=True)
     st.caption("Indice di utilizzazione lorda: presenze rapportate alla capacità teorica (posti letto × giorni del mese).")
 
@@ -989,10 +1075,15 @@ def page_spesa():
     fig_sp = L.chart_region_spend(code, yr)
     if fig_sp is not None:
         st.plotly_chart(fig_sp, use_container_width=True)
+    # Confronto tra regioni — anno selezionabile (ultimi 3 completi), regione attiva evidenziata
+    last3 = L.bdi_region_years()[-3:]
+    opzioni = list(reversed(last3)) or [2024]
+    sel_year = st.selectbox("📅 Anno per il confronto tra regioni", opzioni, index=0, key="spesa_anno",
+                            help="Vale per il Grafico 2 (classifica regioni per spesa straniera, BdI).")
+    st.subheader(f"Grafico 2 — Confronto regioni (spesa stranieri · {sel_year})")
+    st.plotly_chart(L.chart_regions_ranking(highlight=code, year=sel_year), use_container_width=True)
     ext = L.bdi_extended()
     if ext:
-        st.subheader("Grafico 2 — Confronto regioni (spesa stranieri 2024)")
-        st.plotly_chart(L.chart_regions_spend(ext), use_container_width=True)
         cA, cB = st.columns(2)
         with cA:
             st.subheader("Grafico 3 — Per motivo del viaggio")
@@ -1127,7 +1218,7 @@ pg = st.navigation({
 # Step B: le descrittive Regione/Struttura/Occupazione/Spesa usano il totale Italia (ISTAT area="IT").
 NATIONAL_OK = {"Home", "Italia", "Confronto regioni", "Mercati per paese", "Mercati d'origine",
                "Operatori (demo)", "Assistente", "Architettura", "Gestione dati",
-               "Regione", "Per struttura", "Occupazione", "Spesa turistica"}
+               "Regione", "Per provincia", "Per struttura", "Occupazione", "Spesa turistica"}
 
 _rc = st.session_state.get("region_code", L.RG.NATIONAL)
 if pg.title != "Home":
