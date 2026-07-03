@@ -126,3 +126,5 @@ Stesso schema narrativo (adattato, senza dimensione spaziale) esteso alle pagine
   (stagionalità). Il delta è in *punti* (non %) perché l'occupazione è già un tasso.
 
 > Regola di progetto: ad ogni modifica che cambia comportamento/metodo, aggiornare questo README.
+
+<!-- deploy: rebuild forzato 2026-07-03 (pull nuovo tdhlib: chart_italy_map(year=), bdi_region_years) -->
