@@ -90,6 +90,11 @@ scura. Helper opzionale `section_header(title, subtitle, icon)` per le intestazi
 (in alternativa a `st.subheader`). Palette: `#0e7490` teal primario, `#f59e0b` amber, `#f1f5f9`
 sfondo.
 
+Scrollbar personalizzata (in `CSS`): più **chiara** (`#94a3b8`, `#cbd5e1` nella sidebar
+scura) e un po' più **larga** (16px), con pollice arrotondato — quella scura di default
+era quasi invisibile sul fondo `#1e293b` della sidebar. Stile sia `::-webkit-scrollbar`
+(Chrome/Edge) sia `scrollbar-color` (Firefox).
+
 Tabelle "Gestione dati": la colonna **Righe** passa per `fmt_count_col()` che la rende
 uniforme a stringa (numeri con separatore migliaia, `—` per le fonti live senza file). Serve
 a evitare il mix int/placeholder che rompeva la serializzazione Arrow di `st.dataframe`.

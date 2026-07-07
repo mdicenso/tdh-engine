@@ -142,6 +142,20 @@ CSS = f"""<style>
   /* Selectbox e slider */
   [data-testid="stSelectbox"] > div > div {{ border-radius: 8px; border-color: #e2e8f0; }}
   [data-testid="stSlider"] [data-testid="stThumbValue"] {{ color: #0e7490; font-weight: 700; }}
+
+  /* Scrollbar: più chiara e un po' più larga (era scura/quasi invisibile) */
+  * {{ scrollbar-width: auto; scrollbar-color: #94a3b8 transparent; }}  /* Firefox */
+  ::-webkit-scrollbar {{ width: 16px; height: 16px; }}
+  ::-webkit-scrollbar-track {{ background: transparent; }}
+  ::-webkit-scrollbar-thumb {{
+    background: #94a3b8; border-radius: 8px;
+    border: 3px solid transparent; background-clip: padding-box; }}
+  ::-webkit-scrollbar-thumb:hover {{ background: #64748b; background-clip: padding-box; }}
+  /* Nella sidebar scura serve un pollice ancora più chiaro per staccare dal fondo */
+  [data-testid="stSidebar"] {{ scrollbar-color: #cbd5e1 transparent; }}
+  [data-testid="stSidebar"] ::-webkit-scrollbar-thumb {{
+    background: #cbd5e1; border: 3px solid transparent; background-clip: padding-box; }}
+  [data-testid="stSidebar"] ::-webkit-scrollbar-thumb:hover {{ background: #e2e8f0; background-clip: padding-box; }}
 </style>"""
 
 
