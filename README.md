@@ -90,6 +90,10 @@ scura. Helper opzionale `section_header(title, subtitle, icon)` per le intestazi
 (in alternativa a `st.subheader`). Palette: `#0e7490` teal primario, `#f59e0b` amber, `#f1f5f9`
 sfondo.
 
+Pulsante "View X more" / "View less" della navigazione (`stSidebarNavViewButton`):
+schiarito a `#cbd5e1` (verde-acqua `#5eead4` su hover) — sul fondo scuro della sidebar
+era scuro e illeggibile, come gli altri link della nav.
+
 Scrollbar personalizzata (in `CSS`): più **chiara** (`#94a3b8`, `#cbd5e1` nella sidebar
 scura) e un po' più **larga** (16px), con pollice arrotondato — quella scura di default
 era quasi invisibile sul fondo `#1e293b` della sidebar. Stile sia `::-webkit-scrollbar`
@@ -129,6 +133,24 @@ Stesso schema narrativo (adattato, senza dimensione spaziale) esteso alle pagine
 - **Occupazione**: QUANT'È (livello + **variazione a/a in punti percentuali** come `delta` della
   metrica, ultimi 12 mesi vs 12 precedenti) → COSA È CAMBIATO (trend occupazione lorda) → QUANDO
   (stagionalità). Il delta è in *punti* (non %) perché l'occupazione è già un tasso.
+
+**Turisti esteri per PAESE × regione/provincia (ISTAT cube `122_54_DF_DCSC_TUR_9`, ANNUALE)**:
+scoperta 2026-07-07 che riempie il buco storico (prima si credeva non esistesse — vedi memoria
+vincolo dati). A differenza di `_7` (solo `IT`/`WRL_X_ITA`), il cube `_9` espone i **singoli paesi**
+(DE/FR/AT/ES/US/CH_LI…) per **ogni regione e provincia**, arrivi (`AR`) e presenze (`NI`), 2008→oggi.
+Scaricato via SDMX-CSV (`real_sources`/script) in `.cache/istat_estero_regione_prov_annuale.csv`
+(dimensioni secondarie fissate a `ALL`/`TOT` per evitare righe doppie). Reader in `tdhlib`:
+`estero_regione_long`, `estero_markets(code, datatype, year, top)`, `estero_country_series`,
+`estero_years`, `estero_country_name`. NB: il per-paese × regione **mensile** resta non disponibile
+(solo annuale via `_9`; il mensile per-paese `_5` è solo nazionale).
+
+**Spesa STIMATA turisti stranieri per mercato × regione** (pagina Spesa turistica, *Grafico 5 +
+Tabella 1*): ISTAT non produce la spesa del turismo estero in entrata (solo flussi fisici); la spesa
+la dà solo la Banca d'Italia, ma per regione **o** per paese, mai il loro incrocio. Stima trasparente:
+`estero_spesa_stimata(code)` = notti reali per mercato in regione (`_9`) × spesa media a notte del
+mercato a livello nazionale (`bdi_spend_per_night(year)`, da BdI TS1); mappa `_ISTAT_TO_BDI` per i
+codici paese, solo mercati presenti in entrambe le fonti, anno = il più recente comune completo.
+Etichettata **esplicitamente come stima** (non dato ufficiale). `chart_estero_spesa_stimata`.
 
 > Regola di progetto: ad ogni modifica che cambia comportamento/metodo, aggiornare questo README.
 

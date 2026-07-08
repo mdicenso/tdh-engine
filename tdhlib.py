@@ -91,6 +91,13 @@ CSS = f"""<style>
     border-left: 3px solid #0e7490; }}
   [data-testid="stSidebarNav"] a[aria-current="page"] span,
   [data-testid="stSidebarNav"] a[aria-current="page"] p {{ color: #5eead4 !important; font-weight: 700; }}
+  /* Pulsante "View X more" / "View less" della navigazione (era scuro/illeggibile) */
+  [data-testid="stSidebarNavViewButton"],
+  [data-testid="stSidebarNavViewButton"] span,
+  [data-testid="stSidebarNavViewButton"] p {{ color: #cbd5e1 !important; opacity: 1 !important; }}
+  [data-testid="stSidebarNavViewButton"]:hover,
+  [data-testid="stSidebarNavViewButton"]:hover span,
+  [data-testid="stSidebarNavViewButton"]:hover p {{ color: #5eead4 !important; }}
   [data-testid="stSidebar"] .stButton > button {{
     background: #334155; border: 1px solid #475569; color: #e2e8f0;
     border-radius: 8px; font-weight: 500; }}
@@ -461,6 +468,116 @@ def chart_region_spend(code: str, yr_range=None) -> go.Figure | None:
     return _layout(fig, h=340)
 
 
+# --- ISTAT esteri per PAESE × territorio (regione/provincia), ANNUALE (cube DCSC_TUR_9) ---
+_TUR9_PATH = ".cache/istat_estero_regione_prov_annuale.csv"
+
+# Nomi leggibili dei codici COUNTRY_RES_GUESTS (ISO2 + aggregati). Pass-through se ignoto.
+_ISTAT_COUNTRY_NAME = {
+    "DE": "Germania", "FR": "Francia", "AT": "Austria", "ES": "Spagna",
+    "GB": "Regno Unito", "UK": "Regno Unito", "CH_LI": "Svizzera e Liechtenstein",
+    "CH": "Svizzera", "US": "Stati Uniti", "CA": "Canada", "NL": "Paesi Bassi",
+    "BE": "Belgio", "RU": "Russia", "CN": "Cina", "JP": "Giappone", "BR": "Brasile",
+    "AR": "Argentina", "AU": "Australia", "PL": "Polonia", "SE": "Svezia",
+    "DK": "Danimarca", "FI": "Finlandia", "NO": "Norvegia", "IE": "Irlanda",
+    "PT": "Portogallo", "GR": "Grecia", "CZ": "Rep. Ceca", "HU": "Ungheria",
+    "HR": "Croazia", "SI": "Slovenia", "SK": "Slovacchia", "RO": "Romania",
+    "BG": "Bulgaria", "EE": "Estonia", "LT": "Lituania", "LV": "Lettonia",
+    "CY": "Cipro", "MT": "Malta", "LU": "Lussemburgo", "IN": "India",
+    "KR": "Corea del Sud", "MX": "Messico", "TR": "Turchia", "IL": "Israele",
+    "EG": "Egitto", "ZA": "Sudafrica", "NZ": "Nuova Zelanda",
+    "WORLD": "Mondo (totale)", "WRL_X_ITA": "Estero (tutti i paesi)",
+    "IT": "Italia (residenti)", "EU": "Unione Europea",
+    "EUR_NEU": "Altri Europa non-UE", "EUR_OTH": "Altri Europa",
+    "AFRMED": "Africa mediterranea", "AFR_OTH": "Altri Africa",
+    "AME_N_OTH": "Altri America del Nord", "AME_C_S_OTH": "America centro-sud (altri)",
+    "ASI_OTH": "Altri Asia", "ASI_W_OTH": "Asia occidentale (altri)",
+    "OCE_OTH": "Altri Oceania",
+}
+
+
+def estero_country_name(code: str) -> str:
+    """Nome leggibile del codice paese ISTAT (pass-through se non mappato)."""
+    return _ISTAT_COUNTRY_NAME.get(code, code)
+
+
+def _tur9_is_aggregate(c: str) -> bool:
+    """True se il codice è un aggregato (mondo/ripartizioni continentali/UE) o l'Italia,
+    non un singolo paese estero. CH_LI (Svizzera+Liechtenstein) è tenuto come mercato."""
+    if c in {"WORLD", "WRL_X_ITA", "IT", "EU"}:
+        return True
+    if c.endswith("_OTH") or c.endswith("_NEU"):
+        return True
+    return c in {"AFRMED", "EUR", "AFR", "ASI", "AME", "OCE"}
+
+
+@st.cache_data(show_spinner=False)
+def estero_regione_long():
+    """Presenze/arrivi turisti ESTERI per PAESE × territorio (naz/regione/provincia),
+    ANNUALE (ISTAT DCSC_TUR_9). DataFrame: area·datatype·country·anno·valore.
+    None se la cache manca."""
+    if not os.path.exists(_TUR9_PATH):
+        return None
+    df = pd.read_csv(_TUR9_PATH, dtype={"REF_AREA": str, "DATA_TYPE": str,
+                                        "COUNTRY_RES_GUESTS": str})
+    if df.empty:
+        return None
+    df = df.rename(columns={"REF_AREA": "area", "DATA_TYPE": "datatype",
+                            "COUNTRY_RES_GUESTS": "country", "TIME_PERIOD": "anno",
+                            "OBS_VALUE": "valore"})
+    df["anno"] = pd.to_numeric(df["anno"], errors="coerce").astype("Int64")
+    df["valore"] = pd.to_numeric(df["valore"], errors="coerce")
+    return df.dropna(subset=["anno", "valore"])
+
+
+def estero_markets(code: str, datatype: str = "NI", year: int | None = None,
+                   only_countries: bool = True, top: int | None = None):
+    """Classifica dei mercati esteri per la regione (o Italia): DataFrame
+    country·nome·valore per l'anno scelto (o l'ultimo disponibile), ordinata desc.
+    datatype: 'NI' presenze, 'AR' arrivi. only_countries esclude gli aggregati."""
+    df = estero_regione_long()
+    if df is None:
+        return None
+    area = RG.istat_area(code)
+    d = df[(df["area"] == area) & (df["datatype"] == datatype)]
+    if only_countries:
+        d = d[~d["country"].map(_tur9_is_aggregate)]
+    if d.empty:
+        return None
+    if year is None:
+        year = int(d["anno"].max())
+    d = d[d["anno"] == year].copy()
+    if d.empty:
+        return None
+    d["nome"] = d["country"].map(estero_country_name)
+    return d.sort_values("valore", ascending=False)[["country", "nome", "valore"]] \
+            .head(top).reset_index(drop=True) if top else \
+            d.sort_values("valore", ascending=False)[["country", "nome", "valore"]] \
+            .reset_index(drop=True)
+
+
+def estero_country_series(code: str, country: str, datatype: str = "NI"):
+    """Serie storica annuale di un paese in una regione: DataFrame anno·valore."""
+    df = estero_regione_long()
+    if df is None:
+        return None
+    area = RG.istat_area(code)
+    d = df[(df["area"] == area) & (df["datatype"] == datatype) &
+           (df["country"] == country)]
+    if d.empty:
+        return None
+    return d.sort_values("anno")[["anno", "valore"]].reset_index(drop=True)
+
+
+def estero_years(code: str, datatype: str = "NI"):
+    """Anni disponibili per la regione/territorio (lista ordinata di int)."""
+    df = estero_regione_long()
+    if df is None:
+        return []
+    area = RG.istat_area(code)
+    d = df[(df["area"] == area) & (df["datatype"] == datatype)]
+    return sorted(int(a) for a in d["anno"].dropna().unique())
+
+
 # --- Banca d'Italia per PAESE di origine (nazionale, trimestrale 1997-2025) ---
 _BDI_COLMAP = {4: "DE", 5: "FR", 6: "AT", 7: "ES", 9: "GB", 10: "CH", 11: "RU",
                13: "US", 14: "CA", 17: "JP"}
@@ -511,6 +628,75 @@ def bdi_country_annual():
     g = df.groupby(["anno", "code"]).agg(
         notti=("notti", "sum"), spesa=("spesa", "sum"), viaggiatori=("viaggiatori", "sum")).reset_index()
     return g[g["code"].isin(BDI_MARKETS)]
+
+
+# --- Spesa STIMATA dei turisti stranieri per mercato × regione (ISTAT _9 × BdI €/notte) ---
+# ISTAT country code -> BdI country code (per la spesa media a notte nazionale)
+_ISTAT_TO_BDI = {"DE": "DE", "FR": "FR", "AT": "AT", "ES": "ES", "US": "US",
+                 "CA": "CA", "JP": "JP", "RU": "RU", "GB": "GB", "UK": "GB",
+                 "CH": "CH", "CH_LI": "CH"}
+
+
+def bdi_spend_per_night(year: int) -> dict:
+    """€/notte per paese (BdI) nell'anno indicato (solo anni completi, 4 trimestri):
+    spesa in M€ / notti in migliaia → €/notte. {} se dati assenti."""
+    long = bdi_country_long()
+    if long is None or long.empty:
+        return {}
+    d = long.copy(); d["anno"] = d["date"].dt.year
+    d = d[d["anno"] == year]
+    if d.empty:
+        return {}
+    g = d.groupby("code").agg(spesa=("spesa", "sum"), notti=("notti", "sum"), q=("date", "count"))
+    return {code: r["spesa"] * 1e6 / (r["notti"] * 1e3)
+            for code, r in g.iterrows() if r["q"] >= 4 and r["notti"] > 0}
+
+
+def estero_spesa_stimata(code: str, year: int | None = None, top: int | None = None):
+    """STIMA della spesa dei turisti stranieri per mercato in una regione:
+    notti reali (ISTAT cube _9) × spesa media a notte del mercato (BdI, nazionale).
+    DataFrame country·nome·notti·eur_notte·spesa_m (M€), ordinata desc; solo i mercati
+    presenti in ENTRAMBE le fonti. None se manca una delle due. Anno scelto in .attrs['anno']."""
+    pres = estero_regione_long()
+    if pres is None:
+        return None
+    area = RG.istat_area(code)
+    p = pres[(pres["area"] == area) & (pres["datatype"] == "NI")]
+    if p.empty:
+        return None
+    # anno: il più recente con dati ISTAT E spesa/notte BdI (anno completo)
+    years = [year] if year else sorted((int(a) for a in p["anno"].dropna().unique()), reverse=True)
+    chosen, spn = None, {}
+    for y in years:
+        spn = bdi_spend_per_night(y)
+        if spn:
+            chosen = y; break
+    if chosen is None:
+        return None
+    rows = []
+    for _, r in p[p["anno"] == chosen].iterrows():
+        bdi = _ISTAT_TO_BDI.get(r["country"])
+        if bdi and bdi in spn:
+            notti = float(r["valore"]); eurn = spn[bdi]
+            rows.append({"country": r["country"], "nome": estero_country_name(r["country"]),
+                         "notti": notti, "eur_notte": eurn, "spesa_m": notti * eurn / 1e6})
+    if not rows:
+        return None
+    out = pd.DataFrame(rows).sort_values("spesa_m", ascending=False).reset_index(drop=True)
+    out = out.head(top) if top else out
+    out.attrs["anno"] = chosen
+    return out
+
+
+def chart_estero_spesa_stimata(code: str, year: int | None = None) -> go.Figure | None:
+    d = estero_spesa_stimata(code, year=year, top=12)
+    if d is None or d.empty:
+        return None
+    d = d.sort_values("spesa_m")
+    fig = go.Figure(go.Bar(x=d["spesa_m"], y=d["nome"], orientation="h", marker_color="#0e7490",
+                           hovertemplate="<b>%{y}</b><br>%{x:,.1f} M€ stimati<extra></extra>"))
+    fig.update_xaxes(title="spesa stimata turisti stranieri (M€/anno)")
+    return _layout(fig, h=380)
 
 
 # ════════════════════════════════════════════════════════════════════════════

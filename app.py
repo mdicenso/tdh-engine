@@ -669,7 +669,7 @@ def page_gestione_dati():
         st.success("Nessun candidato in attesa: tutte le fonti proposte sono già state approvate.")
     else:
         L.aggrid_table(L.fmt_count_col(pd.DataFrame(pend, columns=L.SRC_COLS)),
-                       height=150, key="pending_grid")
+                       height=320, key="pending_grid")
         approved_ids = {cid for cid, s in L.candidates_state().items() if s.get("approved")}
         for c in L.CANDIDATES:
             if c["id"] in approved_ids:
@@ -1093,6 +1093,30 @@ def page_spesa():
             st.subheader("Grafico 4 — Per tipo di struttura")
             st.caption("Dato nazionale (turisti stranieri in Italia)")
             st.plotly_chart(L.chart_bdi_struttura(ext), use_container_width=True)
+
+    # Spesa STIMATA per mercato × regione: notti reali ISTAT (cube _9) × spesa/notte BdI
+    st.divider()
+    st.subheader(f"Grafico 5 — Spesa stimata dei turisti stranieri per mercato in {nome}")
+    d_est = L.estero_spesa_stimata(code)
+    if d_est is None or d_est.empty:
+        st.info("⏳ Stima non ancora disponibile: richiede il dato ISTAT «Paese di origine» per regione "
+                "(cube DCSC_TUR_9), in fase di download. Riapparirà appena la cache è pronta.")
+    else:
+        anno_est = d_est.attrs.get("anno", "—")
+        tot = d_est["spesa_m"].sum()
+        st.caption(f"**Stima** (anno {anno_est}): notti reali per mercato in {nome} (ISTAT) × spesa media a "
+                   f"notte del mercato a livello nazionale (Banca d'Italia). **Non è un dato ufficiale**: è una "
+                   f"decomposizione trasparente, utile come ordine di grandezza. "
+                   f"Totale stimato dei mercati noti: **{tot:,.0f} M€**".replace(",", "."))
+        st.plotly_chart(L.chart_estero_spesa_stimata(code), use_container_width=True)
+        tab = pd.DataFrame({
+            "Mercato": d_est["nome"],
+            "Notti (ISTAT)": d_est["notti"].round(0).astype("int64"),
+            "€/notte (BdI)": d_est["eur_notte"].round(0).astype("int64"),
+            "Spesa stimata (M€)": d_est["spesa_m"].round(1),
+        })
+        st.subheader("Tabella 1 — Spesa stimata per mercato")
+        st.dataframe(tab, hide_index=True, use_container_width=True)
 
 
 def page_mercati_paese():
