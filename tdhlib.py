@@ -1473,6 +1473,12 @@ def builtin_sources() -> list[dict]:
         rows.append(_row("Presenze straniere per regione",
                          "Presenze di stranieri al mese (movimento clienti) — tutte le 21 regioni",
                          "ISTAT", "https://esploradati.istat.it/", "mensile", A, _csv_rows(istat), _fmt_mtime(istat)))
+    tur9 = ".cache/istat_estero_regione_prov_annuale.csv"
+    if os.path.exists(tur9):
+        rows.append(_row("Turisti esteri per paese × regione/provincia",
+                         "Arrivi/presenze per singolo paese estero, per ogni regione e provincia (annuale, dal 2008)",
+                         "ISTAT · Movimento clienti (cube DCSC_TUR_9)", "https://esploradati.istat.it/",
+                         "annuale", A, _csv_rows(tur9), _fmt_mtime(tur9)))
     trends = sorted(glob.glob(".cache/trends_*.csv"))
     if trends:
         _geos = [mk.code for mk in DEFAULT_MARKETS]
@@ -1696,10 +1702,10 @@ def coverage_matrix() -> list[dict]:
     M = [
         ("Presenze turistiche (totali)", "✅", "✅", "✅", "ISTAT DCSC_TUR", "completo per tutte le regioni"),
         ("Presenze straniere (aggregato)", "✅", "✅", "✅", "ISTAT DCSC_TUR", "stranieri totali, non per singolo paese"),
-        ("Presenze per PAESE di origine", "✅", "❌", "❌", "BdI TS1 / ISTAT naz.", "🔴 BUCO chiave: a livello regionale ISTAT non lo espone → si stima dalle quote nazionali"),
+        ("Presenze per PAESE di origine", "✅", "✅", "✅", "ISTAT DCSC_TUR_9", "✅ risolto: annuale dal 2008 per regione E provincia (cube _9); il mensile per-paese resta solo nazionale"),
         ("Capacità ricettiva (posti letto)", "✅", "✅", "🟡", "ISTAT DCSC_TUR_1", "regionale ok; provinciale solo alcune"),
         ("Anagrafica strutture ricettive", "🟡", "❌", "❌", "registri regionali", "🔴 BUCO: registri non federati come open data"),
-        ("Spesa turistica per paese", "✅", "🟡", "❌", "Banca d'Italia", "regionale solo TOTALE (TS2), non per paese"),
+        ("Spesa turistica per paese", "✅", "🟡", "🟡", "BdI + stima da _9", "regionale/provinciale STIMATA (presenze _9 × spesa/notte BdI); dato diretto solo TOTALE regionale (BdI TS2)"),
         ("Accessibilità aerea (voli/pax)", "✅", "✅", "—", "Eurostat avia_par", "regionale via mappa regione→aeroporto"),
         ("Accessibilità ferroviaria", "✅", "❌", "❌", "Aut. Trasporti", "🟡 solo totale nazionale; manca il dettaglio regionale"),
         ("Interesse online — Google Trends", "✅", "✅", "—", "Google Trends", "per regione: keyword = nome regione"),
@@ -2850,6 +2856,9 @@ def series_coverage() -> list[dict]:
             y = 2024
         cov.append({"serie": "Voli Pescara (Eurostat)", "start": pd.Timestamp(f"{y}-01-01"),
                     "end": pd.Timestamp(f"{y}-12-31"), "freq": "annuale"})
+    if os.path.exists(".cache/istat_estero_regione_prov_annuale.csv"):
+        cov.append({"serie": "Esteri per paese×regione (ISTAT _9)", "start": pd.Timestamp("2008-01-01"),
+                    "end": pd.Timestamp("2024-12-31"), "freq": "annuale"})
     return cov
 
 

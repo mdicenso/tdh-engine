@@ -144,7 +144,11 @@ Scaricato via SDMX-CSV (`real_sources`/script) in `.cache/istat_estero_regione_p
 (dimensioni secondarie fissate a `ALL`/`TOT` per evitare righe doppie). Reader in `tdhlib`:
 `estero_regione_long`, `estero_markets(code, datatype, year, top)`, `estero_country_series`,
 `estero_years`, `estero_country_name`. NB: il per-paese × regione **mensile** resta non disponibile
-(solo annuale via `_9`; il mensile per-paese `_5` è solo nazionale).
+(solo annuale via `_9`; il mensile per-paese `_5` è solo nazionale). Registrato in **Gestione dati**
+(Tabella *Dati Presenti* via `builtin_sources`) e matrice di copertura aggiornata: la riga *Presenze
+per PAESE di origine* passa da 🔴 buco a ✅ (regione+provincia, annuale); voce anche nella *Copertura
+temporale delle serie*. Scaricato con `scratchpad/download_tur9.py` (resumibile, per-territorio,
+retry sui 502/timeout ISTAT) — 130 territori, ~263k righe, 2008→2024.
 
 **Spesa STIMATA turisti stranieri per mercato × regione** (pagina Spesa turistica, *Grafico 5 +
 Tabella 1*): ISTAT non produce la spesa del turismo estero in entrata (solo flussi fisici); la spesa
