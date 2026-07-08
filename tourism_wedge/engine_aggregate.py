@@ -198,14 +198,18 @@ def forecast_aggregate(fit: AggregateFit) -> AggregateForecast:
 # --------------------------------------------------------------------------
 def rank_markets(df: pd.DataFrame, markets: list[Market] = DEFAULT_MARKETS,
                  value_override: dict | None = None,
-                 feas_override: dict | None = None) -> list[dict]:
+                 feas_override: dict | None = None,
+                 weight_override: dict | None = None) -> list[dict]:
     """Decomposizione trasparente del 'dove conviene agire':
-        score = max(forza_anticipatrice,0) × momentum × valore_economico × fattibilità
-    value_override: {code: €/visitatore} reali (Banca d'Italia) al posto di mk.spend_per_visitor.
+        score = max(forza_anticipatrice,0) × momentum × peso_economico × fattibilità
+    value_override: {code: €/visitatore} reali (Banca d'Italia) — mostrato in scheda.
+    weight_override: {code: peso economico REALE del mercato NELLA REGIONE} (es. spesa
+    stimata M€ da ISTAT _9 × BdI); se assente, il peso dello score è il €/visitatore.
     feas_override:  {code: peso 0..1} di fattibilità reale (es. connettività voli Eurostat) al
     posto del flag statico mk.capacity_ok. Restituisce schede ordinate."""
     vov = value_override or {}
     fov = feas_override or {}
+    wov = weight_override or {}
     d = df.copy()
     d["month"] = d["date"].dt.month
     tr = d.dropna(subset=["presences"]).reset_index(drop=True)
@@ -213,6 +217,7 @@ def rank_markets(df: pd.DataFrame, markets: list[Market] = DEFAULT_MARKETS,
     cards = []
     for mk in markets:
         valore = float(vov.get(mk.code, mk.spend_per_visitor))
+        peso = float(wov.get(mk.code, valore))  # peso economico dello score (regionale se disponibile)
         scode = f"search_{mk.code}"
         lag, corr = lead_corr(tr["presences"], tr[scode], tr["month"])
         if not np.isfinite(corr):  # mercato senza Trends per la regione: forza 0
@@ -225,7 +230,7 @@ def rank_markets(df: pd.DataFrame, markets: list[Market] = DEFAULT_MARKETS,
 
         feas = float(fov.get(mk.code, 1.0 if mk.capacity_ok else 0.5))
         connected = feas >= 0.6
-        score = max(corr, 0.0) * momentum * valore * feas
+        score = max(corr, 0.0) * momentum * peso * feas
 
         if not connected:
             reco = "Mantenere (voli diretti limitati)"
@@ -245,6 +250,7 @@ def rank_markets(df: pd.DataFrame, markets: list[Market] = DEFAULT_MARKETS,
             "lag_mesi": lag,
             "momentum_search_pct": round(momentum, 1),
             "valore_eur_per_visitatore": round(valore),
+            "peso_score": round(peso, 2),
             "capacita_voli_ok": connected,
             "fattibilita": round(feas, 2),
             "search_recente": round(float(recent), 0),

@@ -501,9 +501,19 @@ def page_ranking():
     st.subheader("Grafico 1 — Ranking in barre")
     st.plotly_chart(L.chart_ranking_bar(summary), use_container_width=True)
     if is_real:
-        st.subheader("Grafico 2 — Valore economico per mercato")
-        st.caption("Spesa media per viaggiatore (Banca d'Italia, 2024) — peso economico reale usato nel ranking.")
-        st.plotly_chart(L.chart_value_bar(summary), use_container_width=True)
+        _rcw = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+        fig_w = L.chart_region_weight_bar(summary)
+        if fig_w is not None:
+            st.subheader(f"Grafico 2 — Valore economico dei mercati in {L.RG.region(_rcw)['nome']}")
+            st.caption("Peso economico **reale della regione** usato nel ranking: presenze del mercato "
+                       "nella regione (ISTAT, cube _9) × spesa media a notte (Banca d'Italia). "
+                       "Sostituisce il vecchio €/viaggiatore **nazionale** (uguale per tutte le regioni).")
+            st.plotly_chart(fig_w, use_container_width=True)
+        else:
+            st.subheader("Grafico 2 — Valore economico per mercato")
+            st.caption("Spesa media per viaggiatore (Banca d'Italia) — dato nazionale "
+                       "(il peso regionale ISTAT _9 non è disponibile).")
+            st.plotly_chart(L.chart_value_bar(summary), use_container_width=True)
         _rc = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
         fig_conn = L.chart_connectivity(_rc)
         if fig_conn is not None:

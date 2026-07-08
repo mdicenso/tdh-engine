@@ -323,7 +323,8 @@ def compute_real(region_code: str | None = None) -> dict:
     fit = fit_aggregate(df)
     fc = forecast_aggregate(fit)
     ranked = rank_markets(df, value_override=bdi_spend_per_market() or None,
-                          feas_override=region_feas_weights(region_code) or None)
+                          feas_override=region_feas_weights(region_code) or None,
+                          weight_override=region_market_value(region_code) or None)
     obs = df.dropna(subset=["presences"])[["date", "presences"]].reset_index(drop=True)
     return {
         "ranked": ranked,
@@ -363,6 +364,43 @@ def bdi_spend_per_market() -> dict:
     df = pd.read_csv(p)
     return {str(r["code"]): float(r["eur_per_viaggiatore"])
             for _, r in df.iterrows() if pd.notna(r["eur_per_viaggiatore"])}
+
+
+# --- Peso economico REALE per mercato NELLA REGIONE (ISTAT _9 × BdI €/notte) ---
+_MK_ISTAT = {"DE": "DE", "AT": "AT", "FR": "FR", "ES": "ES", "US": "US",
+             "NL": "NL", "CH": "CH_LI", "GB": "GB"}
+_MK_BDI = {"DE": "DE", "AT": "AT", "FR": "FR", "ES": "ES", "US": "US",
+           "NL": None, "CH": "CH", "GB": "GB"}
+
+
+def region_market_value(code: str, markets=None) -> dict:
+    """Peso economico REALE di ogni mercato NELLA regione = presenze reali (ISTAT _9, ultimo
+    anno) × spesa media a notte del mercato (BdI naz; mediana come fallback, es. NL). {code: M€}.
+    Un valore per OGNI mercato del motore (0 se il mercato non è presente nella regione).
+    {} se manca la cache _9 o BdI → il motore ricade sul €/visitatore nazionale."""
+    markets = markets or DEFAULT_MARKETS
+    df = estero_regione_long()
+    if df is None:
+        return {}
+    area = RG.istat_area(code)
+    ni = df[(df["area"] == area) & (df["datatype"] == "NI")]
+    if ni.empty:
+        return {}
+    yr = int(ni["anno"].max())
+    ni = ni[ni["anno"] == yr]
+    spn = bdi_spend_per_night(yr)
+    if not spn:
+        return {}
+    med = float(pd.Series(list(spn.values())).median())
+    pres = dict(zip(ni["country"], ni["valore"]))
+    out = {}
+    for mk in markets:
+        p = pres.get(_MK_ISTAT.get(mk.code, mk.code))
+        if p is None and mk.code == "GB":
+            p = pres.get("UK")
+        eurn = spn.get(_MK_BDI.get(mk.code) or "", med)
+        out[mk.code] = round(float(p or 0) * eurn / 1e6, 3)   # M€ (0 se mercato assente)
+    return out if any(out.values()) else {}
 
 
 @st.cache_data(show_spinner=False)
@@ -932,6 +970,18 @@ def chart_value_bar(summary: list[dict]) -> go.Figure:
     return _layout(fig, h=300)
 
 
+def chart_region_weight_bar(summary: list[dict]) -> go.Figure | None:
+    """Peso economico REALE del mercato nella regione (stima M€) — il peso usato nello score."""
+    s = sorted([x for x in summary if x.get("peso")], key=lambda x: x["peso"])
+    if not s:
+        return None
+    fig = go.Figure(go.Bar(x=[x["peso"] for x in s], y=[x["market"] for x in s], orientation="h",
+                           marker_color="#0e7490",
+                           hovertemplate="<b>%{y}</b><br>%{x:,.1f} M€ (stima regionale)<extra></extra>"))
+    fig.update_layout(xaxis_title="valore economico stimato nella regione (M€/anno)")
+    return _layout(fig, h=300)
+
+
 # --- Eurostat avia_par: connettività aerea diretta su Pescara (fattibilità reale) ---
 @st.cache_data(show_spinner=False)
 def pescara_connectivity() -> dict:
@@ -1125,7 +1175,8 @@ def markets_summary(ctx: dict) -> list[dict]:
         return [{"code": c["code"], "market": c["market"], "reco": c["raccomandazione"],
                  "score": c["score"], "forza": c["forza_anticipatrice"],
                  "momentum": c["momentum_search_pct"], "valore": c["valore_eur_per_visitatore"],
-                 "capacity_ok": c["capacita_voli_ok"], "rank": c["rank"]} for c in ctx["R"]["ranked"]]
+                 "peso": c.get("peso_score"), "capacity_ok": c["capacita_voli_ok"],
+                 "rank": c["rank"]} for c in ctx["R"]["ranked"]]
     rows = ctx["rows"]; name2code = {r["name"]: c for c, r in rows.items()}
     out = []
     for r in ctx["ranked"]:

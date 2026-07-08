@@ -170,6 +170,16 @@ storico 2008→ con multiselect dei mercati. Sotto, il **contesto nazionale** Bd
 *Grafico 3 + Tabella 2*). Funzioni: `estero_markets_table` (quota+yoy), `chart_estero_markets`,
 `chart_estero_trend`. Rimosso il vecchio caveat "ISTAT non espone il per-paese regionale" (ora superato).
 
+**Ranking motore — peso economico REGIONALE** (non più nazionale): `rank_markets` ha un nuovo
+`weight_override`; lo **score** (`= forza × momentum × peso × fattibilità`) ora usa il **valore
+economico reale del mercato NELLA regione** = presenze reali (`_9`, ultimo anno) × spesa/notte BdI
+(mediana come fallback, es. NL), via `region_market_value(code)` in `compute_real`. Il `€/viaggiatore`
+nazionale BdI resta **mostrato** in scheda (campo `valore_eur_per_visitatore`) ma non è più il peso
+dello score; il peso usato è il nuovo campo `peso_score`. Effetto: es. in Abruzzo la Germania (valore
+reale ~30 M€) sale, gli USA (alto €/viaggiatore nazionale ma pochi arrivi in Abruzzo) scendono. Pagina
+Ranking *Grafico 2* mostra `chart_region_weight_bar` (peso regionale M€); fallback al vecchio
+`chart_value_bar` (€/viaggiatore naz.) se `_9` manca.
+
 > Regola di progetto: ad ogni modifica che cambia comportamento/metodo, aggiornare questo README.
 
 <!-- deploy: rebuild forzato 2026-07-03 (pull nuovo tdhlib: chart_italy_map(year=), bdi_region_years) -->
