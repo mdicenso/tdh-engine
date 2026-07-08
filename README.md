@@ -192,6 +192,13 @@ reale ~30 M€) sale, gli USA (alto €/viaggiatore nazionale ma pochi arrivi in
 Ranking *Grafico 2* mostra `chart_region_weight_bar` (peso regionale M€); fallback al vecchio
 `chart_value_bar` (€/viaggiatore naz.) se `_9` manca.
 
+Pagina **Advisor Operatori** (`page_advisor_operatori`, gruppo *Sistema*, sotto Gestione dati):
+documento di **studio** (non integra dati) che confronta le 3 fonti candidate per i dati reali degli
+operatori/affitti brevi — **Inside Airbnb** (gratis/aperta, poche città), **AirDNA** (a pagamento,
+copertura ampia), **AirROI** (low-cost, da verificare) — con matrice comparativa, pro/contro per fonte
+e raccomandazione a fasi. Nota chiave: canali/funnel/conversione/affluenza sono dati proprietari dei
+gestionali, non disponibili aperti (nella pagina Operatori vanno tolti o marcati "simulato").
+
 > Regola di progetto: ad ogni modifica che cambia comportamento/metodo, aggiornare questo README.
 
 <!-- deploy: rebuild forzato 2026-07-03 (pull nuovo tdhlib: chart_italy_map(year=), bdi_region_years) -->
