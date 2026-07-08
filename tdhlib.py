@@ -229,6 +229,59 @@ def section_header(title: str, subtitle: str = "", icon: str = ""):
     </div>""", unsafe_allow_html=True)
 
 
+def page_header(title: str, subtitle: str = "", group: str = "", emoji: str = "",
+                region_code: str | None = None):
+    """Header di pagina 'dashboard esecutiva': banner teal con breadcrumb, titolo grande e
+    (opzionale) badge regione. Drop-in al posto di st.header()+st.caption()."""
+    crumb = (f"{group} &nbsp;›&nbsp; {title}" if group else title)
+    badge = ""
+    if region_code is not None:
+        nome = RG.region(region_code)["nome"]
+        badge = ("<span style='margin-left:auto;background:rgba(255,255,255,.15);"
+                 "border:1px solid rgba(255,255,255,.32);border-radius:999px;padding:6px 15px;"
+                 f"font-size:.85rem;font-weight:600;white-space:nowrap'>📍 {nome}</span>")
+    sub = (f"<div style='font-size:.9rem;opacity:.93;margin-top:6px;max-width:920px'>{subtitle}</div>"
+           if subtitle else "")
+    emo = (f"<div style='font-size:1.7rem;line-height:1'>{emoji}</div>" if emoji else "")
+    st.markdown(f"""
+    <div style="background:linear-gradient(120deg,#0e7490 0%,#155e75 55%,#0f3d4a 100%);
+                border-radius:16px;padding:18px 22px;margin:.2rem 0 1.1rem;color:#f8fafc;
+                box-shadow:0 6px 22px rgba(14,116,144,.28)">
+      <div style="font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+                  opacity:.82;font-weight:600">{crumb}</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+        {emo}
+        <div style="font-size:1.5rem;font-weight:800;letter-spacing:-.02em;line-height:1.1">{title}</div>
+        {badge}
+      </div>
+      {sub}
+    </div>""", unsafe_allow_html=True)
+
+
+def kpi_row(items: list[dict]):
+    """Riga di KPI 'executive' (numeri grandi, label maiuscola, delta opzionale).
+    items: [{label, value, delta?, delta_dir?('up'|'down'|'flat'), hint?}]."""
+    for col, it in zip(st.columns(len(items)), items):
+        dh = ""
+        if it.get("delta"):
+            d = it.get("delta_dir", "flat")
+            color = {"up": "#16a34a", "down": "#dc2626", "flat": "#64748b"}.get(d, "#64748b")
+            arrow = {"up": "▲", "down": "▼", "flat": "→"}.get(d, "")
+            dh = (f"<div style='font-size:.8rem;font-weight:700;color:{color};margin-top:6px'>"
+                  f"{arrow} {it['delta']}</div>")
+        hint = (f"<div style='font-size:.72rem;color:#94a3b8;margin-top:4px'>{it['hint']}</div>"
+                if it.get("hint") else "")
+        col.markdown(f"""
+        <div style="background:#fff;border:1px solid #e2e8f0;border-top:3px solid #0e7490;
+                    border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px rgba(15,23,42,.06);height:100%">
+          <div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;
+                      letter-spacing:.05em">{it['label']}</div>
+          <div style="font-size:1.95rem;font-weight:800;color:#0f172a;line-height:1.1;margin-top:6px">
+            {it['value']}</div>
+          {dh}{hint}
+        </div>""", unsafe_allow_html=True)
+
+
 def badge_html(reco: str) -> str:
     c = reco_color(reco)
     return (f"<span style='background:{c}1f;color:{c};padding:3px 11px;border-radius:999px;"

@@ -121,9 +121,9 @@ def page_sintesi():
 
 
 def page_italia():
-    st.header(":material/public: Italia")
-    st.caption("Seleziona la regione di interesse: **clicca la mappa** oppure usa il menu qui sotto. "
-               "Il colore indica la spesa dei turisti stranieri (Banca d'Italia); scegli l'**anno** qui sotto.")
+    L.page_header("Italia", group="Panoramica", emoji="🇮🇹",
+                  subtitle="Seleziona la regione: clicca la mappa o usa il menu. Il colore indica la spesa "
+                           "dei turisti stranieri (Banca d'Italia); scegli l'anno qui sotto.")
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     last3 = L.bdi_region_years()[-3:]          # ultimi 3 anni completi (4 trimestri)
     opzioni = list(reversed(last3)) or [2024]  # più recente in cima
@@ -158,12 +158,12 @@ def page_regione():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     info = L.RG.region(code)
     nazionale = L.RG.is_national(code)
-    st.header(f":material/public: {info['nome']} — quadro {'nazionale' if nazionale else 'regionale'}")
-    if nazionale:
-        st.caption("**Vista d'insieme nazionale**: totale Italia da ISTAT (area «IT»). "
-                   "Scegli una regione dal selettore per il dettaglio territoriale.")
-    else:
-        st.caption("**Multi-regione**: dati ISTAT reali per la regione selezionata (pagina **Italia**).")
+    L.page_header(f"{info['nome']} — quadro {'nazionale' if nazionale else 'regionale'}",
+                  subtitle=("Vista d'insieme nazionale: totale Italia da ISTAT (area «IT»). "
+                            "Scegli una regione dal selettore per il dettaglio territoriale."
+                            if nazionale else
+                            "Multi-regione: dati ISTAT reali per la regione selezionata."),
+                  group="Panoramica", emoji="📍", region_code=code)
     try:
         ov = L.region_overview(code)
     except Exception as e:  # noqa: BLE001
@@ -172,21 +172,22 @@ def page_regione():
         return
     df = ov["presenze"]
     obs = df.dropna(subset=["stranieri"])
-    c1, c2, c3, c4 = st.columns(4)
+    kpis = []
     if len(obs):
-        c1.metric("Presenze straniere (ultimo mese)",
-                  f"{int(obs['stranieri'].iloc[-1]):,}".replace(",", "."))
+        kpis.append({"label": "Presenze straniere (ultimo mese)",
+                     "value": f"{int(obs['stranieri'].iloc[-1]):,}".replace(",", ".")})
     if ov["letti"]:
-        c2.metric(f"Posti letto ({ov['anno_letti']})", f"{ov['letti']:,}".replace(",", "."))
+        kpis.append({"label": f"Posti letto ({ov['anno_letti']})",
+                     "value": f"{ov['letti']:,}".replace(",", ".")})
     sp = L.region_spend(code)
     if sp:
-        delta = "totale Italia" if sp[1] is None else f"#{sp[1]} su {sp[2]} regioni"
-        c3.metric("Spesa straniera 2024 (BdI)", f"{sp[0]:,.0f} M€".replace(",", "."),
-                  delta=delta, delta_color="off")
-    if nazionale:
-        c4.metric("Regioni coperte", f"{len(L.RG.REGIONS)}")
-    else:
-        c4.metric("Aeroporti", ", ".join(info["airports"]) if info["airports"] else "—")
+        kpis.append({"label": "Spesa straniera 2024 (BdI)",
+                     "value": f"{sp[0]:,.0f} M€".replace(",", "."),
+                     "hint": "totale Italia" if sp[1] is None else f"#{sp[1]} su {sp[2]} regioni"})
+    kpis.append({"label": "Regioni coperte" if nazionale else "Aeroporti",
+                 "value": f"{len(L.RG.REGIONS)}" if nazionale else
+                          (", ".join(info["airports"]) if info["airports"] else "—")})
+    L.kpi_row(kpis)
     # ── Periodo: UNA dropdown condivisa, filtra sia le presenze sia l'analisi pluriennale ──
     win = st.selectbox("Periodo", ["Ultimo anno", "Ultimi 2 anni", "Ultimi 3 anni",
                                    "Ultimi 5 anni", "Tutti gli anni"], index=3, key="reg_win",
@@ -459,11 +460,10 @@ def page_mercati_origine():
 
 
 def page_confronto_regioni():
-    st.header(":material/bar_chart: Confronto tra regioni")
-    st.caption("Classifica di **tutte le regioni** per spesa dei turisti stranieri (Banca d'Italia). "
-               "Scegli l'**anno di riferimento** qui sotto. La regione attiva è evidenziata; "
-               "la selezione si fa nella pagina **Italia**.")
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    L.page_header("Confronto tra regioni", group="Panoramica", emoji="📊", region_code=code,
+                  subtitle="Classifica di tutte le regioni per spesa dei turisti stranieri (Banca d'Italia). "
+                           "Scegli l'anno qui sotto; la regione attiva è evidenziata.")
 
     last3 = L.bdi_region_years()[-3:]          # ultimi 3 anni completi (4 trimestri)
     opzioni = list(reversed(last3)) or [2024]  # più recente in cima
@@ -491,8 +491,9 @@ def page_mappa():
 
 
 def page_ranking():
-    st.header(":material/leaderboard: Ranking mercati")
-    st.caption("Ordinamento per opportunità: dove conviene concentrare il budget.")
+    L.page_header("Ranking mercati", group="Cosa fare", emoji="🏆",
+                  region_code=st.session_state.get("region_code", L.RG.DEFAULT_REGION),
+                  subtitle="Ordinamento per opportunità: dove conviene concentrare il budget promozionale.")
     tbl = pd.DataFrame([{"#": s["rank"], "Mercato": s["market"], "Raccomandazione": s["reco"],
                          **({"Forza": s["forza"], "Momentum %": s["momentum"]} if is_real else {}),
                          "Score": round(s["score"])} for s in summary])
@@ -663,8 +664,9 @@ def page_assistente():
 
 
 def page_gestione_dati():
-    st.header(":material/database: Gestione dati")
-    st.caption("Dati presenti, candidati in valutazione (con nulla osta), copertura temporale e caricamento file.")
+    L.page_header("Gestione dati", group="Sistema", emoji="🗄️",
+                  subtitle="Dati presenti, candidati in valutazione (con nulla osta), copertura temporale "
+                           "e caricamento file.")
 
     st.subheader(":material/table: Tabella 1 — Dati Presenti")
     st.caption("Tutte le fonti attualmente in uso dal motore: reali, candidati approvati e file caricati.")
@@ -871,9 +873,9 @@ def page_province():
         st.info(f"La vista per provincia è **regionale**: sto mostrando **{L.RG.region(code)['nome']}**. "
                 "Scegli un'altra regione dal selettore 📍 in alto a sinistra.")
     nome = L.RG.region(code)["nome"]
-    st.header(":material/place: Presenze per provincia")
-    st.caption(f"Quadro territoriale di **{nome}** — dati ISTAT (multi-regione): **dove** si concentra il "
-               "turismo, **come** sta cambiando e **quando** lavora ciascuna provincia.")
+    L.page_header("Presenze per provincia", group="Cosa è successo", emoji="📍", region_code=code,
+                  subtitle="Quadro territoriale (ISTAT): dove si concentra il turismo, come sta "
+                           "cambiando e quando lavora ciascuna provincia.")
     try:
         P = L.compute_provinces(code)
     except Exception as e:  # noqa: BLE001
@@ -1064,8 +1066,9 @@ def page_operatori():
 def page_spesa():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     nome = L.RG.region(code)["nome"]
-    st.header(":material/payments: Spesa turistica (Banca d'Italia)")
-    st.caption(f"Spesa dei turisti stranieri in **{nome}** + contesto nazionale. Indagine turismo internazionale BdI.")
+    L.page_header("Spesa turistica", group="Cosa è successo", emoji="💶", region_code=code,
+                  subtitle="Spesa dei turisti stranieri nella regione + contesto nazionale "
+                           "(Banca d'Italia, indagine turismo internazionale).")
     g = L.bdi_region_annual(code)
     if g is None or g.empty:
         st.info(f"Dati Banca d'Italia per {nome} non disponibili.")
@@ -1075,11 +1078,12 @@ def page_spesa():
     sp, notti, viagg, anno = last["spesa"], last["notti"], last["viaggiatori"], int(last["anno"])
     durata = notti / viagg if viagg else 0
     spnotte = sp * 1e6 / (notti * 1e3) if notti else 0
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric(f"Spesa straniera {anno}", f"{sp:,.0f} M€".replace(",", "."))
-    c2.metric("Pernottamenti", f"{notti / 1000:.1f} mln")
-    c3.metric("Durata media", f"{durata:.1f} notti")
-    c4.metric("Spesa per notte", f"€ {spnotte:.0f}")
+    L.kpi_row([
+        {"label": f"Spesa straniera {anno}", "value": f"{sp:,.0f} M€".replace(",", ".")},
+        {"label": "Pernottamenti", "value": f"{notti / 1000:.1f} mln"},
+        {"label": "Durata media", "value": f"{durata:.1f} notti"},
+        {"label": "Spesa per notte", "value": f"€ {spnotte:.0f}"},
+    ])
     yr = st.session_state.get("yr_range", (2019, 2024))
     st.subheader(f"Grafico 1 — Spesa straniera in {nome} · {yr[0]}–{yr[1]}")
     fig_sp = L.chart_region_spend(code, yr)
@@ -1132,10 +1136,9 @@ def page_spesa():
 def page_mercati_paese():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     nome = L.RG.region(code)["nome"]
-    st.header(":material/public: Mercati esteri per paese")
-    st.caption(f"Da quali paesi arrivano davvero i turisti stranieri in **{nome}** (dato **reale** ISTAT per "
-               "regione) e come si muovono nel tempo. Sotto, il contesto **nazionale** (Banca d'Italia) con "
-               "spesa e viaggiatori per mercato.")
+    L.page_header("Mercati esteri per paese", group="Cosa è successo", emoji="🌍", region_code=code,
+                  subtitle="Da quali paesi arrivano davvero i turisti stranieri nella regione (dato reale "
+                           "ISTAT) e come si muovono nel tempo. Sotto, il contesto nazionale (Banca d'Italia).")
 
     # ── A) MERCATI REALI DELLA REGIONE (ISTAT cube _9, annuale) ──────────────
     c1, c2 = st.columns([2, 1])

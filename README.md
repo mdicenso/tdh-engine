@@ -90,6 +90,15 @@ scura. Helper opzionale `section_header(title, subtitle, icon)` per le intestazi
 (in alternativa a `st.subheader`). Palette: `#0e7490` teal primario, `#f59e0b` amber, `#f1f5f9`
 sfondo.
 
+**Identità "dashboard esecutiva"** (in `tdhlib.py`):
+- `page_header(title, subtitle, group, emoji, region_code)` — banner di pagina con gradiente teal,
+  **breadcrumb** (`gruppo › titolo`), titolo grande e **badge regione** (📍) sulle pagine region-aware.
+  Drop-in al posto di `st.header()`+`st.caption()`. Applicato finora a: Italia, Regione, Confronto
+  regioni, Per provincia, Spesa turistica, Mercati per paese, Ranking, Gestione dati (rollout alle
+  restanti pagine in corso).
+- `kpi_row(items)` — riga di KPI "executive" (numeri grandi, label maiuscola, delta/hint opzionali)
+  al posto di `st.metric`. Usata nelle schede Regione e Spesa turistica.
+
 Pulsante "View X more" / "View less" della navigazione (`stSidebarNavViewButton`):
 schiarito a `#cbd5e1` (verde-acqua `#5eead4` su hover) — sul fondo scuro della sidebar
 era scuro e illeggibile, come gli altri link della nav.
