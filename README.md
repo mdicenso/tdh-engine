@@ -94,9 +94,10 @@ sfondo.
 - `page_header(title, subtitle, group, emoji, region_code)` — banner di pagina con gradiente teal,
   **breadcrumb** (`gruppo › titolo`), titolo grande e **badge regione** (📍) sulle pagine region-aware.
   Drop-in al posto di `st.header()`+`st.caption()`. Applicato a **tutte le pagine** (tranne Home).
-- `kpi_row(items)` — riga di KPI "executive" (numeri grandi, label maiuscola, delta/hint opzionali)
-  al posto di `st.metric`. Usata nelle schede Sintesi, Regione, Spesa turistica, Forecast. Le altre
-  pagine con metriche usano ancora `st.metric` (già stilizzato via CSS come card con accent-top).
+- `kpi_row(items)` — riga di KPI "executive" (numeri grandi, label maiuscola, delta ▲/▼ e hint
+  opzionali) al posto di `st.metric`. Usata su **tutte** le pagine con KPI (Sintesi, Regione, Spesa,
+  Forecast, Mercati d'origine, Dettaglio, Struttura, Occupazione, Operatori): **zero `st.metric`
+  residui** in `app.py`.
 - **Niente doppio banner**: la barra globale `hero()` (in `app.py`) è **disattivata** — ogni pagina
   ha il proprio `page_header`. `hero()` resta come funzione ma non è più chiamata. Banner compatti
   (padding e font ridotti) per non rubare spazio verticale.

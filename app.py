@@ -382,13 +382,15 @@ def page_mercati_origine():
         st.info("Dati Banca d'Italia per paese non disponibili.")
         return
     cov = L.origin_markets_coverage()
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Spesa dei 10 paesi in Italia", f"{cov['sum10_M'] / 1000:.1f} mld €".replace(".", ","))
+    _kpi = [{"label": "Spesa dei 10 paesi in Italia",
+             "value": f"{cov['sum10_M'] / 1000:.1f} mld €".replace(".", ",")}]
     if cov.get("quota_pct"):
-        c2.metric(f"Copertura sul totale stranieri ({cov['anno']})", f"{cov['quota_pct']:.0f}%",
-                  help="Quota della spesa straniera nazionale coperta dai 10 paesi; il resto sono altri mercati.")
-    c3.metric("Turisti (somma 10 paesi)",
-              f"{sum(r['turisti_k'] for r in rows) / 1000:.1f} mln".replace(".", ","))
+        _kpi.append({"label": f"Copertura sul totale stranieri ({cov['anno']})",
+                     "value": f"{cov['quota_pct']:.0f}%",
+                     "hint": "quota della spesa straniera nazionale coperta dai 10 paesi"})
+    _kpi.append({"label": "Turisti (somma 10 paesi)",
+                 "value": f"{sum(r['turisti_k'] for r in rows) / 1000:.1f} mln".replace(".", ",")})
+    L.kpi_row(_kpi)
 
     st.subheader("Tabella 1 — I 10 mercati d'origine")
     tbl = pd.DataFrame([{
@@ -603,11 +605,12 @@ def page_dettaglio():
         st.markdown(L.badge_html(s["reco"]) + f"&nbsp;&nbsp;<b>{s['reco']}</b>", unsafe_allow_html=True)
         ext = L.bdi_extended()
         stay = (ext.get("durata_media_2024", {}) if ext else {}).get(s["code"])
-        d1, d2, d3, d4 = st.columns(4)
-        d1.metric("Forza anticipatrice", f"{s['forza']:+.2f}")
-        d2.metric("Momentum ricerca", f"{s['momentum']:+.0f}%")
-        d3.metric("Valore €/viaggiatore", f"{s['valore']:.0f}")
-        d4.metric("Durata media", f"{stay:.1f} notti" if stay else "—")
+        L.kpi_row([
+            {"label": "Forza anticipatrice", "value": f"{s['forza']:+.2f}"},
+            {"label": "Momentum ricerca", "value": f"{s['momentum']:+.0f}%"},
+            {"label": "Valore €/viaggiatore", "value": f"{s['valore']:.0f}"},
+            {"label": "Durata media", "value": f"{stay:.1f} notti" if stay else "—"},
+        ])
         h = L.market_health().get(s["code"])
         if h:
             st.caption(f":material/thermostat: **Salute mercato** (fiducia consumatori {s['code']}): saldo {h['conf']:+.1f} "
@@ -620,9 +623,10 @@ def page_dettaglio():
         rows = ctx["rows"]
         code = next(c for c, r in rows.items() if r["name"] == sel)
         card = rows[code]["card"]
-        m1, m2 = st.columns(2)
-        m1.metric("Raccomandazione", card["raccomandazione"])
-        m2.metric("Confidenza", card["confidenza"])
+        L.kpi_row([
+            {"label": "Raccomandazione", "value": card["raccomandazione"]},
+            {"label": "Confidenza", "value": card["confidenza"]},
+        ])
         st.markdown(f"**Effetto atteso** · {card['effetto_atteso']}")
         with st.expander("Evidenza · meccanismo · rischio", expanded=True):
             for e in card["evidenza"]:
@@ -981,10 +985,11 @@ def page_struttura():
 
     # ─────────── COM'È COMPOSTO: metriche + donut ───────────
     tot = S["alberghiero"] + S["extra"]
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Alberghiero (12 mesi)", f"{S['alberghiero']:,.0f}".replace(",", "."))
-    c2.metric("Extra-alberghiero", f"{S['extra']:,.0f}".replace(",", "."))
-    c3.metric("Quota alberghiero", f"{S['alberghiero'] / tot * 100:.0f}%" if tot else "—")
+    L.kpi_row([
+        {"label": "Alberghiero (12 mesi)", "value": f"{S['alberghiero']:,.0f}".replace(",", ".")},
+        {"label": "Extra-alberghiero", "value": f"{S['extra']:,.0f}".replace(",", ".")},
+        {"label": "Quota alberghiero", "value": f"{S['alberghiero'] / tot * 100:.0f}%" if tot else "—"},
+    ])
     st.subheader("Grafico 1 — Alberghiero vs extra-alberghiero (ultimi 12 mesi)")
     st.plotly_chart(L.chart_structure_donut(S), use_container_width=True)
 
@@ -1030,11 +1035,17 @@ def page_occupazione():
     p = O["panel"].sort_values("date")
     occ_cur = O["occ_media12"]
     occ_prev = float(p.iloc[-24:-12]["occ"].mean()) if len(p) >= 24 else None
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Occupazione media (12 mesi)", f"{occ_cur:.0f}%",
-              delta=(f"{occ_cur - occ_prev:+.1f} p.p. a/a" if occ_prev is not None else None))
-    c2.metric(f"Posti letto ({nome})", f"{O['letti_ultimo']:,}".replace(",", "."))
-    c3.metric("Anno capacità", O["anno_letti"])
+    occ_delta = occ_dir = None
+    if occ_prev is not None:
+        diff = occ_cur - occ_prev
+        occ_delta = f"{diff:+.1f} p.p. a/a"
+        occ_dir = "up" if diff > 0 else ("down" if diff < 0 else "flat")
+    L.kpi_row([
+        {"label": "Occupazione media (12 mesi)", "value": f"{occ_cur:.0f}%",
+         "delta": occ_delta, "delta_dir": occ_dir},
+        {"label": f"Posti letto ({nome})", "value": f"{O['letti_ultimo']:,}".replace(",", ".")},
+        {"label": "Anno capacità", "value": O["anno_letti"]},
+    ])
     if occ_prev is not None:
         st.caption(f"**Cosa è cambiato**: {occ_cur - occ_prev:+.1f} punti percentuali rispetto ai 12 mesi "
                    f"precedenti ({occ_prev:.0f}% → {occ_cur:.0f}%).")
@@ -1055,11 +1066,12 @@ def page_operatori():
     L.demo_banner()
     prov = st.selectbox("Filtra per provincia:", ["Tutte", "L'Aquila", "Teramo", "Pescara", "Chieti"])
     d = L.demo_operators(prov)
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Tasso occupazione", f"{d['occupazione']}%")
-    c2.metric("Prezzo medio (ADR)", f"€ {d['adr']}")
-    c3.metric("Punteggio qualità", f"{d['qualita']}/5")
-    c4.metric("Tasso conversione", f"{d['conversione']}%")
+    L.kpi_row([
+        {"label": "Tasso occupazione", "value": f"{d['occupazione']}%"},
+        {"label": "Prezzo medio (ADR)", "value": f"€ {d['adr']}"},
+        {"label": "Punteggio qualità", "value": f"{d['qualita']}/5"},
+        {"label": "Tasso conversione", "value": f"{d['conversione']}%"},
+    ])
     a, b = st.columns(2)
     with a:
         st.subheader("Grafico 1 — Canali di acquisizione")
