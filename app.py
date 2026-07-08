@@ -1303,8 +1303,11 @@ NATIONAL_OK = {"Home", "Italia", "Confronto regioni", "Mercati per paese", "Merc
                "Operatori (demo)", "Assistente", "Architettura", "Gestione dati",
                "Regione", "Per provincia", "Per struttura", "Occupazione", "Spesa turistica"}
 
+# Pagine con header proprio (page_header): niente hero globale, per non avere due banner.
+_OWN_HEADER = {"Italia", "Regione", "Confronto regioni", "Per provincia", "Spesa turistica",
+               "Mercati per paese", "Ranking mercati", "Gestione dati"}
 _rc = st.session_state.get("region_code", L.RG.NATIONAL)
-if pg.title != "Home":
+if pg.title != "Home" and pg.title not in _OWN_HEADER:
     L.hero(f"<b>📍 {L.RG.region(_rc)['nome']}</b> · allocazione del budget promozionale sui mercati esteri",
            "Dati reali" if is_real else "Dati sintetici")
 

@@ -98,6 +98,9 @@ sfondo.
   restanti pagine in corso).
 - `kpi_row(items)` — riga di KPI "executive" (numeri grandi, label maiuscola, delta/hint opzionali)
   al posto di `st.metric`. Usata nelle schede Regione e Spesa turistica.
+- **Niente doppio banner**: la barra globale `hero()` (in `app.py`) è **soppressa** sulle pagine che
+  hanno il proprio `page_header` (set `_OWN_HEADER`); le altre pagine mantengono l'hero. Entrambi i
+  banner sono compatti (padding ridotto) per non rubare spazio verticale.
 
 Pulsante "View X more" / "View less" della navigazione (`stSidebarNavViewButton`):
 schiarito a `#cbd5e1` (verde-acqua `#5eead4` su hover) — sul fondo scuro della sidebar

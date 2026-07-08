@@ -204,14 +204,14 @@ def hero(subtitle: str = "", mode_label: str = ""):
             f"font-size:.8rem;font-weight:600'>{mode_label}</span>") if mode_label else ""
     st.markdown(f"""
     <div style="background:linear-gradient(120deg,#0e7490 0%,#0891b2 55%,#06b6d4 100%);
-                border-radius:16px;padding:34px 26px 22px;margin:10px 0 18px;color:#fff;
-                box-shadow:0 6px 18px rgba(8,145,178,.25);display:flex;align-items:center;
+                border-radius:12px;padding:12px 20px;margin:.1rem 0 .8rem;color:#fff;
+                box-shadow:0 3px 12px rgba(8,145,178,.22);display:flex;align-items:center;
                 justify-content:space-between;flex-wrap:wrap;gap:8px;overflow:visible">
       <div>
-        <div style="font-size:.72rem;letter-spacing:.08em;opacity:.85;font-weight:600;line-height:1.5">
+        <div style="font-size:.64rem;letter-spacing:.08em;opacity:.82;font-weight:600;line-height:1.4">
              STRUMENTO AD USO INTERNO · SCALA NAZIONALE</div>
-        <div style="font-size:1.5rem;font-weight:800;letter-spacing:.01em;margin-top:2px">⛰️ Turism Data Hub</div>
-        <div style="opacity:.92;font-size:.92rem;margin-top:2px">{subtitle}</div>
+        <div style="font-size:1.2rem;font-weight:800;letter-spacing:.01em;margin-top:1px">⛰️ Turism Data Hub</div>
+        <div style="opacity:.92;font-size:.82rem;margin-top:1px">{subtitle}</div>
       </div>{chip}
     </div>""", unsafe_allow_html=True)
 
@@ -240,18 +240,18 @@ def page_header(title: str, subtitle: str = "", group: str = "", emoji: str = ""
         badge = ("<span style='margin-left:auto;background:rgba(255,255,255,.15);"
                  "border:1px solid rgba(255,255,255,.32);border-radius:999px;padding:6px 15px;"
                  f"font-size:.85rem;font-weight:600;white-space:nowrap'>📍 {nome}</span>")
-    sub = (f"<div style='font-size:.9rem;opacity:.93;margin-top:6px;max-width:920px'>{subtitle}</div>"
+    sub = (f"<div style='font-size:.82rem;opacity:.92;margin-top:2px;max-width:920px'>{subtitle}</div>"
            if subtitle else "")
-    emo = (f"<div style='font-size:1.7rem;line-height:1'>{emoji}</div>" if emoji else "")
+    emo = (f"<span style='font-size:1.25rem;line-height:1'>{emoji}</span>" if emoji else "")
     st.markdown(f"""
-    <div style="background:linear-gradient(120deg,#0e7490 0%,#155e75 55%,#0f3d4a 100%);
-                border-radius:16px;padding:18px 22px;margin:.2rem 0 1.1rem;color:#f8fafc;
-                box-shadow:0 6px 22px rgba(14,116,144,.28)">
-      <div style="font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
-                  opacity:.82;font-weight:600">{crumb}</div>
-      <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+    <div style="background:linear-gradient(120deg,#0e7490 0%,#155e75 60%,#0f3d4a 100%);
+                border-radius:12px;padding:10px 16px;margin:.1rem 0 .8rem;color:#f8fafc;
+                box-shadow:0 3px 12px rgba(14,116,144,.22)">
+      <div style="font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
+                  opacity:.8;font-weight:600">{crumb}</div>
+      <div style="display:flex;align-items:center;gap:9px;margin-top:2px">
         {emo}
-        <div style="font-size:1.5rem;font-weight:800;letter-spacing:-.02em;line-height:1.1">{title}</div>
+        <div style="font-size:1.2rem;font-weight:800;letter-spacing:-.02em;line-height:1.15">{title}</div>
         {badge}
       </div>
       {sub}
