@@ -90,15 +90,21 @@ def search_panel() -> pd.DataFrame | None:
 
 # ──────────────────────────── PAGINE ────────────────────────────
 def page_sintesi():
-    st.subheader("Sintesi")
+    L.page_header("Sintesi", group="Panoramica", emoji="📊",
+                  region_code=st.session_state.get("region_code", L.RG.DEFAULT_REGION),
+                  subtitle="I numeri chiave della regione e i mercati su cui conviene agire.")
     if is_real:
         k = L.kpi_real(ctx["R"])
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric(f"Presenze straniere {k['anno']}", f"{k['presenze_anno']:,.0f}".replace(",", "."),
-                  delta=f"{k['yoy']:+.0f}% vs anno prec.")
-        c2.metric("Mercato top", k["top"])
-        c3.metric("Mercati da spingere", k["n_aumentare"])
-        c4.metric("Anticipo del segnale", f"{ctx['R']['agg']['lag']} mesi")
+        yoy = k["yoy"]
+        L.kpi_row([
+            {"label": f"Presenze straniere {k['anno']}",
+             "value": f"{k['presenze_anno']:,.0f}".replace(",", "."),
+             "delta": f"{yoy:+.0f}% vs anno prec.",
+             "delta_dir": "up" if yoy > 0 else ("down" if yoy < 0 else "flat")},
+            {"label": "Mercato top", "value": k["top"]},
+            {"label": "Mercati da spingere", "value": k["n_aumentare"]},
+            {"label": "Anticipo del segnale", "value": f"{ctx['R']['agg']['lag']} mesi"},
+        ])
     else:
         st.info("Modalità sintetica (collaudo). Passa a **Reale** per i KPI sui dati veri.")
 
@@ -368,9 +374,9 @@ def page_regione():
 
 
 def page_mercati_origine():
-    st.header(":material/travel_explore: Mercati d'origine — i 10 paesi")
-    st.caption("Da dove arrivano i turisti stranieri: **quanto spendono in Italia**, **quanti sono** e "
-               "**quanto vale il loro mercato** (spesa per turismo all'estero). Dato nazionale.")
+    L.page_header("Mercati d'origine — i 10 paesi", group="Panoramica", emoji="🌍",
+                  subtitle="Da dove arrivano i turisti stranieri: quanto spendono in Italia, quanti sono "
+                           "e quanto vale il loro mercato (spesa per turismo all'estero). Dato nazionale.")
     rows = L.origin_markets_table()
     if not rows:
         st.info("Dati Banca d'Italia per paese non disponibili.")
@@ -481,8 +487,9 @@ def page_confronto_regioni():
 
 
 def page_mappa():
-    st.header(":material/map: Mappa dei mercati")
-    st.caption("Colore = raccomandazione · dimensione bolla = score · linea = flusso verso la destinazione")
+    L.page_header("Mappa dei mercati", group="Cosa fare", emoji="🗺️",
+                  region_code=st.session_state.get("region_code", L.RG.DEFAULT_REGION),
+                  subtitle="Colore = raccomandazione · dimensione bolla = score · linea = flusso verso la destinazione.")
     st.subheader("Grafico 1 — Mappa dei mercati")
     st.plotly_chart(L.chart_map(summary), use_container_width=True)
     with st.expander("Ranking in forma di barre"):
@@ -551,12 +558,15 @@ def page_ranking():
 def page_forecast():
     if is_real:
         R = ctx["R"]; agg = R["agg"]
-        _nome = L.RG.region(ctx.get("region", L.RG.DEFAULT_REGION))["nome"]
-        st.header(f":material/trending_up: Forecast presenze straniere — {_nome}")
-        m1, m2, m3 = st.columns(3)
-        m1.metric("Lag segnale", f"{agg['lag']} mesi")
-        m2.metric("Batte la naive?", "Sì" if agg["beats_naive"] else "No")
-        m3.metric("Errore backtest (MAPE)", f"{agg['mape_model']:.0f}%")
+        L.page_header("Forecast presenze straniere", group="Cosa fare", emoji="📈",
+                      region_code=ctx.get("region", L.RG.DEFAULT_REGION),
+                      subtitle="Proiezione delle presenze straniere con banda di incertezza; "
+                               "a livello aggregato la stagionalità domina.")
+        L.kpi_row([
+            {"label": "Lag segnale", "value": f"{agg['lag']} mesi"},
+            {"label": "Batte la naive?", "value": "Sì" if agg["beats_naive"] else "No"},
+            {"label": "Errore backtest (MAPE)", "value": f"{agg['mape_model']:.0f}%"},
+        ])
         if not agg["beats_naive"]:
             st.info("A livello aggregato la stagionalità domina: il modello non batte la naive. "
                     "Per il **numero** si usa il riferimento stagionale (confidenza bassa); "
@@ -569,7 +579,8 @@ def page_forecast():
                 st.markdown(f"- {line}")
     else:
         rows = ctx["rows"]
-        st.header(":material/trending_up: Forecast per mercato")
+        L.page_header("Forecast per mercato", group="Cosa fare", emoji="📈",
+                      subtitle="Proiezione per singolo mercato (modalità sintetica).")
         sel = st.selectbox("Mercato:", [s["market"] for s in summary])
         code = next(c for c, r in rows.items() if r["name"] == sel)
         Rr = rows[code]
@@ -582,7 +593,9 @@ def page_forecast():
 
 
 def page_dettaglio():
-    st.header(":material/search: Dettaglio mercato")
+    L.page_header("Dettaglio mercato", group="Cosa fare", emoji="🔎",
+                  region_code=st.session_state.get("region_code", L.RG.DEFAULT_REGION),
+                  subtitle="Scheda per singolo mercato: raccomandazione, forza del segnale, valore e accessibilità.")
     names = [s["market"] for s in summary]
     sel = st.selectbox("Mercato:", names)
     if is_real:
@@ -619,9 +632,10 @@ def page_dettaglio():
 
 
 def page_allocatore():
-    st.header(":material/savings: Allocatore di budget")
-    st.caption("Ripartizione proporzionale allo score. NON è una stima causale: indica dove conviene "
-               "concentrare, non quanto renderà.")
+    L.page_header("Allocatore di budget", group="Cosa fare", emoji="💰",
+                  region_code=st.session_state.get("region_code", L.RG.DEFAULT_REGION),
+                  subtitle="Ripartizione proporzionale allo score. NON è una stima causale: indica dove "
+                           "conviene concentrare, non quanto renderà.")
     c1, c2 = st.columns([1, 2])
     total = c1.number_input("Budget promo totale (€)", min_value=0, value=500000, step=50000)
     cats = c2.multiselect("Includi raccomandazioni:", ["Aumentare", "Mantenere", "Monitorare"],
@@ -644,9 +658,10 @@ def page_allocatore():
 
 
 def page_timing():
-    st.header(":material/calendar_month: Timing stagionale")
-    st.caption("Quando l'interesse di ricerca di ogni mercato è al massimo → quando anticipare la campagna "
-               "(il search precede gli arrivi).")
+    L.page_header("Timing stagionale", group="Cosa fare", emoji="📅",
+                  region_code=st.session_state.get("region_code", L.RG.DEFAULT_REGION),
+                  subtitle="Quando l'interesse di ricerca di ogni mercato è al massimo → quando anticipare "
+                           "la campagna (il search precede gli arrivi).")
     panel = search_panel()
     if panel is None:
         st.info("Dati di ricerca non disponibili.")
@@ -657,9 +672,9 @@ def page_timing():
 
 
 def page_assistente():
-    st.header(":material/forum: Assistente")
-    st.caption(f"Claude · {L.MODEL} · modalità {'REALE' if is_real else 'sintetica'} · "
-               "risponde sui numeri del motore")
+    L.page_header("Assistente", group="Sistema", emoji="💬",
+                  subtitle=f"Claude · {L.MODEL} · modalità {'REALE' if is_real else 'sintetica'} · "
+                           "risponde sui numeri del motore.")
     L.render_assistant(ctx)
 
 
@@ -803,9 +818,10 @@ def page_gestione_dati():
 
 
 def page_azioni():
-    st.header(":material/ads_click: Azioni raccomandate")
-    st.caption("Suggerimenti operativi dai dati: dove e quando agire. "
-               "Stime d'opportunità, non garanzie di ritorno.")
+    L.page_header("Azioni raccomandate", group="Cosa fare", emoji="🎯",
+                  region_code=st.session_state.get("region_code", L.RG.DEFAULT_REGION),
+                  subtitle="Suggerimenti operativi dai dati: dove e quando agire. "
+                           "Stime d'opportunità, non garanzie di ritorno.")
     if not is_real:
         st.info("Le azioni sfruttano i dati reali (forza anticipatrice, momentum, stagionalità). "
                 "Passa a modalità **Reale** per indicazioni complete.")
@@ -843,8 +859,8 @@ def page_azioni():
 
 
 def page_architettura():
-    st.header(":material/account_tree: Architettura & sorgenti dati")
-    st.caption("La visione completa del Turism Data Hub e lo stato delle sorgenti.")
+    L.page_header("Architettura & sorgenti dati", group="Sistema", emoji="🧩",
+                  subtitle="La visione completa del Turism Data Hub e lo stato delle sorgenti.")
     A = L.tdh_architecture()
     st.subheader("Architettura a 5 livelli")
     for nome, desc in A["livelli"]:
@@ -950,9 +966,10 @@ def page_province():
 def page_struttura():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     nome = L.RG.region(code)["nome"]
-    st.header(":material/hotel: Presenze per tipologia di struttura")
-    st.caption(f"Composizione dell'offerta in **{nome}** — dati ISTAT: **com'è composta**, **come** sta "
-               "cambiando e **quando** lavora ciascun segmento.")
+    L.page_header("Presenze per tipologia di struttura", group="Cosa è successo", emoji="🏨",
+                  region_code=code,
+                  subtitle="Composizione dell'offerta (ISTAT): com'è composta, come sta cambiando "
+                           "e quando lavora ciascun segmento.")
     try:
         S = L.compute_structure(code)
     except Exception as e:  # noqa: BLE001
@@ -995,9 +1012,10 @@ def page_struttura():
 def page_occupazione():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     nome = L.RG.region(code)["nome"]
-    st.header(":material/king_bed: Tasso di occupazione (reale)")
-    st.caption(f"Utilizzazione lorda dei posti letto in **{nome}** = presenze ÷ (posti letto × giorni del mese). "
-               "Dati ISTAT: **quant'è**, **come** sta cambiando e **quando**.")
+    L.page_header("Tasso di occupazione (reale)", group="Cosa è successo", emoji="🛏️",
+                  region_code=code,
+                  subtitle="Utilizzazione lorda dei posti letto = presenze ÷ (posti letto × giorni del mese). "
+                           "Dati ISTAT: quant'è, come sta cambiando e quando.")
     try:
         O = L.compute_occupancy(code)
     except Exception as e:  # noqa: BLE001
@@ -1032,7 +1050,8 @@ def page_occupazione():
 
 
 def page_operatori():
-    st.header(":material/badge: Vista operatori (demo)")
+    L.page_header("Vista operatori (demo)", group="Cosa è successo", emoji="👤",
+                  subtitle="Dati simulati a scopo dimostrativo (non reali).")
     L.demo_banner()
     prov = st.selectbox("Filtra per provincia:", ["Tutte", "L'Aquila", "Teramo", "Pescara", "Chieti"])
     d = L.demo_operators(prov)
@@ -1210,9 +1229,10 @@ def page_mercati_paese():
 def page_online():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     nome = L.RG.region(code)["nome"]
-    st.header(":material/language: Interesse online (segnali anticipatori)")
-    st.caption(f"Google Trends (per paese) e Wikipedia pageviews (per lingua) per **{nome}** anticipano gli arrivi. "
-               "Wikipedia è per LINGUA, quindi DE/AT/CH condividono il tedesco e GB/US l'inglese.")
+    L.page_header("Interesse online (segnali anticipatori)", group="Cosa fare", emoji="🌐",
+                  region_code=code,
+                  subtitle="Google Trends (per paese) e Wikipedia pageviews (per lingua) anticipano gli arrivi. "
+                           "Wikipedia è per LINGUA: DE/AT/CH condividono il tedesco, GB/US l'inglese.")
     yr = st.session_state.get("yr_range", (2019, 2024))
     st.subheader(f"Grafico 1 — Wikipedia — interesse per «{nome}» per lingua · {yr[0]}–{yr[1]}")
     st.plotly_chart(L.chart_wiki(yr, code), use_container_width=True)
@@ -1303,13 +1323,9 @@ NATIONAL_OK = {"Home", "Italia", "Confronto regioni", "Mercati per paese", "Merc
                "Operatori (demo)", "Assistente", "Architettura", "Gestione dati",
                "Regione", "Per provincia", "Per struttura", "Occupazione", "Spesa turistica"}
 
-# Pagine con header proprio (page_header): niente hero globale, per non avere due banner.
-_OWN_HEADER = {"Italia", "Regione", "Confronto regioni", "Per provincia", "Spesa turistica",
-               "Mercati per paese", "Ranking mercati", "Gestione dati"}
+# Ogni pagina (tranne Home) ha il proprio page_header con breadcrumb + badge regione:
+# nessun hero globale (evita il doppio banner). hero() resta disponibile ma non è più usato qui.
 _rc = st.session_state.get("region_code", L.RG.NATIONAL)
-if pg.title != "Home" and pg.title not in _OWN_HEADER:
-    L.hero(f"<b>📍 {L.RG.region(_rc)['nome']}</b> · allocazione del budget promozionale sui mercati esteri",
-           "Dati reali" if is_real else "Dati sintetici")
 
 if L.RG.is_national(_rc) and pg.title not in NATIONAL_OK:
     # In modalità «Italia» le pagine di dettaglio per regione non mostrano di nascosto

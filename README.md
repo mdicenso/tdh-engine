@@ -93,14 +93,13 @@ sfondo.
 **Identità "dashboard esecutiva"** (in `tdhlib.py`):
 - `page_header(title, subtitle, group, emoji, region_code)` — banner di pagina con gradiente teal,
   **breadcrumb** (`gruppo › titolo`), titolo grande e **badge regione** (📍) sulle pagine region-aware.
-  Drop-in al posto di `st.header()`+`st.caption()`. Applicato finora a: Italia, Regione, Confronto
-  regioni, Per provincia, Spesa turistica, Mercati per paese, Ranking, Gestione dati (rollout alle
-  restanti pagine in corso).
+  Drop-in al posto di `st.header()`+`st.caption()`. Applicato a **tutte le pagine** (tranne Home).
 - `kpi_row(items)` — riga di KPI "executive" (numeri grandi, label maiuscola, delta/hint opzionali)
-  al posto di `st.metric`. Usata nelle schede Regione e Spesa turistica.
-- **Niente doppio banner**: la barra globale `hero()` (in `app.py`) è **soppressa** sulle pagine che
-  hanno il proprio `page_header` (set `_OWN_HEADER`); le altre pagine mantengono l'hero. Entrambi i
-  banner sono compatti (padding ridotto) per non rubare spazio verticale.
+  al posto di `st.metric`. Usata nelle schede Sintesi, Regione, Spesa turistica, Forecast. Le altre
+  pagine con metriche usano ancora `st.metric` (già stilizzato via CSS come card con accent-top).
+- **Niente doppio banner**: la barra globale `hero()` (in `app.py`) è **disattivata** — ogni pagina
+  ha il proprio `page_header`. `hero()` resta come funzione ma non è più chiamata. Banner compatti
+  (padding e font ridotti) per non rubare spazio verticale.
 
 Pulsante "View X more" / "View less" della navigazione (`stSidebarNavViewButton`):
 schiarito a `#cbd5e1` (verde-acqua `#5eead4` su hover) — sul fondo scuro della sidebar
