@@ -106,7 +106,9 @@ a evitare il mix int/placeholder che rompeva la serializzazione Arrow di `st.dat
 Griglia dei grafici: `_layout()` riconosce le **barre orizzontali** (`go.Bar` con
 `orientation="h"`) e inverte la griglia — linee guida **verticali** sull'asse degli importi
 (così ogni barra corrisponde al suo valore), niente linee orizzontali tra le categorie. I
-grafici temporali/verticali restano con griglia orizzontale.
+grafici temporali/verticali restano con griglia orizzontale. Il grafico **Copertura temporale
+delle serie** (`chart_coverage`, timeline in Gestione dati) ha linee verticali di riferimento:
+**maggiori per anno** (solide, etichetta `%Y`) e **minori per semestre** (punteggiate, `dtick` M12/M6).
 
 Selettore anno (ultimi 3 anni completi) su tre pagine, tutte sulla stessa sorgente multi-anno
 `regions_spend_ranking_year(year)` / `bdi_region_years()` (da `bdi_region_long`, serie BdI

@@ -2859,6 +2859,12 @@ def chart_coverage(cov: list[dict]) -> go.Figure:
     fig = px.timeline(df, x_start="start", x_end="end", y="serie", color="freq",
                       color_discrete_sequence=["#0e7490", "#f59e0b", "#16a34a"])
     fig.update_yaxes(autorange="reversed", title=None)
+    # Linee verticali di riferimento: maggiori per ANNO (solide), minori per SEMESTRE (punteggiate)
+    fig.update_xaxes(
+        showgrid=True, gridcolor="#94a3b8", gridwidth=1, dtick="M12",
+        tickformat="%Y", ticklabelmode="period", ticks="outside",
+        minor=dict(dtick="M6", showgrid=True, gridcolor="#e2e8f0", griddash="dot", gridwidth=1),
+    )
     fig.update_layout(height=300, margin=dict(l=10, r=10, t=10, b=10), paper_bgcolor="white",
                       plot_bgcolor="white", title_text="", legend_title="frequenza", font=dict(family=FONT_STACK))
     return fig
