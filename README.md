@@ -163,6 +163,13 @@ mercato a livello nazionale (`bdi_spend_per_night(year)`, da BdI TS1); mappa `_I
 codici paese, solo mercati presenti in entrambe le fonti, anno = il più recente comune completo.
 Etichettata **esplicitamente come stima** (non dato ufficiale). `chart_estero_spesa_stimata`.
 
+Pagina **Mercati esteri per paese** (`page_mercati_paese`) ora è **region-aware** e parte dal dato
+**reale** della regione selezionata (da `_9`): selettore metrica *Presenze/Arrivi* + anno, *Grafico 1*
+top mercati (barre), *Tabella 1* con **quota %** sul totale esteri e **var % a/a**, *Grafico 2* trend
+storico 2008→ con multiselect dei mercati. Sotto, il **contesto nazionale** BdI (spesa/notti/viaggiatori,
+*Grafico 3 + Tabella 2*). Funzioni: `estero_markets_table` (quota+yoy), `chart_estero_markets`,
+`chart_estero_trend`. Rimosso il vecchio caveat "ISTAT non espone il per-paese regionale" (ora superato).
+
 > Regola di progetto: ad ogni modifica che cambia comportamento/metodo, aggiornare questo README.
 
 <!-- deploy: rebuild forzato 2026-07-03 (pull nuovo tdhlib: chart_italy_map(year=), bdi_region_years) -->

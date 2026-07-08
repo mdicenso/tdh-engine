@@ -1120,29 +1120,75 @@ def page_spesa():
 
 
 def page_mercati_paese():
-    st.header(":material/public: Mercati per paese (Banca d'Italia)")
-    st.caption("Quali mercati esteri contano e come si muovono nel tempo — dato **nazionale** (Italia) per "
-               "paese di origine, indagine BdI. Contesto strategico per leggere i mercati; non è il dato "
-               "regionale dell'Abruzzo (che ISTAT non espone per singolo paese).")
+    code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
+    nome = L.RG.region(code)["nome"]
+    st.header(":material/public: Mercati esteri per paese")
+    st.caption(f"Da quali paesi arrivano davvero i turisti stranieri in **{nome}** (dato **reale** ISTAT per "
+               "regione) e come si muovono nel tempo. Sotto, il contesto **nazionale** (Banca d'Italia) con "
+               "spesa e viaggiatori per mercato.")
+
+    # ── A) MERCATI REALI DELLA REGIONE (ISTAT cube _9, annuale) ──────────────
+    c1, c2 = st.columns([2, 1])
+    metric_lbl = c1.radio("Metrica (dato reale regionale):", ["Presenze", "Arrivi"],
+                          horizontal=True, key="mp_metric")
+    dt = "NI" if metric_lbl == "Presenze" else "AR"
+    unit = metric_lbl.lower()
+    years = L.estero_years(code, dt)
+    tbl = None
+    if years:
+        yr = c2.selectbox("📅 Anno", list(reversed(years)), index=0, key="mp_anno")
+        tbl = L.estero_markets_table(code, datatype=dt, year=yr, top=15)
+    if tbl is None or tbl.empty:
+        st.info("⏳ Dati ISTAT «Paese di origine» per regione (cube _9) non disponibili: "
+                "in download o assenti per questo territorio.")
+    else:
+        st.subheader(f"Grafico 1 — Top mercati esteri in {nome} · {unit} {yr}")
+        st.plotly_chart(L.chart_estero_markets(code, datatype=dt, year=yr, top=12),
+                        use_container_width=True)
+        disp = pd.DataFrame({
+            "Mercato": tbl["nome"],
+            f"{metric_lbl} {yr}": tbl["valore"].round(0).astype("int64"),
+            "Quota % esteri": tbl["quota"].round(1),
+            "var. % a/a": tbl["yoy"].map(lambda v: f"{v:+.0f}%" if pd.notna(v) else "—"),
+        })
+        st.subheader(f"Tabella 1 — Mercati esteri in {nome} · {yr}")
+        st.dataframe(disp, hide_index=True, use_container_width=True)
+        st.caption("Fonte: ISTAT movimento clienti per paese di residenza (cube _9), dato **reale** per "
+                   "regione. «Quota % esteri» = peso del mercato sul totale dei turisti stranieri della regione.")
+        opts = dict(zip(tbl["country"], tbl["nome"]))
+        default = list(tbl["country"].head(5))
+        sel = st.multiselect("Mercati da confrontare nel tempo:", list(opts),
+                             default=default, format_func=lambda c: opts.get(c, c), key="mp_trend")
+        st.subheader(f"Grafico 2 — Trend storico dei mercati in {nome} (2008→)")
+        fig_tr = L.chart_estero_trend(code, sel, datatype=dt)
+        if fig_tr is not None:
+            st.plotly_chart(fig_tr, use_container_width=True)
+        else:
+            st.caption("Seleziona almeno un mercato per vedere il trend.")
+
+    # ── B) CONTESTO NAZIONALE (Banca d'Italia: spesa/notti/viaggiatori) ──────
+    st.divider()
+    st.markdown("#### Contesto nazionale (Banca d'Italia)")
     g = L.bdi_country_annual()
     if g is None or g.empty:
         st.info("Dati Banca d'Italia per paese non disponibili.")
         return
-    metric = st.radio("Metrica:", ["notti", "spesa", "viaggiatori"], horizontal=True)
-    st.subheader("Grafico 1 — Mercati per paese nel tempo")
+    metric = st.radio("Metrica (dato nazionale BdI):", ["notti", "spesa", "viaggiatori"],
+                      horizontal=True, key="mp_bdi_metric")
+    st.subheader("Grafico 3 — Mercati per paese nel tempo (Italia)")
     st.plotly_chart(L.chart_bdi_country(metric), use_container_width=True)
     last = int(g["anno"].max())
     cur = g[g["anno"] == last].set_index("code")
     prev = g[g["anno"] == last - 1].set_index("code")
     rows = []
-    for code in L.BDI_MARKETS:
-        if code in cur.index:
-            v = cur.loc[code, metric]
-            p = prev.loc[code, metric] if code in prev.index else None
+    for c in L.BDI_MARKETS:
+        if c in cur.index:
+            v = cur.loc[c, metric]
+            p = prev.loc[c, metric] if c in prev.index else None
             yoy = (v / p - 1) * 100 if (p and p != 0) else None
-            rows.append({"Mercato": code, f"{metric.capitalize()} {last}": round(v),
+            rows.append({"Mercato": c, f"{metric.capitalize()} {last}": round(v),
                          "var. % a/a": (f"{yoy:+.0f}%" if yoy is not None else "—")})
-    st.subheader("Tabella 1 — Mercati per paese (ultimo anno)")
+    st.subheader("Tabella 2 — Mercati per paese, Italia (ultimo anno)")
     st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
     st.caption("Unità BdI: notti e viaggiatori in migliaia, spesa in milioni di €. "
                "Mercati: Germania, Austria, Regno Unito, Svizzera, USA, Francia, Spagna.")

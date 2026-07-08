@@ -699,6 +699,72 @@ def chart_estero_spesa_stimata(code: str, year: int | None = None) -> go.Figure 
     return _layout(fig, h=380)
 
 
+def estero_markets_table(code: str, datatype: str = "NI", year: int | None = None,
+                         top: int | None = 12):
+    """Tabella mercati esteri REALI per regione (ISTAT _9): country·nome·valore·quota·yoy.
+    quota = % sul totale esteri (WRL_X_ITA) dell'anno; yoy = var% vs anno precedente.
+    Anno usato in .attrs['anno']. None se dati assenti."""
+    df = estero_regione_long()
+    if df is None:
+        return None
+    area = RG.istat_area(code)
+    base = df[(df["area"] == area) & (df["datatype"] == datatype)]
+    if base.empty:
+        return None
+    yrs = sorted(int(a) for a in base["anno"].dropna().unique())
+    if not yrs:
+        return None
+    y = year or yrs[-1]
+    cur = base[base["anno"] == y]
+    prev = base[base["anno"] == y - 1].set_index("country")["valore"].to_dict()
+    tot = float(cur[cur["country"] == "WRL_X_ITA"]["valore"].sum()) or None
+    rows = []
+    for _, r in cur.iterrows():
+        c = r["country"]
+        if _tur9_is_aggregate(c):
+            continue
+        v = float(r["valore"]); pv = prev.get(c)
+        rows.append({"country": c, "nome": estero_country_name(c), "valore": v,
+                     "quota": (v / tot * 100 if tot else None),
+                     "yoy": ((v / float(pv) - 1) * 100 if pv else None)})
+    if not rows:
+        return None
+    out = pd.DataFrame(rows).sort_values("valore", ascending=False).reset_index(drop=True)
+    out.attrs["anno"] = y
+    return out.head(top) if top else out
+
+
+def chart_estero_markets(code: str, datatype: str = "NI", year: int | None = None,
+                         top: int = 12) -> go.Figure | None:
+    d = estero_markets_table(code, datatype=datatype, year=year, top=top)
+    if d is None or d.empty:
+        return None
+    d = d.sort_values("valore")
+    unit = "presenze" if datatype == "NI" else "arrivi"
+    fig = go.Figure(go.Bar(x=d["valore"], y=d["nome"], orientation="h", marker_color="#0e7490",
+                           hovertemplate="<b>%{y}</b><br>%{x:,.0f} " + unit + "<extra></extra>"))
+    fig.update_xaxes(title=f"{unit} di turisti esteri")
+    return _layout(fig, h=420)
+
+
+def chart_estero_trend(code: str, countries: list[str], datatype: str = "NI") -> go.Figure | None:
+    """Trend storico (2008→) dei mercati scelti per la regione. None se nessuna serie."""
+    if not countries:
+        return None
+    fig = go.Figure()
+    for c in countries:
+        s = estero_country_series(code, c, datatype=datatype)
+        if s is not None and not s.empty:
+            fig.add_trace(go.Scatter(x=s["anno"], y=s["valore"], mode="lines+markers",
+                                     name=estero_country_name(c)))
+    if not fig.data:
+        return None
+    unit = "presenze" if datatype == "NI" else "arrivi"
+    fig.update_yaxes(title=f"{unit} di turisti esteri")
+    fig.update_xaxes(dtick=1, title=None)
+    return _layout(fig, h=380)
+
+
 # ════════════════════════════════════════════════════════════════════════════
 # MERCATI D'ORIGINE — i 10 paesi da cui arrivano i turisti stranieri.
 #   spesa in Italia + n. turisti (Banca d'Italia, TS1 per paese, completi al 2025)
