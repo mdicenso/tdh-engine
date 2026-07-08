@@ -13,9 +13,11 @@ Da implementare nei prossimi giri (vedi note in fondo):
 """
 from __future__ import annotations
 
+import csv
 import io
 import json
 import os
+import time
 import urllib.request
 import urllib.error
 
@@ -268,6 +270,104 @@ def fetch_istat_capacity(area: str = "ITF1", start: str = "2002", cache_dir: str
         import time
         time.sleep(3)
     raise RuntimeError(f"ISTAT capacità non raggiungibile ({type(last_err).__name__}: {last_err})")
+
+
+# --------------------------------------------------------------------------
+# ISTAT — ESTERI per PAESE × territorio (regione/provincia), ANNUALE, dataflow
+# DCSC_TUR_9. Scarica per-territorio (richieste piccole, retry sui 502/timeout)
+# e scrive un unico CSV lungo: REF_AREA,DATA_TYPE,COUNTRY_RES_GUESTS,TIME_PERIOD,OBS_VALUE.
+# Dimensioni secondarie fissate (ALL/TOT) per evitare righe doppie.
+# --------------------------------------------------------------------------
+ISTAT_DATAFLOW_ESTERO = "122_54_DF_DCSC_TUR_9"
+ISTAT_ESTERO_CACHE = "istat_estero_regione_prov_annuale.csv"
+_ESTERO_FIELDS = ["REF_AREA", "DATA_TYPE", "COUNTRY_RES_GUESTS", "TIME_PERIOD", "OBS_VALUE"]
+# nazionale + 22 regioni NUTS2 storiche + province NUTS3
+ISTAT_ESTERO_TERR = [
+    "IT", "ITC1", "ITC2", "ITC3", "ITC4", "ITD1", "ITD2", "ITDA", "ITD3", "ITD4", "ITD5",
+    "ITE1", "ITE2", "ITE3", "ITE4", "ITF1", "ITF2", "ITF3", "ITF4", "ITF5", "ITF6", "ITG1", "ITG2",
+    "IT108", "IT109", "IT110", "IT111",
+    "ITC11", "ITC12", "ITC13", "ITC14", "ITC15", "ITC16", "ITC17", "ITC18", "ITC20",
+    "ITC31", "ITC32", "ITC33", "ITC34", "ITC41", "ITC42", "ITC43", "ITC44", "ITC45", "ITC46",
+    "ITC47", "ITC48", "ITC49", "ITC4A", "ITC4B",
+    "ITD10", "ITD20", "ITD31", "ITD32", "ITD33", "ITD34", "ITD35", "ITD36", "ITD37",
+    "ITD41", "ITD42", "ITD43", "ITD44", "ITD51", "ITD52", "ITD53", "ITD54", "ITD55", "ITD56",
+    "ITD57", "ITD58", "ITD59",
+    "ITE11", "ITE12", "ITE13", "ITE14", "ITE15", "ITE16", "ITE17", "ITE18", "ITE19", "ITE1A",
+    "ITE21", "ITE22", "ITE31", "ITE32", "ITE33", "ITE34", "ITE41", "ITE42", "ITE43", "ITE44", "ITE45",
+    "ITF11", "ITF12", "ITF13", "ITF14", "ITF21", "ITF22", "ITF31", "ITF32", "ITF33", "ITF34", "ITF35",
+    "ITF41", "ITF42", "ITF43", "ITF44", "ITF45", "ITF51", "ITF52", "ITF61", "ITF62", "ITF63",
+    "ITF64", "ITF65",
+    "ITG11", "ITG12", "ITG13", "ITG14", "ITG15", "ITG16", "ITG17", "ITG18", "ITG19",
+    "ITG25", "ITG26", "ITG27", "ITG28"]
+
+
+def _fetch_estero_territory(terr: str, start: str = "2008", end: str = "2026",
+                            timeout: int = 90, tries: int = 3) -> list[dict]:
+    """Righe (dict) di un territorio: AR+NI, tutti i paesi, annuale. [] se 404 (senza dati)."""
+    key = f"A.{terr}.AR+NI.N.ALL.551_553..ALL.ALL.ALL.TOT"
+    qs = (f"?detail=dataonly&startPeriod={start}&endPeriod={end}"
+          f"&dimensionAtObservation=TIME_PERIOD")
+    last_err = None
+    for _att in range(tries):
+        for host in ISTAT_HOSTS:
+            try:
+                url = f"{host}/data/IT1,{ISTAT_DATAFLOW_ESTERO},1.0/{key}/ALL/{qs}"
+                req = urllib.request.Request(
+                    url, headers={"Accept": "application/vnd.sdmx.data+csv;version=1.0.0"})
+                raw = urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "replace")
+                rows = list(csv.DictReader(io.StringIO(raw)))
+                return [{k: r.get(k, "") for k in _ESTERO_FIELDS} for r in rows if r.get("OBS_VALUE")]
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    return []
+                last_err = e
+            except Exception as e:  # noqa: BLE001
+                last_err = e
+        time.sleep(4)
+    raise RuntimeError(f"ISTAT estero {terr}: {type(last_err).__name__}")
+
+
+def fetch_estero_country_region_annual(start: str = "2008", end: str = "2026",
+                                       cache_dir: str = ".cache", timeout: int = 90,
+                                       refresh: bool = False, progress=None) -> pd.DataFrame:
+    """Turisti esteri per PAESE × territorio (naz/regione/provincia), ANNUALE (DCSC_TUR_9).
+    Scarica per-territorio con retry; i territori che falliscono mantengono le righe già in
+    cache (nessuna perdita dati su refresh parziale). Scrive un unico CSV lungo e lo ritorna."""
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, ISTAT_ESTERO_CACHE)
+    if os.path.exists(cache_path) and not refresh:
+        return pd.read_csv(cache_path)
+    existing: dict[str, list[dict]] = {}
+    if os.path.exists(cache_path):
+        try:
+            old = pd.read_csv(cache_path, dtype=str)
+            for terr, grp in old.groupby("REF_AREA"):
+                existing[terr] = grp[_ESTERO_FIELDS].to_dict("records")
+        except Exception:  # noqa: BLE001
+            pass
+    data: dict[str, list[dict]] = {}
+    for i, terr in enumerate(ISTAT_ESTERO_TERR, 1):
+        try:
+            data[terr] = _fetch_estero_territory(terr, start, end, timeout)
+        except Exception:  # noqa: BLE001 — refresh fallito: tieni il vecchio (no perdita dati)
+            data[terr] = existing.get(terr, [])
+        if progress:
+            progress(i, len(ISTAT_ESTERO_TERR), terr)
+    allrows = [r for terr in data for r in data[terr]]
+    df = pd.DataFrame(allrows, columns=_ESTERO_FIELDS)
+    df.to_csv(cache_path, index=False)
+    return df
+
+
+def fetch_estero_latest_year(timeout: int = 60) -> int | None:
+    """Anno più recente disponibile alla fonte — probe LEGGERO (un solo territorio, ITF1).
+    Serve al controllo settimanale per decidere se vale la pena riscaricare tutto."""
+    try:
+        rows = _fetch_estero_territory("ITF1", start="2020", end="2026", timeout=timeout, tries=2)
+    except Exception:  # noqa: BLE001
+        return None
+    yrs = [int(r["TIME_PERIOD"]) for r in rows if str(r.get("TIME_PERIOD", "")).isdigit()]
+    return max(yrs) if yrs else None
 
 
 # --------------------------------------------------------------------------

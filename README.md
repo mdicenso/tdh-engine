@@ -148,7 +148,12 @@ Scaricato via SDMX-CSV (`real_sources`/script) in `.cache/istat_estero_regione_p
 (Tabella *Dati Presenti* via `builtin_sources`) e matrice di copertura aggiornata: la riga *Presenze
 per PAESE di origine* passa da 🔴 buco a ✅ (regione+provincia, annuale); voce anche nella *Copertura
 temporale delle serie*. Scaricato con `scratchpad/download_tur9.py` (resumibile, per-territorio,
-retry sui 502/timeout ISTAT) — 130 territori, ~263k righe, 2008→2024.
+retry sui 502/timeout ISTAT) — 130 territori, ~263k righe, 2008→2024. **Agganciato
+all'auto-refresh**: `real_sources.fetch_estero_country_region_annual()` (downloader per-territorio,
+i territori falliti tengono le righe già in cache → nessuna perdita su refresh parziale) +
+`fetch_estero_latest_year()` (probe leggero). In `update_check.py` è la fonte `istat_estero`;
+il job settimanale fa lo **skip intelligente**: riscarica i 131 territori SOLO se ISTAT pubblica
+un anno più recente di quello in cache (dato annuale, download pesante).
 
 **Spesa STIMATA turisti stranieri per mercato × regione** (pagina Spesa turistica, *Grafico 5 +
 Tabella 1*): ISTAT non produce la spesa del turismo estero in entrata (solo flussi fisici); la spesa

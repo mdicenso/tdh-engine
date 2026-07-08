@@ -48,6 +48,9 @@ def _last_period(path: str):
     if "anno" in d.columns:
         y = pd.to_numeric(d["anno"], errors="coerce").dropna()
         return (pd.Timestamp(f"{int(y.max())}-12-31"), len(d)) if len(y) else (None, len(d))
+    if "TIME_PERIOD" in d.columns:  # cache "lunga" ISTAT _9 (anno per riga)
+        y = pd.to_numeric(d["TIME_PERIOD"], errors="coerce").dropna()
+        return (pd.Timestamp(f"{int(y.max())}-12-31"), len(d)) if len(y) else (None, len(d))
     return (None, len(d))
 
 
@@ -74,6 +77,8 @@ SOURCES = [
      "paths": [], "live": "ecb"},
     {"key": "istat_capacita", "label": "Capacità posti letto (ISTAT)", "cadence": "annuale",
      "paths": [f"{CACHE}/istat_capacity_letti_ITF1.csv"], "live": "istat_capacita"},
+    {"key": "istat_estero", "label": "Esteri per paese×regione (ISTAT)", "cadence": "annuale",
+     "paths": [f"{CACHE}/istat_estero_regione_prov_annuale.csv"], "live": "istat_estero"},
     {"key": "wikipedia", "label": "Wikipedia pageviews", "cadence": "mensile",
      "paths": sorted(glob.glob(f"{CACHE}/wiki_*.csv")) or [f"{CACHE}/wiki_de.csv"], "live": "wikipedia"},
     {"key": "bdi", "label": "Spesa turisti (Banca d'Italia)", "cadence": "trimestrale",
@@ -142,6 +147,9 @@ def _fresh_last_period(source: dict) -> pd.Timestamp | None:
     if kind == "istat_capacita":
         df = RS.fetch_istat_capacity(cache_dir=tmp, refresh=True)
         return pd.Timestamp(f"{int(df['anno'].max())}-12-31")
+    if kind == "istat_estero":  # probe leggero: solo l'anno più recente disponibile
+        y = RS.fetch_estero_latest_year()
+        return pd.Timestamp(f"{int(y)}-12-31") if y else None
     if kind == "ecb":
         df = RS.fetch_fx_monthly("USD")
         return pd.to_datetime(df["date"]).max()
@@ -216,6 +224,23 @@ def apply_update(key: str) -> dict:
         if kind == "istat_capacita":
             df = RS.fetch_istat_capacity(refresh=True)
             return {"ok": True, "msg": f"ISTAT capacità aggiornata · fino al {int(df['anno'].max())}"}
+        if kind == "istat_estero":
+            # dato ANNUALE + download pesante (131 territori): riscarica TUTTO solo se ISTAT
+            # ha pubblicato un anno più recente di quello già in cache (probe leggero prima).
+            fresh = RS.fetch_estero_latest_year()
+            cache_path = f"{CACHE}/istat_estero_regione_prov_annuale.csv"
+            cache_year = None
+            if os.path.exists(cache_path):
+                try:
+                    y = pd.to_numeric(pd.read_csv(cache_path)["TIME_PERIOD"], errors="coerce").dropna()
+                    cache_year = int(y.max()) if len(y) else None
+                except Exception:  # noqa: BLE001
+                    pass
+            if fresh and cache_year and cache_year >= fresh:
+                return {"ok": True, "msg": f"già aggiornato (anno {cache_year}); nessun anno nuovo pubblicato"}
+            df = RS.fetch_estero_country_region_annual(refresh=True)
+            yy = pd.to_numeric(df["TIME_PERIOD"], errors="coerce").dropna()
+            return {"ok": True, "msg": f"ISTAT esteri paese×regione aggiornati · fino al {int(yy.max())}"}
         if kind == "ecb":
             return {"ok": True, "msg": "ECB è sempre live: nessuna cache da aggiornare"}
         return {"ok": False, "msg": "refresh non ancora disponibile per questa fonte (Fase 2)"}
