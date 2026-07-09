@@ -371,6 +371,131 @@ def fetch_estero_latest_year(timeout: int = 60) -> int | None:
 
 
 # --------------------------------------------------------------------------
+# ASTAT — Provincia Autonoma di Bolzano / Alto Adige (SDMX proprio, host astatsdmxservices).
+# Dataflow DF_TOUR_ACC_CAP_TOURASS_MONTHLY_1: capacità ricettiva + flussi turistici, MENSILE.
+# Fonte COMPLEMENTARE (una sola provincia): non è una base multi-regione e non ha il paese
+# di origine, ma dà mensilità recente (fino 2026) e il LATO OFFERTA (esercizi/posti letto per
+# categoria) che le basi ISTAT nazionali non danno. Ordine dimensioni della key:
+#   FREQ . TYPE_PERIOD . TYPE_GEO . TOUR_GEO . CATEGORY . INDICATOR
+# Nessun proxy/auth: risponde in SDMX-CSV direttamente.
+# --------------------------------------------------------------------------
+ASTAT_BASE = "https://astatsdmxservices.prov.bz.it/dsm/NSI_WS/rest/data"
+ASTAT_DATAFLOW = "ITH1,DF_TOUR_ACC_CAP_TOURASS_MONTHLY_1,1.0"
+ASTAT_FLOWS_CACHE = "astat_bolzano_flussi_mensili.csv"
+ASTAT_CAP_CACHE = "astat_bolzano_capacita_categoria.csv"
+# categorie ricettive (codice ASTAT -> etichetta italiana), ordine di presentazione
+ASTAT_CATEGORIES = {
+    "TOTAL": "Totale", "A": "Alberghiero", "01_03": "4-5 stelle", "05": "3 stelle",
+    "07_09": "1-2 stelle", "11": "Residence", "E": "Extralberghiero", "17": "Campeggi",
+    "21": "Alloggi privati", "23": "Agriturismi", "99": "Altri esercizi"}
+
+
+def _astat_fetch(key: str, start: str, end: str, timeout: int = 120,
+                 tries: int = 3) -> list[dict]:
+    """Righe grezze (dict SDMX-CSV) del dataflow ASTAT per una key. [] se 404."""
+    qs = (f"?detail=dataonly&startPeriod={start}&endPeriod={end}"
+          f"&dimensionAtObservation=TIME_PERIOD")
+    url = f"{ASTAT_BASE}/{ASTAT_DATAFLOW}/{key}/ALL/{qs}"
+    last_err = None
+    for _att in range(tries):
+        try:
+            req = urllib.request.Request(
+                url, headers={"Accept": "application/vnd.sdmx.data+csv;version=1.0.0"})
+            raw = urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "replace")
+            return list(csv.DictReader(io.StringIO(raw), delimiter=";"))
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                return []
+            last_err = e
+        except Exception as e:  # noqa: BLE001
+            last_err = e
+        time.sleep(4)
+    raise RuntimeError(f"ASTAT {key}: {type(last_err).__name__}")
+
+
+def fetch_astat_flussi_mensili(start: str = "1990-01-01", end: str = "2026-12-31",
+                               cache_dir: str = ".cache", timeout: int = 120,
+                               refresh: bool = False) -> pd.DataFrame:
+    """Flussi turistici MENSILI dell'intero Alto Adige (arrivi + presenze).
+    Colonne: date (primo giorno mese), arrivi, presenze. Cache CSV."""
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, ASTAT_FLOWS_CACHE)
+    if os.path.exists(cache_path) and not refresh:
+        return pd.read_csv(cache_path, parse_dates=["date"])
+    key = "M.CALENDER_YEAR.TOUR_FEDERATION.TOTAL.TOTAL.ARRIVALS_N+OVERNIGHTS_N"
+    rows = _astat_fetch(key, start, end, timeout)
+    rec: dict[str, dict] = {}
+    for r in rows:
+        v = r.get("OBS_VALUE")
+        if not v:
+            continue
+        tp = r.get("TIME_PERIOD", "")
+        d = rec.setdefault(tp, {"date": tp})
+        if r.get("INDICATOR") == "ARRIVALS_N":
+            d["arrivi"] = float(v)
+        elif r.get("INDICATOR") == "OVERNIGHTS_N":
+            d["presenze"] = float(v)
+    df = pd.DataFrame(sorted(rec.values(), key=lambda x: x["date"]))
+    if not df.empty:
+        df["date"] = pd.to_datetime(df["date"] + "-01")
+    df.to_csv(cache_path, index=False)
+    return df
+
+
+def fetch_astat_capacita_categoria(start: str = "2010", end: str = "2026",
+                                   cache_dir: str = ".cache", timeout: int = 120,
+                                   refresh: bool = False) -> pd.DataFrame:
+    """Capacità ricettiva ANNUALE dell'Alto Adige per categoria (esercizi + posti letto).
+    Colonne: anno, cat_code, categoria, esercizi, posti_letto. Cache CSV."""
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, ASTAT_CAP_CACHE)
+    if os.path.exists(cache_path) and not refresh:
+        return pd.read_csv(cache_path)
+    cats = "+".join(ASTAT_CATEGORIES.keys())
+    key = f"A.CALENDER_YEAR.TOUR_FEDERATION.TOTAL.{cats}.ESTABLISHMENTS_N+BEDS_N"
+    rows = _astat_fetch(key, start, end, timeout)
+    rec: dict[tuple, dict] = {}
+    for r in rows:
+        v = r.get("OBS_VALUE")
+        if not v:
+            continue
+        yr = r.get("TIME_PERIOD", ""); cc = r.get("CATEGORY", "")
+        d = rec.setdefault((yr, cc), {
+            "anno": yr, "cat_code": cc, "categoria": ASTAT_CATEGORIES.get(cc, cc)})
+        if r.get("INDICATOR") == "ESTABLISHMENTS_N":
+            d["esercizi"] = float(v)
+        elif r.get("INDICATOR") == "BEDS_N":
+            d["posti_letto"] = float(v)
+    df = pd.DataFrame(rec.values())
+    if not df.empty:
+        df = df.sort_values(["anno", "cat_code"]).reset_index(drop=True)
+    df.to_csv(cache_path, index=False)
+    return df
+
+
+def fetch_astat_bolzano(cache_dir: str = ".cache", refresh: bool = False,
+                        timeout: int = 120) -> dict:
+    """Comodità: assicura entrambe le cache ASTAT (flussi + capacità) e le ritorna.
+    Ritorna {'flussi': df, 'capacita': df}."""
+    return {
+        "flussi": fetch_astat_flussi_mensili(cache_dir=cache_dir, refresh=refresh, timeout=timeout),
+        "capacita": fetch_astat_capacita_categoria(cache_dir=cache_dir, refresh=refresh, timeout=timeout),
+    }
+
+
+def fetch_astat_latest_period(timeout: int = 60) -> str | None:
+    """Mese più recente disponibile alla fonte (probe leggero) — es. '2026-05'.
+    Serve al controllo settimanale per decidere se riscaricare."""
+    try:
+        rows = _astat_fetch("M.CALENDER_YEAR.TOUR_FEDERATION.TOTAL.TOTAL.OVERNIGHTS_N",
+                            "2025-01-01", "2026-12-31", timeout=timeout, tries=2)
+    except Exception:  # noqa: BLE001
+        return None
+    tps = [r.get("TIME_PERIOD", "") for r in rows if r.get("OBS_VALUE")]
+    return max(tps) if tps else None
+
+
+# --------------------------------------------------------------------------
 # WIKIPEDIA — pageviews mensili per articolo (secondo segnale anticipatore, per lingua).
 # Wikimedia REST: filtro agent='user' (esclude bot) e titolo articolo per lingua
 # (la regione in tedesco/olandese è 'Abruzzen'). UA obbligatorio.

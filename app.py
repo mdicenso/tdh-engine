@@ -1417,6 +1417,75 @@ def page_advisor_operatori():
                "Confronto visivo completo generato come artifact separato.")
 
 
+def _it_num(v) -> str:
+    """Numero intero con separatore migliaia all'italiana (12.187)."""
+    if v is None:
+        return "n/d"
+    return f"{v:,.0f}".replace(",", ".")
+
+
+def page_alto_adige_astat():
+    L.page_header("Alto Adige (ASTAT)", group="Cosa è successo", emoji="🏔️",
+                  subtitle="Provincia autonoma di Bolzano · fonte ASTAT. Dato locale complementare, "
+                           "fisso sull'Alto Adige (non segue il selettore di regione).")
+    st.caption("Fonte **complementare** di una sola provincia: mensilità recente (fino a mag-2026) e "
+               "**lato offerta** (esercizi/posti letto per categoria) che le basi ISTAT nazionali non danno. "
+               "Non ha il **paese di origine**, quindi non alimenta il motore di ranking dei mercati.")
+
+    k = L.astat_kpi()
+    if k.get("anno"):
+        yoy = k.get("yoy")
+        L.kpi_row([
+            {"label": f"Presenze {k['anno']}", "value": _it_num(k["presenze_anno"]),
+             "delta": (f"{yoy:+.1f}% su {k['anno']-1}" if yoy is not None else None),
+             "delta_dir": ("up" if (yoy or 0) >= 0 else "down"),
+             "hint": "ultimo anno solare completo"},
+            {"label": f"Arrivi {k['anno']}", "value": _it_num(k["arrivi_anno"])},
+            {"label": "Esercizi ricettivi", "value": _it_num(k["esercizi"]), "hint": "totale, ultimo anno"},
+            {"label": "Posti letto", "value": _it_num(k["posti_letto"])},
+            {"label": "Ultimo mese dato", "value": k.get("mese_ultimo") or "n/d"},
+        ])
+    else:
+        st.warning("Cache ASTAT non disponibile. Lancia l'aggiornamento dati (fonte «Alto Adige · ASTAT»).")
+
+    # ── FLUSSI MENSILI ─────────────────────────────────────────────
+    st.subheader("Flussi turistici mensili")
+    c1, c2 = st.columns([1, 1])
+    ind_lbl = c1.radio("Indicatore", ["Presenze", "Arrivi"], horizontal=True, key="astat_ind")
+    ind = "presenze" if ind_lbl == "Presenze" else "arrivi"
+    anno_da = c2.slider("Dall'anno", 2000, 2025, 2015, key="astat_da")
+    st.markdown(f"**Grafico 1 — {ind_lbl} mensili (Alto Adige, dal {anno_da})**")
+    fig1 = L.chart_astat_flussi(ind, start_year=anno_da)
+    if fig1:
+        st.plotly_chart(fig1, use_container_width=True)
+    st.markdown("**Grafico 2 — Profilo stagionale (media mensile, ultimi 3 anni)**")
+    fig2 = L.chart_astat_stagionalita(ind, years=3)
+    if fig2:
+        st.plotly_chart(fig2, use_container_width=True)
+    st.caption("La stagionalità dell'Alto Adige è bimodale (picco estivo + picco invernale della neve): "
+               "utile come benchmark di destinazione matura per confronto con le altre regioni.")
+
+    # ── LATO OFFERTA ──────────────────────────────────────────────
+    cap = L.astat_capacita()
+    anno_cap = int(cap["anno"].max()) if not cap.empty else None
+    st.subheader(f"Capacità ricettiva per categoria{f' · {anno_cap}' if anno_cap else ''}")
+    st.markdown("**Grafico 3 — Posti letto per categoria ricettiva**")
+    fig3 = L.chart_astat_capacita()
+    if fig3:
+        st.plotly_chart(fig3, use_container_width=True)
+    st.markdown("**Tabella 1 — Esercizi e posti letto per categoria**")
+    tcap = L.astat_capacita_table()
+    if tcap is not None and not tcap.empty:
+        show = tcap.rename(columns={"categoria": "Categoria", "esercizi": "Esercizi",
+                                    "posti_letto": "Posti letto"}).copy()
+        show["Esercizi"] = show["Esercizi"].map(_it_num)
+        show["Posti letto"] = show["Posti letto"].map(_it_num)
+        st.dataframe(show, hide_index=True, use_container_width=True)
+    st.caption("Fonte: ASTAT · Provincia autonoma di Bolzano · SDMX DF_TOUR_ACC_CAP_TOURASS_MONTHLY_1. "
+               "Categorie di dettaglio (esclusi gli aggregati alberghiero/extralberghiero/totale per non "
+               "contare due volte).")
+
+
 # ──────────────────── NAVIGAZIONE A DUE PILASTRI (st.navigation) + DISPATCH ────────────────────
 SINTESI_PAGE = st.Page(page_sintesi, title="Sintesi", icon=":material/dashboard:")
 pg = st.navigation({
@@ -1434,6 +1503,7 @@ pg = st.navigation({
         st.Page(page_occupazione, title="Occupazione", icon=":material/king_bed:"),
         st.Page(page_spesa, title="Spesa turistica", icon=":material/payments:"),
         st.Page(page_mercati_paese, title="Mercati per paese", icon=":material/public:"),
+        st.Page(page_alto_adige_astat, title="Alto Adige (ASTAT)", icon=":material/landscape:"),
         st.Page(page_operatori, title="Operatori (demo)", icon=":material/person:"),
     ],
     "Cosa fare": [
@@ -1457,6 +1527,7 @@ pg = st.navigation({
 # Step B: le descrittive Regione/Struttura/Occupazione/Spesa usano il totale Italia (ISTAT area="IT").
 NATIONAL_OK = {"Home", "Italia", "Confronto regioni", "Mercati per paese", "Mercati d'origine",
                "Operatori (demo)", "Assistente", "Architettura", "Gestione dati", "Advisor Operatori",
+               "Alto Adige (ASTAT)",
                "Regione", "Per provincia", "Per struttura", "Occupazione", "Spesa turistica"}
 
 # Ogni pagina (tranne Home) ha il proprio page_header con breadcrumb + badge regione:

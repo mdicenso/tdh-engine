@@ -857,6 +857,128 @@ def chart_estero_trend(code: str, countries: list[str], datatype: str = "NI") ->
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# ALTO ADIGE / BOLZANO (ASTAT) — fonte COMPLEMENTARE di una sola provincia.
+#   flussi MENSILI (arrivi + presenze, 1990→) e capacità ANNUALE per categoria
+#   (esercizi + posti letto). Niente paese di origine: non alimenta il motore,
+#   serve per stagionalità tempestiva + lato offerta. [[tdh-engine-project]]
+# ════════════════════════════════════════════════════════════════════════════
+# categorie di DETTAGLIO (escludo gli aggregati per non contare due volte)
+_ASTAT_DETAIL_CATS = ["4-5 stelle", "3 stelle", "1-2 stelle", "Residence",
+                      "Campeggi", "Alloggi privati", "Agriturismi", "Altri esercizi"]
+
+
+@st.cache_data(show_spinner=False)
+def astat_flussi() -> pd.DataFrame:
+    """Flussi mensili Alto Adige: date·arrivi·presenze. Vuoto se cache assente."""
+    try:
+        return RS.fetch_astat_flussi_mensili(refresh=False)
+    except Exception:  # noqa: BLE001
+        return pd.DataFrame(columns=["date", "arrivi", "presenze"])
+
+
+@st.cache_data(show_spinner=False)
+def astat_capacita() -> pd.DataFrame:
+    """Capacità ricettiva annuale Alto Adige: anno·categoria·esercizi·posti_letto."""
+    try:
+        return RS.fetch_astat_capacita_categoria(refresh=False)
+    except Exception:  # noqa: BLE001
+        return pd.DataFrame(columns=["anno", "cat_code", "categoria", "esercizi", "posti_letto"])
+
+
+def astat_kpi() -> dict:
+    """KPI sintetici per l'header: ultimo anno solare COMPLETO, YoY presenze, offerta."""
+    f = astat_flussi()
+    out = {"mese_ultimo": None, "presenze_anno": None, "yoy": None,
+           "arrivi_anno": None, "anno": None, "esercizi": None, "posti_letto": None}
+    if not f.empty:
+        f = f.copy()
+        f["anno"] = f["date"].dt.year
+        out["mese_ultimo"] = f["date"].max().strftime("%m/%Y")
+        # ultimo anno con 12 mesi presenti (anno solare completo)
+        full = f.groupby("anno").size()
+        completi = [y for y, n in full.items() if n >= 12]
+        if completi:
+            y = max(completi)
+            out["anno"] = int(y)
+            out["presenze_anno"] = float(f[f["anno"] == y]["presenze"].sum())
+            out["arrivi_anno"] = float(f[f["anno"] == y]["arrivi"].sum())
+            prev = f[f["anno"] == y - 1]["presenze"].sum()
+            if prev:
+                out["yoy"] = (out["presenze_anno"] - prev) / prev * 100.0
+    c = astat_capacita()
+    if not c.empty:
+        last = c[c["anno"] == c["anno"].max()]
+        tot = last[last["categoria"] == "Totale"]
+        if not tot.empty:
+            out["esercizi"] = float(tot["esercizi"].iloc[0])
+            out["posti_letto"] = float(tot["posti_letto"].iloc[0])
+    return out
+
+
+def chart_astat_flussi(indicator: str = "presenze", start_year: int = 2015) -> go.Figure | None:
+    """Serie mensile (presenze o arrivi) dell'Alto Adige da start_year."""
+    f = astat_flussi()
+    if f.empty:
+        return None
+    f = f[f["date"].dt.year >= start_year]
+    if f.empty or indicator not in f.columns:
+        return None
+    label = "Presenze" if indicator == "presenze" else "Arrivi"
+    fig = go.Figure(go.Scatter(x=f["date"], y=f[indicator], mode="lines",
+                               line=dict(color="#0e7490", width=2),
+                               fill="tozeroy", fillcolor="rgba(14,116,144,0.08)",
+                               hovertemplate="%{x|%m/%Y}<br>%{y:,.0f} " + label.lower() + "<extra></extra>"))
+    fig.update_yaxes(title=f"{label} · Alto Adige")
+    fig.update_xaxes(title=None)
+    return _layout(fig, h=360)
+
+
+def chart_astat_stagionalita(indicator: str = "presenze", years: int = 3) -> go.Figure | None:
+    """Profilo stagionale: media per mese dell'anno sugli ultimi `years` anni completi."""
+    f = astat_flussi()
+    if f.empty or indicator not in f.columns:
+        return None
+    f = f.copy()
+    f["anno"] = f["date"].dt.year
+    f["mese"] = f["date"].dt.month
+    yrs = sorted(f["anno"].unique())[-years:]
+    f = f[f["anno"].isin(yrs)]
+    prof = f.groupby("mese")[indicator].mean().reindex(range(1, 13))
+    mesi = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"]
+    label = "presenze" if indicator == "presenze" else "arrivi"
+    fig = go.Figure(go.Bar(x=mesi, y=prof.values, marker_color="#0e7490",
+                           hovertemplate="%{x}<br>%{y:,.0f} " + label + " (media)<extra></extra>"))
+    fig.update_yaxes(title=f"{label.capitalize()} · media mensile")
+    fig.update_xaxes(title=None)
+    return _layout(fig, h=340)
+
+
+def astat_capacita_table(year: int | None = None) -> pd.DataFrame:
+    """Capacità per categoria di dettaglio (un anno). Colonne pronte per la vista."""
+    c = astat_capacita()
+    if c.empty:
+        return c
+    y = year or int(c["anno"].max())
+    d = c[(c["anno"] == y) & (c["categoria"].isin(_ASTAT_DETAIL_CATS))].copy()
+    d["categoria"] = pd.Categorical(d["categoria"], _ASTAT_DETAIL_CATS, ordered=True)
+    d = d.sort_values("categoria")
+    return d[["categoria", "esercizi", "posti_letto"]].reset_index(drop=True)
+
+
+def chart_astat_capacita(year: int | None = None) -> go.Figure | None:
+    """Posti letto per categoria ricettiva (un anno) — lato offerta."""
+    d = astat_capacita_table(year)
+    if d is None or d.empty:
+        return None
+    d = d.sort_values("posti_letto")
+    fig = go.Figure(go.Bar(x=d["posti_letto"], y=d["categoria"], orientation="h",
+                           marker_color="#f59e0b",
+                           hovertemplate="<b>%{y}</b><br>%{x:,.0f} posti letto<extra></extra>"))
+    fig.update_xaxes(title="Posti letto")
+    return _layout(fig, h=380)
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # MERCATI D'ORIGINE — i 10 paesi da cui arrivano i turisti stranieri.
 #   spesa in Italia + n. turisti (Banca d'Italia, TS1 per paese, completi al 2025)
 #   spesa per turismo all'estero = taglia del mercato (World Bank ST.INT.XPND.CD)
@@ -1649,6 +1771,14 @@ def builtin_sources() -> list[dict]:
                          "Arrivi/presenze per singolo paese estero, per ogni regione e provincia (annuale, dal 2008)",
                          "ISTAT · Movimento clienti (cube DCSC_TUR_9)", "https://esploradati.istat.it/",
                          "annuale", A, _csv_rows(tur9), _fmt_mtime(tur9)))
+    astat_f = ".cache/astat_bolzano_flussi_mensili.csv"
+    astat_c = ".cache/astat_bolzano_capacita_categoria.csv"
+    if os.path.exists(astat_f):
+        rows.append(_row("Alto Adige · flussi e capacità (ASTAT)",
+                         "Arrivi/presenze mensili + esercizi/posti letto per categoria — SOLO provincia di "
+                         "Bolzano (fonte COMPLEMENTARE, non multi-regione, senza paese di origine)",
+                         "ASTAT · Provincia autonoma di Bolzano", "https://astat.provincia.bz.it/",
+                         "mensile", A, (_csv_rows(astat_f) or 0) + (_csv_rows(astat_c) or 0), _fmt_mtime(astat_f)))
     trends = sorted(glob.glob(".cache/trends_*.csv"))
     if trends:
         _geos = [mk.code for mk in DEFAULT_MARKETS]
@@ -1874,6 +2004,7 @@ def coverage_matrix() -> list[dict]:
         ("Presenze straniere (aggregato)", "✅", "✅", "✅", "ISTAT DCSC_TUR", "stranieri totali, non per singolo paese"),
         ("Presenze per PAESE di origine", "✅", "✅", "✅", "ISTAT DCSC_TUR_9", "✅ risolto: annuale dal 2008 per regione E provincia (cube _9); il mensile per-paese resta solo nazionale"),
         ("Capacità ricettiva (posti letto)", "✅", "✅", "🟡", "ISTAT DCSC_TUR_1", "regionale ok; provinciale solo alcune"),
+        ("Flussi MENSILI per categoria ricettiva", "❌", "❌", "🟡", "ASTAT (Bolzano)", "🟡 solo Alto Adige: arrivi/presenze mensili + esercizi/posti letto per stelle/categoria (fonte provinciale complementare)"),
         ("Anagrafica strutture ricettive", "🟡", "❌", "❌", "registri regionali", "🔴 BUCO: registri non federati come open data"),
         ("Spesa turistica per paese", "✅", "🟡", "🟡", "BdI + stima da _9", "regionale/provinciale STIMATA (presenze _9 × spesa/notte BdI); dato diretto solo TOTALE regionale (BdI TS2)"),
         ("Accessibilità aerea (voli/pax)", "✅", "✅", "—", "Eurostat avia_par", "regionale via mappa regione→aeroporto"),
@@ -3029,6 +3160,9 @@ def series_coverage() -> list[dict]:
     if os.path.exists(".cache/istat_estero_regione_prov_annuale.csv"):
         cov.append({"serie": "Esteri per paese×regione (ISTAT _9)", "start": pd.Timestamp("2008-01-01"),
                     "end": pd.Timestamp("2024-12-31"), "freq": "annuale"})
+    r = rng(".cache/astat_bolzano_flussi_mensili.csv")
+    if r:
+        cov.append({"serie": "Alto Adige flussi (ASTAT)", "start": r[0], "end": r[1], "freq": "mensile"})
     return cov
 
 

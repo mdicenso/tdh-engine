@@ -199,6 +199,25 @@ copertura ampia), **AirROI** (low-cost, da verificare) — con matrice comparati
 e raccomandazione a fasi. Nota chiave: canali/funnel/conversione/affluenza sono dati proprietari dei
 gestionali, non disponibili aperti (nella pagina Operatori vanno tolti o marcati "simulato").
 
+**Alto Adige — flussi e capacità (ASTAT, fonte COMPLEMENTARE)**: pagina `page_alto_adige_astat`
+(gruppo *Cosa è successo*), dato della **sola provincia di Bolzano** dal portale SDMX ASTAT
+(`astatsdmxservices.prov.bz.it`, dataflow `ITH1,DF_TOUR_ACC_CAP_TOURASS_MONTHLY_1`). Non è una base
+multi-regione e **non ha il paese di origine** → non alimenta il motore di ranking; vale per due cose
+che le basi ISTAT nazionali non danno: **mensilità recente** (arrivi/presenze fino a mag-2026) e il
+**lato offerta** (esercizi + posti letto per categoria ricettiva: stelle, residence, campeggi,
+agriturismi…). Ordine dimensioni della key SDMX: `FREQ.TYPE_PERIOD.TYPE_GEO.TOUR_GEO.CATEGORY.INDICATOR`;
+SDMX-CSV con separatore `;` (ISTAT usa `,`), nessun proxy/auth. Reader in `real_sources`:
+`fetch_astat_flussi_mensili` (→ `.cache/astat_bolzano_flussi_mensili.csv`, date·arrivi·presenze),
+`fetch_astat_capacita_categoria` (→ `.cache/astat_bolzano_capacita_categoria.csv`,
+anno·categoria·esercizi·posti_letto), `fetch_astat_bolzano` (comodità), `fetch_astat_latest_period`
+(probe leggero). Helper/vista in `tdhlib`: `astat_flussi`, `astat_capacita`, `astat_kpi`,
+`astat_capacita_table`, `chart_astat_flussi`, `chart_astat_stagionalita` (profilo mensile medio 3 anni,
+utile come benchmark stagionalità), `chart_astat_capacita`. Registrata in **Gestione dati** (riga
+*Alto Adige · flussi e capacità (ASTAT)* in `builtin_sources`), nella *Copertura temporale delle serie*
+(`series_coverage`) e nella matrice con la riga *Flussi MENSILI per categoria ricettiva* (🟡 solo Alto
+Adige). **Agganciata all'auto-refresh**: fonte `astat` in `update_check.py` con **skip intelligente**
+(riscarica solo se ASTAT pubblica un mese più recente di quello in cache).
+
 > Regola di progetto: ad ogni modifica che cambia comportamento/metodo, aggiornare questo README.
 
 <!-- deploy: rebuild forzato 2026-07-03 (pull nuovo tdhlib: chart_italy_map(year=), bdi_region_years) -->

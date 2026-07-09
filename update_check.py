@@ -79,6 +79,8 @@ SOURCES = [
      "paths": [f"{CACHE}/istat_capacity_letti_ITF1.csv"], "live": "istat_capacita"},
     {"key": "istat_estero", "label": "Esteri per paese×regione (ISTAT)", "cadence": "annuale",
      "paths": [f"{CACHE}/istat_estero_regione_prov_annuale.csv"], "live": "istat_estero"},
+    {"key": "astat", "label": "Alto Adige · flussi e capacità (ASTAT)", "cadence": "mensile",
+     "paths": [f"{CACHE}/astat_bolzano_flussi_mensili.csv"], "live": "astat"},
     {"key": "wikipedia", "label": "Wikipedia pageviews", "cadence": "mensile",
      "paths": sorted(glob.glob(f"{CACHE}/wiki_*.csv")) or [f"{CACHE}/wiki_de.csv"], "live": "wikipedia"},
     {"key": "bdi", "label": "Spesa turisti (Banca d'Italia)", "cadence": "trimestrale",
@@ -150,6 +152,9 @@ def _fresh_last_period(source: dict) -> pd.Timestamp | None:
     if kind == "istat_estero":  # probe leggero: solo l'anno più recente disponibile
         y = RS.fetch_estero_latest_year()
         return pd.Timestamp(f"{int(y)}-12-31") if y else None
+    if kind == "astat":  # probe leggero: mese più recente pubblicato da ASTAT
+        p = RS.fetch_astat_latest_period()
+        return pd.Timestamp(f"{p}-01") if p else None
     if kind == "ecb":
         df = RS.fetch_fx_monthly("USD")
         return pd.to_datetime(df["date"]).max()
@@ -241,6 +246,17 @@ def apply_update(key: str) -> dict:
             df = RS.fetch_estero_country_region_annual(refresh=True)
             yy = pd.to_numeric(df["TIME_PERIOD"], errors="coerce").dropna()
             return {"ok": True, "msg": f"ISTAT esteri paese×regione aggiornati · fino al {int(yy.max())}"}
+        if kind == "astat":
+            # download leggero (2 query): riscarica solo se ASTAT ha un mese più recente della cache
+            fresh = RS.fetch_astat_latest_period()
+            cache_path = f"{CACHE}/astat_bolzano_flussi_mensili.csv"
+            cache_last = (_last_period(cache_path) or (None, None))[0] if os.path.exists(cache_path) else None
+            fresh_ts = pd.Timestamp(f"{fresh}-01") if fresh else None
+            if fresh_ts is not None and cache_last is not None and fresh_ts <= cache_last:
+                return {"ok": True, "msg": f"già aggiornato (fino a {cache_last:%Y-%m}); nessun mese nuovo"}
+            d = RS.fetch_astat_bolzano(refresh=True)
+            last = pd.to_datetime(d["flussi"]["date"]).max()
+            return {"ok": True, "msg": f"ASTAT Alto Adige aggiornato · flussi fino a {last:%Y-%m}"}
         if kind == "ecb":
             return {"ok": True, "msg": "ECB è sempre live: nessuna cache da aggiornare"}
         return {"ok": False, "msg": "refresh non ancora disponibile per questa fonte (Fase 2)"}
