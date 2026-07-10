@@ -81,6 +81,8 @@ SOURCES = [
      "paths": [f"{CACHE}/istat_estero_regione_prov_annuale.csv"], "live": "istat_estero"},
     {"key": "astat", "label": "Alto Adige · flussi e capacità (ASTAT)", "cadence": "mensile",
      "paths": [f"{CACHE}/astat_bolzano_flussi_mensili.csv"], "live": "astat"},
+    {"key": "lombardia", "label": "Lombardia · flussi provincia × mercato (Open Data)", "cadence": "annuale",
+     "paths": [f"{CACHE}/lombardia_flussi_provincia_mese.csv"], "live": "lombardia"},
     {"key": "wikipedia", "label": "Wikipedia pageviews", "cadence": "mensile",
      "paths": sorted(glob.glob(f"{CACHE}/wiki_*.csv")) or [f"{CACHE}/wiki_de.csv"], "live": "wikipedia"},
     {"key": "bdi", "label": "Spesa turisti (Banca d'Italia)", "cadence": "trimestrale",
@@ -155,6 +157,9 @@ def _fresh_last_period(source: dict) -> pd.Timestamp | None:
     if kind == "astat":  # probe leggero: mese più recente pubblicato da ASTAT
         p = RS.fetch_astat_latest_period()
         return pd.Timestamp(f"{p}-01") if p else None
+    if kind == "lombardia":  # probe leggero: anno più recente su Socrata
+        y = RS.fetch_lombardia_latest_year()
+        return pd.Timestamp(f"{int(y)}-12-31") if y else None
     if kind == "ecb":
         df = RS.fetch_fx_monthly("USD")
         return pd.to_datetime(df["date"]).max()
@@ -257,6 +262,21 @@ def apply_update(key: str) -> dict:
             d = RS.fetch_astat_bolzano(refresh=True)
             last = pd.to_datetime(d["flussi"]["date"]).max()
             return {"ok": True, "msg": f"ASTAT Alto Adige aggiornato · flussi fino a {last:%Y-%m}"}
+        if kind == "lombardia":
+            # dato annuale via Socrata: riscarica solo se è stato pubblicato un anno più recente
+            fresh = RS.fetch_lombardia_latest_year()
+            cache_path = f"{CACHE}/lombardia_flussi_provincia_mese.csv"
+            cache_year = None
+            if os.path.exists(cache_path):
+                try:
+                    y = pd.to_numeric(pd.read_csv(cache_path, usecols=["anno"])["anno"], errors="coerce").dropna()
+                    cache_year = int(y.max()) if len(y) else None
+                except Exception:  # noqa: BLE001
+                    pass
+            if fresh and cache_year and cache_year >= fresh:
+                return {"ok": True, "msg": f"già aggiornato (anno {cache_year}); nessun anno nuovo"}
+            df = RS.fetch_lombardia_flussi(refresh=True)
+            return {"ok": True, "msg": f"Lombardia aggiornata · fino al {int(pd.to_numeric(df['anno']).max())}"}
         if kind == "ecb":
             return {"ok": True, "msg": "ECB è sempre live: nessuna cache da aggiornare"}
         return {"ok": False, "msg": "refresh non ancora disponibile per questa fonte (Fase 2)"}

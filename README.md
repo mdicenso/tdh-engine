@@ -208,9 +208,10 @@ numerazione unica per-pagina:
    rifare le chiamate live ISTAT.
 2. **Sintesi ISTAT** (KPI + *Grafico 1* presenze mensili tot/straniere, *Grafico 2* top mercati esteri
    da `_9`, *Grafico 3* posti letto per anno via `chart_region_letti`).
-3. **Dettaglio locale** (*Grafico 4-6 + Tabella 2*): fonte territoriale ricca dove esiste — oggi la
-   **Provincia di Bolzano `ITD1`** via **ASTAT**; per le altre regioni un avviso ("prossimo candidato:
-   Trentino/ISPAT"). Robusta ai down ISTAT: se `region_overview` fallisce, catalogo + fonti offline
+3. **Dettaglio locale**: fonte territoriale ricca dove esiste — **Provincia di Bolzano `ITD1`** via
+   **ASTAT** (*Grafico 4-6 + Tabella 2*) e **Lombardia `ITC4`** via **Open Data Lombardia**
+   (*Grafico 4-5 + Tabella 2*, con selettore provincia); per le altre regioni un avviso (candidati:
+   Toscana, Sardegna). Robusta ai down ISTAT: se `region_overview` fallisce, catalogo + fonti offline
    restano visibili.
 
 **Fonte ASTAT — Alto Adige/Bolzano (COMPLEMENTARE)**: portale SDMX ASTAT
@@ -228,8 +229,25 @@ Helper in `tdhlib`: `astat_flussi/capacita/kpi/capacita_table`, `chart_astat_flu
 Registrata in **Gestione dati** (`builtin_sources`), nella *Copertura temporale delle serie*
 (`series_coverage`) e nella matrice (*Flussi MENSILI per categoria ricettiva*, 🟡 solo Alto Adige).
 **Auto-refresh**: fonte `astat` in `update_check.py` con **skip intelligente** (riscarica solo se ASTAT
-pubblica un mese più recente di quello in cache). Prossimo passo pianificato: estendere il *dettaglio
-locale* ad altri territori con portale statistico proprio (Trentino/ISPAT come primo candidato).
+pubblica un mese più recente di quello in cache).
+
+**Fonte Open Data Lombardia (COMPLEMENTARE, regione `ITC4`)**: portale Socrata `dati.lombardia.it`,
+dataset `xzck-giqt` *"Flussi turistici per mese nelle province lombarde"*. Dà una cosa che nessun'altra
+fonte del motore ha: il **mercato estero MENSILE a livello sub-nazionale** — arrivi/presenze per **12
+province × provenienza** (regioni italiane + paesi esteri, colonna `provenienza_turisti`, 83 valori) ×
+alberghiero/extra, **2019-2024** (64.285 righe). API SODA (JSON/CSV, `$select/$where/$limit/$offset`,
+nessun proxy/auth), scaricata a pagine da 50k. Reader in `real_sources`: `fetch_lombardia_flussi`
+(→ `.cache/lombardia_flussi_provincia_mese.csv`, con pulizia dei valori sporchi alla fonte:
+`Austrialia`→Australia, `Israel`→Israele, 3 grafie di *Monza e Brianza*), `fetch_lombardia_latest_year`.
+Helper in `tdhlib`: `lomb_flussi`, `lomb_provinces`, `lomb_markets_table`, `lomb_kpi`,
+`chart_lomb_flussi_mensili`, `chart_lomb_markets`; `_lomb_is_foreign` classifica la provenienza come
+paese estero (esclude regioni italiane e «non specificato»). Nel blocco locale della pagina Base Dati
+Regionale c'è un **selettore provincia** (o tutta la Lombardia). Registrata in Gestione dati
+(`builtin_sources`, `series_coverage`) e in matrice (riga *Mercato ESTERO mensile sub-nazionale*, 🟡 solo
+Lombardia). **Auto-refresh**: fonte `lombardia` in `update_check.py`, cadenza annuale, **skip
+intelligente** (riscarica solo se Socrata pubblica un anno più recente). Prossimi candidati con feed
+pulito: **Toscana** (dati.toscana.it CKAN/CSV) e **Sardegna** (osservatorio, CSV CC0); **Trentino/ISPAT**
+scartato (solo HTML da scrapare, nessun export).
 
 > Regola di progetto: ad ogni modifica che cambia comportamento/metodo, aggiornare questo README.
 

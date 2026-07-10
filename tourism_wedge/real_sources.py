@@ -496,6 +496,70 @@ def fetch_astat_latest_period(timeout: int = 60) -> str | None:
 
 
 # --------------------------------------------------------------------------
+# OPEN DATA LOMBARDIA — Socrata (dati.lombardia.it). Fonte COMPLEMENTARE regionale ricca:
+# flussi turistici MENSILI per PROVINCIA × PROVENIENZA (regioni IT + paesi esteri) ×
+# alberghiero/extra, arrivi + presenze (dataset xzck-giqt, 2019-2024). A differenza di ASTAT
+# ha il MERCATO ESTERO mensile a livello sub-nazionale (colonna provenienza_turisti).
+# API SODA: JSON/CSV con $select/$where/$limit, nessun proxy/auth.
+# --------------------------------------------------------------------------
+LOMB_SOCRATA = "https://www.dati.lombardia.it/resource/xzck-giqt.json"
+LOMB_CACHE = "lombardia_flussi_provincia_mese.csv"
+LOMB_FIELDS = ["anno", "provincia", "mese", "provenienza_turisti",
+               "arrivi_totale", "presenze_totale",
+               "arrivi_alberghiero", "presenze_alberghiero",
+               "arrivi_extra_alberghiero", "presenze_extra_alberghiero"]
+# normalizzazioni note (dati sporchi alla fonte)
+_LOMB_FIX_PROV = {"Monza Brianza": "Monza e Brianza", "Monza E Brianza": "Monza e Brianza"}
+_LOMB_FIX_PROV_NIENZA = {"Austrialia": "Australia", "Israel": "Israele"}
+
+
+def _lomb_get(params: dict, timeout: int = 90) -> list[dict]:
+    import urllib.parse
+    url = LOMB_SOCRATA + "?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0", "Accept": "application/json"})
+    raw = urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "replace")
+    return json.loads(raw)
+
+
+def fetch_lombardia_flussi(cache_dir: str = ".cache", timeout: int = 120,
+                           refresh: bool = False) -> pd.DataFrame:
+    """Flussi turistici MENSILI per provincia lombarda × provenienza × categoria (Socrata).
+    Colonne LOMB_FIELDS, valori numerici come float. Cache CSV. Scarica a pagine da 50k."""
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, LOMB_CACHE)
+    if os.path.exists(cache_path) and not refresh:
+        return pd.read_csv(cache_path)
+    rows, offset, page = [], 0, 50000
+    while True:
+        batch = _lomb_get({"$limit": page, "$offset": offset,
+                           "$order": "anno,provincia,mese"}, timeout)
+        rows.extend(batch)
+        if len(batch) < page:
+            break
+        offset += page
+    df = pd.DataFrame(rows)
+    for c in LOMB_FIELDS:
+        if c not in df.columns:
+            df[c] = None
+    df = df[LOMB_FIELDS].copy()
+    df["provincia"] = df["provincia"].replace(_LOMB_FIX_PROV)
+    df["provenienza_turisti"] = df["provenienza_turisti"].replace(_LOMB_FIX_PROV_NIENZA)
+    for c in [c for c in LOMB_FIELDS if c.startswith(("arrivi", "presenze"))]:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    df.to_csv(cache_path, index=False)
+    return df
+
+
+def fetch_lombardia_latest_year(timeout: int = 60) -> int | None:
+    """Anno più recente disponibile alla fonte (probe leggero)."""
+    try:
+        r = _lomb_get({"$select": "max(anno) as b"}, timeout)
+        return int(r[0]["b"]) if r and r[0].get("b") else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+# --------------------------------------------------------------------------
 # WIKIPEDIA — pageviews mensili per articolo (secondo segnale anticipatore, per lingua).
 # Wikimedia REST: filtro agent='user' (esclude bot) e titolo articolo per lingua
 # (la regione in tedesco/olandese è 'Abruzzen'). UA obbligatorio.

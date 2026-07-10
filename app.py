@@ -1474,6 +1474,44 @@ def _render_astat_local_block():
                "(categorie di dettaglio, esclusi gli aggregati per non contare due volte).")
 
 
+def _render_lombardia_local_block():
+    """Dettaglio locale per la Lombardia (Open Data Lombardia): flussi mensili per provincia +
+    mercato estero mensile sub-nazionale. Numerazione: Grafico 4-5, Tabella 2."""
+    provs = ["Tutta la Lombardia"] + L.lomb_provinces()
+    prov = st.selectbox("Provincia", provs, key="lomb_prov")
+    scope = None if prov == "Tutta la Lombardia" else prov
+    k = L.lomb_kpi(scope)
+    if not k.get("anno"):
+        st.warning("Cache Open Data Lombardia non disponibile. Lancia l'aggiornamento (fonte «Lombardia»).")
+        return
+    L.kpi_row([
+        {"label": f"Presenze {k['anno']}", "value": _it_num(k["presenze"])},
+        {"label": f"Arrivi {k['anno']}", "value": _it_num(k["arrivi"])},
+        {"label": "Quota estero", "value": f"{k['quota_estero']:.0f}%" if k["quota_estero"] is not None else "—",
+         "hint": "su presenze totali"},
+        {"label": "Top mercato estero", "value": k.get("top_estero") or "—"},
+    ])
+    st.markdown(f"**Grafico 4 — Presenze mensili ({prov})**")
+    fig = L.chart_lomb_flussi_mensili(scope)
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+    st.markdown(f"**Grafico 5 — Top mercati esteri ({prov}, {k['anno']})**")
+    fig = L.chart_lomb_markets(scope, year=k["anno"], top=12)
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+    st.markdown("**Tabella 2 — Mercati esteri per presenze**")
+    mk = L.lomb_markets_table(scope, year=k["anno"], top=15)
+    if mk is not None and not mk.empty:
+        show = mk.rename(columns={"nome": "Mercato estero", "presenze": "Presenze",
+                                  "arrivi": "Arrivi", "quota": "Quota %"}).copy()
+        show["Presenze"] = show["Presenze"].map(_it_num)
+        show["Arrivi"] = show["Arrivi"].map(_it_num)
+        show["Quota %"] = show["Quota %"].map(lambda v: f"{v:.1f}%")
+        st.dataframe(show, hide_index=True, use_container_width=True)
+    st.caption("Fonte: Open Data Regione Lombardia (Socrata, dataset xzck-giqt) · mensile 2019-2024 · "
+               "provenienza = paese estero (escluse regioni italiane e «non specificato»).")
+
+
 def page_base_dati_regionale():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     info = L.RG.region(code)
@@ -1545,9 +1583,14 @@ def page_base_dati_regionale():
         st.caption("**Provincia di Bolzano · ASTAT** — flussi mensili recenti + lato offerta per categoria, "
                    "dettaglio che le basi ISTAT nazionali non danno.")
         _render_astat_local_block()
+    elif code == "ITC4":
+        st.caption("**Open Data Lombardia** — flussi mensili per **provincia** e, novità, il **mercato estero "
+                   "mensile** a livello sub-nazionale (che ISTAT dà solo annuale).")
+        _render_lombardia_local_block()
     else:
-        st.info("Per questa regione non è ancora agganciata una fonte locale ricca (mensile + lato offerta). "
-                "Oggi è disponibile per la **Provincia di Bolzano** (ASTAT). Prossimo candidato: **Trentino / ISPAT**.")
+        st.info("Per questa regione non è ancora agganciata una fonte locale ricca (mensile + dettaglio). "
+                "Oggi disponibili: **Bolzano** (ASTAT) e **Lombardia** (Open Data Lombardia). "
+                "Prossimi candidati con feed pulito: **Toscana**, **Sardegna**.")
 
 
 # ──────────────────── NAVIGAZIONE A DUE PILASTRI (st.navigation) + DISPATCH ────────────────────

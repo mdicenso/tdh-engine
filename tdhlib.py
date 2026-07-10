@@ -1057,11 +1057,18 @@ def region_data_catalog(code: str, ov: dict | None = None) -> list[dict]:
         add("Eurostat · avia_par", "Passeggeri voli diretti per mercato", "annuale",
             "—", "nessun aeroporto mappato", "🔴")
 
-    # 7) Fonte LOCALE complementare (solo dove esiste) — ASTAT per la prov. di Bolzano
+    # 7) Fonte LOCALE complementare (solo dove esiste)
     if code == "ITD1" and os.path.exists(".cache/astat_bolzano_flussi_mensili.csv"):
         r = _last_date_of(".cache/astat_bolzano_flussi_mensili.csv")
         add("ASTAT · Bolzano (LOCALE)", "Flussi mensili + capacità per categoria", "mensile",
             r.strftime("%Y-%m") if r is not None else "—", "provincia di Bolzano", "🟢")
+    elif code == "ITC4" and os.path.exists(_LOMB_PATH):
+        try:
+            yy = int(pd.read_csv(_LOMB_PATH, usecols=["anno"])["anno"].max())
+        except Exception:  # noqa: BLE001
+            yy = None
+        add("Open Data Lombardia (LOCALE)", "Flussi mensili per provincia × mercato estero", "mensile",
+            str(yy) if yy else "—", "12 province lombarde", "🟢")
     return rows
 
 
@@ -1078,6 +1085,126 @@ def chart_region_letti(code: str) -> go.Figure | None:
     fig.update_yaxes(title="posti letto")
     fig.update_xaxes(dtick=1, title=None)
     return _layout(fig, h=340)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# LOMBARDIA (Open Data Lombardia, Socrata) — fonte COMPLEMENTARE regionale (ITC4).
+#   flussi MENSILI per PROVINCIA × PROVENIENZA (regioni IT + paesi esteri) × categoria.
+#   Unico nel motore: MERCATO ESTERO MENSILE a livello sub-nazionale. [[tdh-engine-project]]
+# ════════════════════════════════════════════════════════════════════════════
+_LOMB_PATH = ".cache/lombardia_flussi_provincia_mese.csv"
+_LOMB_MESI = {"Gennaio": 1, "Febbraio": 2, "Marzo": 3, "Aprile": 4, "Maggio": 5, "Giugno": 6,
+              "Luglio": 7, "Agosto": 8, "Settembre": 9, "Ottobre": 10, "Novembre": 11, "Dicembre": 12}
+# provenienze italiane (regioni) e non specificate → NON sono "mercato estero"
+_LOMB_ITA = {"ABRUZZO", "BASILICATA", "BOLZANO - BOZEN", "CALABRIA", "CAMPANIA", "EMILIA-ROMAGNA",
+             "FRIULI-VENEZIA GIULIA", "LAZIO", "LIGURIA", "LOMBARDIA", "MARCHE", "MOLISE", "PIEMONTE",
+             "PUGLIA", "SARDEGNA", "SICILIA", "TOSCANA", "TRENTO", "UMBRIA", "VALLE D'AOSTA", "VENETO"}
+_LOMB_UNSPEC = {"Non specificato", "Regione non specificata", "Paese estero non specificato"}
+
+
+def _lomb_is_foreign(p: str) -> bool:
+    """True se la provenienza è un PAESE ESTERO (non regione italiana né 'non specificato')."""
+    return p not in _LOMB_ITA and p not in _LOMB_UNSPEC
+
+
+@st.cache_data(show_spinner=False)
+def lomb_flussi() -> pd.DataFrame:
+    """Flussi mensili Lombardia: provincia·mese·provenienza·arrivi·presenze + colonna date.
+    Vuoto se cache assente."""
+    if not os.path.exists(_LOMB_PATH):
+        return pd.DataFrame()
+    df = pd.read_csv(_LOMB_PATH)
+    df = df[df["mese"].isin(_LOMB_MESI)].copy()
+    df["m"] = df["mese"].map(_LOMB_MESI)
+    df["date"] = pd.to_datetime(dict(year=df["anno"], month=df["m"], day=1))
+    return df
+
+
+def lomb_provinces() -> list[str]:
+    df = lomb_flussi()
+    return sorted(df["provincia"].dropna().unique()) if not df.empty else []
+
+
+def _lomb_scope(prov: str | None):
+    """Sottoinsieme per provincia (o tutta la Lombardia se prov None/'Tutta la Lombardia')."""
+    df = lomb_flussi()
+    if df.empty:
+        return df
+    if prov and prov != "Tutta la Lombardia":
+        df = df[df["provincia"] == prov]
+    return df
+
+
+def lomb_monthly_totals(prov: str | None = None) -> pd.DataFrame:
+    """Totale mensile (tutte le provenienze) per provincia/regione: date·arrivi·presenze."""
+    df = _lomb_scope(prov)
+    if df.empty:
+        return df
+    g = df.groupby("date").agg(arrivi=("arrivi_totale", "sum"),
+                               presenze=("presenze_totale", "sum")).reset_index()
+    return g.sort_values("date")
+
+
+def lomb_markets_table(prov: str | None = None, year: int | None = None,
+                       top: int | None = 12) -> pd.DataFrame:
+    """Mercati ESTERI per provincia/anno: nome·presenze·arrivi·quota% (sul totale estero)."""
+    df = _lomb_scope(prov)
+    if df.empty:
+        return df
+    if year is None:
+        year = int(df["anno"].max())
+    d = df[(df["anno"] == year) & (df["provenienza_turisti"].map(_lomb_is_foreign))]
+    if d.empty:
+        return d
+    g = d.groupby("provenienza_turisti").agg(presenze=("presenze_totale", "sum"),
+                                             arrivi=("arrivi_totale", "sum")).reset_index()
+    g = g.rename(columns={"provenienza_turisti": "nome"}).sort_values("presenze", ascending=False)
+    tot = g["presenze"].sum()
+    g["quota"] = (g["presenze"] / tot * 100) if tot else 0.0
+    return g.head(top).reset_index(drop=True) if top else g.reset_index(drop=True)
+
+
+def lomb_kpi(prov: str | None = None) -> dict:
+    """KPI per l'header del blocco: presenze/arrivi ultimo anno, quota estero, top mercato estero."""
+    df = _lomb_scope(prov)
+    out = {"anno": None, "presenze": None, "arrivi": None, "quota_estero": None, "top_estero": None}
+    if df.empty:
+        return out
+    y = int(df["anno"].max()); out["anno"] = y
+    dy = df[df["anno"] == y]
+    out["presenze"] = float(dy["presenze_totale"].sum())
+    out["arrivi"] = float(dy["arrivi_totale"].sum())
+    est = dy[dy["provenienza_turisti"].map(_lomb_is_foreign)]["presenze_totale"].sum()
+    out["quota_estero"] = (est / out["presenze"] * 100) if out["presenze"] else None
+    mk = lomb_markets_table(prov, year=y, top=1)
+    if mk is not None and not mk.empty:
+        out["top_estero"] = f"{mk['nome'].iloc[0]} ({mk['quota'].iloc[0]:.0f}%)"
+    return out
+
+
+def chart_lomb_flussi_mensili(prov: str | None = None) -> go.Figure | None:
+    g = lomb_monthly_totals(prov)
+    if g is None or g.empty:
+        return None
+    fig = go.Figure(go.Scatter(x=g["date"], y=g["presenze"], mode="lines",
+                               line=dict(color="#0e7490", width=2),
+                               fill="tozeroy", fillcolor="rgba(14,116,144,0.08)",
+                               hovertemplate="%{x|%m/%Y}<br>%{y:,.0f} presenze<extra></extra>"))
+    fig.update_yaxes(title="presenze (mese)")
+    fig.update_xaxes(title=None)
+    return _layout(fig, h=340)
+
+
+def chart_lomb_markets(prov: str | None = None, year: int | None = None,
+                       top: int = 12) -> go.Figure | None:
+    d = lomb_markets_table(prov, year=year, top=top)
+    if d is None or d.empty:
+        return None
+    d = d.sort_values("presenze")
+    fig = go.Figure(go.Bar(x=d["presenze"], y=d["nome"], orientation="h", marker_color="#f59e0b",
+                           hovertemplate="<b>%{y}</b><br>%{x:,.0f} presenze<extra></extra>"))
+    fig.update_xaxes(title="presenze di turisti esteri")
+    return _layout(fig, h=420)
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -1881,6 +2008,13 @@ def builtin_sources() -> list[dict]:
                          "Bolzano (fonte COMPLEMENTARE, non multi-regione, senza paese di origine)",
                          "ASTAT · Provincia autonoma di Bolzano", "https://astat.provincia.bz.it/",
                          "mensile", A, (_csv_rows(astat_f) or 0) + (_csv_rows(astat_c) or 0), _fmt_mtime(astat_f)))
+    lomb = ".cache/lombardia_flussi_provincia_mese.csv"
+    if os.path.exists(lomb):
+        rows.append(_row("Lombardia · flussi provincia × mercato (Open Data)",
+                         "Arrivi/presenze mensili per provincia lombarda e paese estero di origine "
+                         "(fonte COMPLEMENTARE, 12 province, 2019-2024)",
+                         "Regione Lombardia · Open Data (Socrata)", "https://www.dati.lombardia.it/",
+                         "mensile", A, _csv_rows(lomb), _fmt_mtime(lomb)))
     trends = sorted(glob.glob(".cache/trends_*.csv"))
     if trends:
         _geos = [mk.code for mk in DEFAULT_MARKETS]
@@ -2107,6 +2241,7 @@ def coverage_matrix() -> list[dict]:
         ("Presenze per PAESE di origine", "✅", "✅", "✅", "ISTAT DCSC_TUR_9", "✅ risolto: annuale dal 2008 per regione E provincia (cube _9); il mensile per-paese resta solo nazionale"),
         ("Capacità ricettiva (posti letto)", "✅", "✅", "🟡", "ISTAT DCSC_TUR_1", "regionale ok; provinciale solo alcune"),
         ("Flussi MENSILI per categoria ricettiva", "❌", "❌", "🟡", "ASTAT (Bolzano)", "🟡 solo Alto Adige: arrivi/presenze mensili + esercizi/posti letto per stelle/categoria (fonte provinciale complementare)"),
+        ("Mercato ESTERO mensile sub-nazionale", "❌", "🟡", "🟡", "Open Data Lombardia", "🟡 solo Lombardia (12 province): presenze/arrivi mensili per paese estero di origine; ISTAT lo dà solo annuale (_9)"),
         ("Anagrafica strutture ricettive", "🟡", "❌", "❌", "registri regionali", "🔴 BUCO: registri non federati come open data"),
         ("Spesa turistica per paese", "✅", "🟡", "🟡", "BdI + stima da _9", "regionale/provinciale STIMATA (presenze _9 × spesa/notte BdI); dato diretto solo TOTALE regionale (BdI TS2)"),
         ("Accessibilità aerea (voli/pax)", "✅", "✅", "—", "Eurostat avia_par", "regionale via mappa regione→aeroporto"),
@@ -3265,6 +3400,9 @@ def series_coverage() -> list[dict]:
     r = rng(".cache/astat_bolzano_flussi_mensili.csv")
     if r:
         cov.append({"serie": "Alto Adige flussi (ASTAT)", "start": r[0], "end": r[1], "freq": "mensile"})
+    r = rng(".cache/lombardia_flussi_provincia_mese.csv")
+    if r:
+        cov.append({"serie": "Lombardia flussi×mercato (Open Data)", "start": r[0], "end": r[1], "freq": "mensile"})
     return cov
 
 
