@@ -978,6 +978,108 @@ def chart_astat_capacita(year: int | None = None) -> go.Figure | None:
     return _layout(fig, h=380)
 
 
+def _last_date_of(path: str):
+    """Ultimo timestamp della colonna 'date' di un CSV in cache. None se assente/vuoto."""
+    try:
+        d = pd.read_csv(path, usecols=["date"])
+        t = pd.to_datetime(d["date"], errors="coerce").dropna()
+        return t.max() if len(t) else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def region_data_catalog(code: str, ov: dict | None = None) -> list[dict]:
+    """Catalogo delle fonti che coprono la regione selezionata (OFFLINE dove possibile).
+    Righe: Fonte·Dato·Granularità·Ultimo·Copertura·Stato (🟢/🟡/🔴). `ov` = region_overview
+    già calcolato per lo snapshot (evita di rifare le chiamate ISTAT live)."""
+    area = RG.istat_area(code)
+    rows: list[dict] = []
+
+    def add(fonte, dato, gran, ultimo, cov, stato):
+        rows.append({"Fonte": fonte, "Dato": dato, "Granularità": gran,
+                     "Ultimo": ultimo, "Copertura": cov, "Stato": stato})
+
+    # 1) ISTAT presenze totali/straniere (mensile, region-aware, via live) — riuso `ov`
+    last_pres, nrp = "—", "tutte le regioni"
+    if ov is not None and isinstance(ov.get("presenze"), pd.DataFrame) and not ov["presenze"].empty:
+        df = ov["presenze"]
+        obs = df.dropna(subset=["stranieri"]) if "stranieri" in df else df
+        if not obs.empty:
+            last_pres = obs["date"].max().strftime("%Y-%m")
+    add("ISTAT · Movimento clienti (_7)", "Presenze totali e straniere", "mensile",
+        last_pres, nrp, "🟢")
+
+    # 2) ISTAT esteri per singolo PAESE × territorio (_9, annuale, OFFLINE)
+    d9 = estero_regione_long()
+    if d9 is not None and (s := d9[d9["area"] == area]) is not None and not s.empty:
+        paesi = s[~s["country"].map(_tur9_is_aggregate)]["country"].nunique()
+        add("ISTAT · _9 (paese × territorio)", "Esteri per singolo paese", "annuale",
+            str(int(s["anno"].max())), f"{paesi} paesi", "🟢")
+    else:
+        add("ISTAT · _9 (paese × territorio)", "Esteri per singolo paese", "annuale",
+            "—", "non per questo territorio", "🔴")
+
+    # 3) ISTAT capacità (posti letto, annuale, via live) — riuso `ov`
+    cap_last = str(ov["anno_letti"]) if (ov and ov.get("anno_letti")) else "—"
+    add("ISTAT · Capacità esercizi", "Posti letto", "annuale", cap_last,
+        "regionale", "🟢" if cap_last != "—" else "🟡")
+
+    # 4) Banca d'Italia — spesa turisti stranieri (trimestrale, OFFLINE)
+    g = bdi_region_annual(code)
+    if g is not None and not g.empty:
+        add("Banca d'Italia · turismo int.", "Spesa turisti stranieri", "trimestrale",
+            str(int(g["anno"].max())), "totale regione", "🟢")
+    else:
+        add("Banca d'Italia · turismo int.", "Spesa turisti stranieri", "trimestrale",
+            "—", "—", "🔴")
+
+    # 5) Google Trends (mensile, OFFLINE — conta i file presenti per la regione)
+    kw = _safe_kw(RG.region(code)["trends_kw"])
+    geos = [mk.code for mk in DEFAULT_MARKETS]
+    present = [p for p in (f".cache/trends_{kw}_{gg}.csv" for gg in geos) if os.path.exists(p)]
+    tlast = "—"
+    if present:
+        r = _last_date_of(present[0])
+        tlast = r.strftime("%Y-%m") if r is not None else "—"
+    add("Google Trends", "Interesse di ricerca per mercato", "mensile", tlast,
+        f"{len(present)}/{len(geos)} mercati",
+        "🟢" if len(present) == len(geos) else ("🟡" if present else "🔴"))
+
+    # 6) Eurostat — connettività aerea (annuale, OFFLINE file-check)
+    airports = RG.region(code)["airports"]
+    if airports and os.path.exists(f".cache/conn_{code}.csv"):
+        add("Eurostat · avia_par", "Passeggeri voli diretti per mercato", "annuale",
+            "2024", ", ".join(airports), "🟢")
+    elif airports:
+        add("Eurostat · avia_par", "Passeggeri voli diretti per mercato", "annuale",
+            "—", ", ".join(airports), "🟡")
+    else:
+        add("Eurostat · avia_par", "Passeggeri voli diretti per mercato", "annuale",
+            "—", "nessun aeroporto mappato", "🔴")
+
+    # 7) Fonte LOCALE complementare (solo dove esiste) — ASTAT per la prov. di Bolzano
+    if code == "ITD1" and os.path.exists(".cache/astat_bolzano_flussi_mensili.csv"):
+        r = _last_date_of(".cache/astat_bolzano_flussi_mensili.csv")
+        add("ASTAT · Bolzano (LOCALE)", "Flussi mensili + capacità per categoria", "mensile",
+            r.strftime("%Y-%m") if r is not None else "—", "provincia di Bolzano", "🟢")
+    return rows
+
+
+def chart_region_letti(code: str) -> go.Figure | None:
+    """Posti letto per anno della regione (ISTAT capacità). None se non disponibile."""
+    panel = region_annual_panel(code)
+    if panel is None or panel.empty or "letti" not in panel.columns:
+        return None
+    d = panel["letti"].dropna()
+    if d.empty:
+        return None
+    fig = go.Figure(go.Bar(x=d.index.astype(int), y=d.values, marker_color="#16a34a",
+                           hovertemplate="<b>%{x}</b><br>%{y:,.0f} posti letto<extra></extra>"))
+    fig.update_yaxes(title="posti letto")
+    fig.update_xaxes(dtick=1, title=None)
+    return _layout(fig, h=340)
+
+
 # ════════════════════════════════════════════════════════════════════════════
 # MERCATI D'ORIGINE — i 10 paesi da cui arrivano i turisti stranieri.
 #   spesa in Italia + n. turisti (Banca d'Italia, TS1 per paese, completi al 2025)
