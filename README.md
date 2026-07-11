@@ -209,9 +209,10 @@ numerazione unica per-pagina:
 2. **Sintesi ISTAT** (KPI + *Grafico 1* presenze mensili tot/straniere, *Grafico 2* top mercati esteri
    da `_9`, *Grafico 3* posti letto per anno via `chart_region_letti`).
 3. **Dettaglio locale**: fonte territoriale ricca dove esiste — **Provincia di Bolzano `ITD1`** via
-   **ASTAT** (*Grafico 4-6 + Tabella 2*) e **Lombardia `ITC4`** via **Open Data Lombardia**
-   (*Grafico 4-5 + Tabella 2*, con selettore provincia); per le altre regioni un avviso (candidati:
-   Toscana, Sardegna). Robusta ai down ISTAT: se `region_overview` fallisce, catalogo + fonti offline
+   **ASTAT** (*Grafico 4-6 + Tabella 2*), **Lombardia `ITC4`** via **Open Data Lombardia**
+   (*Grafico 4-5 + Tabella 2*, con selettore provincia) e **Toscana `ITE1`** via **Open Data Regione
+   Toscana** (*Grafico 4-6 + Tabella 2*, con selettore provincia); per le altre regioni un avviso
+   (candidato: Sardegna). Robusta ai down ISTAT: se `region_overview` fallisce, catalogo + fonti offline
    restano visibili.
 
 **Fonte ASTAT — Alto Adige/Bolzano (COMPLEMENTARE)**: portale SDMX ASTAT
@@ -245,9 +246,27 @@ paese estero (esclude regioni italiane e «non specificato»). Nel blocco locale
 Regionale c'è un **selettore provincia** (o tutta la Lombardia). Registrata in Gestione dati
 (`builtin_sources`, `series_coverage`) e in matrice (riga *Mercato ESTERO mensile sub-nazionale*, 🟡 solo
 Lombardia). **Auto-refresh**: fonte `lombardia` in `update_check.py`, cadenza annuale, **skip
-intelligente** (riscarica solo se Socrata pubblica un anno più recente). Prossimi candidati con feed
-pulito: **Toscana** (dati.toscana.it CKAN/CSV) e **Sardegna** (osservatorio, CSV CC0); **Trentino/ISPAT**
-scartato (solo HTML da scrapare, nessun export).
+intelligente** (riscarica solo se Socrata pubblica un anno più recente).
+
+**Fonte Open Data Regione Toscana (COMPLEMENTARE, regione `ITE1`)**: portale CKAN `dati.toscana.it`,
+serie *"Movimento dei clienti e struttura dell'offerta ricettiva. Toscana. Anno YYYY"*. Dà una cosa che
+nessun'altra fonte del motore ha: il **movimento a livello COMUNALE** — arrivi/presenze **annuali per
+~272 comuni × ambito turistico**, con split **italiani/stranieri**, **2018-2025** (org. Regione Toscana,
+escluse le locazioni brevi). Struttura CKAN a **un dataset per anno** (URL a UUID casuale): il reader li
+**enumera via `package_search`** e per ogni anno prende la risorsa CSV *movimento*. I file annuali hanno
+**formati eterogenei** — *wide* (2024-25, colonne `arrivi_italiani/stranieri`), *long* con `;` (2018-22,
+`Provenienza`=Italiani/Stranieri o colonna `Italiano-Straniero`=ITA/STR) e *long* con **TAB** (2023,
+`ProvenienzaMacro`=ITA/STR) — normalizzati a uno schema unico via `_tosc_canonkey` (mappa le intestazioni)
++ sniffing del separatore; encoding **cp1252**. Reader in `real_sources`: `fetch_toscana_movimento`
+(→ `.cache/toscana_movimento_comune_anno.csv`, 2.170 righe), `_tosc_movimento_urls`, `_tosc_parse`,
+`fetch_toscana_latest_year`. Helper in `tdhlib`: `tosc_movimento`, `tosc_provinces`, `tosc_yearly_totals`,
+`tosc_top_comuni`, `tosc_ambiti`, `tosc_kpi`, `chart_tosc_yearly`, `chart_tosc_top_comuni`,
+`chart_tosc_ambiti`. Nel blocco locale della pagina Base Dati Regionale c'è un **selettore provincia** (o
+tutta la Toscana). Registrata in Gestione dati (`builtin_sources`, `series_coverage`) e in matrice (riga
+*Movimento a livello COMUNALE*, 🟡 solo Toscana). **Auto-refresh**: fonte `toscana` in `update_check.py`,
+cadenza annuale, **skip intelligente** (riscarica solo se CKAN pubblica un anno più recente). Prossimo
+candidato con feed pulito: **Sardegna** (osservatorio, CSV CC0); **Trentino/ISPAT** scartato (solo HTML
+da scrapare, nessun export).
 
 > Regola di progetto: ad ogni modifica che cambia comportamento/metodo, aggiornare questo README.
 

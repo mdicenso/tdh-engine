@@ -1512,6 +1512,49 @@ def _render_lombardia_local_block():
                "provenienza = paese estero (escluse regioni italiane e «non specificato»).")
 
 
+def _render_toscana_local_block():
+    """Dettaglio locale per la Toscana (Open Data Regione Toscana): movimento ANNUALE per
+    COMUNE × ambito, split italiani/stranieri. Numerazione: Grafico 4-6, Tabella 2."""
+    provs = ["Tutta la Toscana"] + L.tosc_provinces()
+    prov = st.selectbox("Provincia", provs, key="tosc_prov")
+    scope = None if prov == "Tutta la Toscana" else prov
+    k = L.tosc_kpi(scope)
+    if not k.get("anno"):
+        st.warning("Cache Open Data Toscana non disponibile. Lancia l'aggiornamento (fonte «Toscana»).")
+        return
+    L.kpi_row([
+        {"label": f"Presenze {k['anno']}", "value": _it_num(k["presenze"])},
+        {"label": f"Arrivi {k['anno']}", "value": _it_num(k["arrivi"])},
+        {"label": "Quota estero", "value": f"{k['quota_estero']:.0f}%" if k["quota_estero"] is not None else "—",
+         "hint": "su presenze totali"},
+        {"label": "Comune n.1", "value": k.get("top_comune") or "—", "hint": "quota su presenze"},
+    ])
+    st.markdown(f"**Grafico 4 — Presenze annuali per origine ({prov})**")
+    fig = L.chart_tosc_yearly(scope)
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+    st.markdown(f"**Grafico 5 — Comuni per presenze ({prov}, {k['anno']})**")
+    fig = L.chart_tosc_top_comuni(scope, year=k["anno"], top=12)
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+    st.markdown(f"**Grafico 6 — Presenze per ambito turistico ({prov}, {k['anno']})**")
+    fig = L.chart_tosc_ambiti(scope, year=k["anno"], top=12)
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+    st.markdown("**Tabella 2 — Comuni per presenze**")
+    tc = L.tosc_top_comuni(scope, year=k["anno"], top=20)
+    if tc is not None and not tc.empty:
+        show = tc.rename(columns={"nome": "Comune", "presenze": "Presenze", "arrivi": "Arrivi",
+                                  "quota_estero": "Quota estero %", "quota": "Quota %"}).copy()
+        show["Presenze"] = show["Presenze"].map(_it_num)
+        show["Arrivi"] = show["Arrivi"].map(_it_num)
+        show["Quota estero %"] = show["Quota estero %"].map(lambda v: f"{v:.0f}%")
+        show["Quota %"] = show["Quota %"].map(lambda v: f"{v:.1f}%")
+        st.dataframe(show, hide_index=True, use_container_width=True)
+    st.caption("Fonte: Open Data Regione Toscana (CKAN, dati.toscana.it) · annuale 2018-2025 · "
+               "movimento per comune × ambito, split italiani/stranieri (escluse locazioni brevi).")
+
+
 def page_base_dati_regionale():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     info = L.RG.region(code)
@@ -1521,7 +1564,7 @@ def page_base_dati_regionale():
                            "dettaglio locale dove esiste una fonte territoriale ricca.")
     st.caption("Segue il **selettore di regione** in alto a sinistra. Il catalogo dice cosa abbiamo e "
                "con che granularità; la sintesi mostra la realtà ISTAT; il dettaglio locale aggiunge le "
-               "fonti provinciali (oggi: ASTAT per Bolzano).")
+               "fonti territoriali (oggi: ASTAT/Bolzano, Open Data Lombardia, Open Data Toscana).")
 
     # Snapshot ISTAT (chiamate live): se ISTAT è giù, catalogo e dati offline restano comunque
     ov = None
@@ -1587,10 +1630,15 @@ def page_base_dati_regionale():
         st.caption("**Open Data Lombardia** — flussi mensili per **provincia** e, novità, il **mercato estero "
                    "mensile** a livello sub-nazionale (che ISTAT dà solo annuale).")
         _render_lombardia_local_block()
+    elif code == "ITE1":
+        st.caption("**Open Data Regione Toscana** — movimento clienti a livello **comunale** (~272 comuni) "
+                   "per ambito turistico, con split italiani/stranieri: un dettaglio sotto il livello "
+                   "provinciale che le basi ISTAT non danno.")
+        _render_toscana_local_block()
     else:
         st.info("Per questa regione non è ancora agganciata una fonte locale ricca (mensile + dettaglio). "
-                "Oggi disponibili: **Bolzano** (ASTAT) e **Lombardia** (Open Data Lombardia). "
-                "Prossimi candidati con feed pulito: **Toscana**, **Sardegna**.")
+                "Oggi disponibili: **Bolzano** (ASTAT), **Lombardia** e **Toscana** (Open Data regionali). "
+                "Prossimo candidato con feed pulito: **Sardegna**.")
 
 
 # ──────────────────── NAVIGAZIONE A DUE PILASTRI (st.navigation) + DISPATCH ────────────────────

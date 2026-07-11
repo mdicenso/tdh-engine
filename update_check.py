@@ -83,6 +83,8 @@ SOURCES = [
      "paths": [f"{CACHE}/astat_bolzano_flussi_mensili.csv"], "live": "astat"},
     {"key": "lombardia", "label": "Lombardia · flussi provincia × mercato (Open Data)", "cadence": "annuale",
      "paths": [f"{CACHE}/lombardia_flussi_provincia_mese.csv"], "live": "lombardia"},
+    {"key": "toscana", "label": "Toscana · movimento per comune (Open Data)", "cadence": "annuale",
+     "paths": [f"{CACHE}/toscana_movimento_comune_anno.csv"], "live": "toscana"},
     {"key": "wikipedia", "label": "Wikipedia pageviews", "cadence": "mensile",
      "paths": sorted(glob.glob(f"{CACHE}/wiki_*.csv")) or [f"{CACHE}/wiki_de.csv"], "live": "wikipedia"},
     {"key": "bdi", "label": "Spesa turisti (Banca d'Italia)", "cadence": "trimestrale",
@@ -159,6 +161,9 @@ def _fresh_last_period(source: dict) -> pd.Timestamp | None:
         return pd.Timestamp(f"{p}-01") if p else None
     if kind == "lombardia":  # probe leggero: anno più recente su Socrata
         y = RS.fetch_lombardia_latest_year()
+        return pd.Timestamp(f"{int(y)}-12-31") if y else None
+    if kind == "toscana":  # probe leggero: anno più recente dei dataset CKAN
+        y = RS.fetch_toscana_latest_year()
         return pd.Timestamp(f"{int(y)}-12-31") if y else None
     if kind == "ecb":
         df = RS.fetch_fx_monthly("USD")
@@ -277,6 +282,21 @@ def apply_update(key: str) -> dict:
                 return {"ok": True, "msg": f"già aggiornato (anno {cache_year}); nessun anno nuovo"}
             df = RS.fetch_lombardia_flussi(refresh=True)
             return {"ok": True, "msg": f"Lombardia aggiornata · fino al {int(pd.to_numeric(df['anno']).max())}"}
+        if kind == "toscana":
+            # dato annuale via CKAN: riscarica solo se è stato pubblicato un anno più recente
+            fresh = RS.fetch_toscana_latest_year()
+            cache_path = f"{CACHE}/toscana_movimento_comune_anno.csv"
+            cache_year = None
+            if os.path.exists(cache_path):
+                try:
+                    y = pd.to_numeric(pd.read_csv(cache_path, usecols=["anno"])["anno"], errors="coerce").dropna()
+                    cache_year = int(y.max()) if len(y) else None
+                except Exception:  # noqa: BLE001
+                    pass
+            if fresh and cache_year and cache_year >= fresh:
+                return {"ok": True, "msg": f"già aggiornato (anno {cache_year}); nessun anno nuovo"}
+            df = RS.fetch_toscana_movimento(refresh=True)
+            return {"ok": True, "msg": f"Toscana aggiornata · fino al {int(pd.to_numeric(df['anno']).max())}"}
         if kind == "ecb":
             return {"ok": True, "msg": "ECB è sempre live: nessuna cache da aggiornare"}
         return {"ok": False, "msg": "refresh non ancora disponibile per questa fonte (Fase 2)"}

@@ -1,0 +1,2171 @@
+anno,sigla_provincia,comune,cod_istat,ambito,arrivi_italiani,arrivi_stranieri,presenze_italiane,presenze_straniere
+2018,AR,Anghiari,51001,Valtiberina,5516,1824,11798,8165
+2018,AR,Arezzo,51002,Arezzo,138900,98551,241359,213917
+2018,AR,Badia Tedalda,51003,Valtiberina,819,80,3823,450
+2018,AR,Bibbiena,51004,Casentino,6837,1891,17421,9614
+2018,AR,Bucine,51005,Valdarno Aretino,3570,11346,21581,84806
+2018,AR,Capolona,51006,Arezzo,354,924,1168,6665
+2018,AR,Caprese Michelangelo,51007,Valtiberina,684,589,1698,3001
+2018,AR,Castel Focognano,51008,Casentino,41,170,85,1351
+2018,AR,Castel San Niccol?,51010,Casentino,475,776,848,4674
+2018,AR,Castelfranco Piandisco,51040,Valdarno Aretino,732,1549,3263,9879
+2018,AR,Castiglion Fibocchi,51011,Arezzo,186,887,503,5836
+2018,AR,Castiglion Fiorentino,51012,Valdichiana  Aretina,10909,20936,22555,62494
+2018,AR,Cavriglia,51013,Valdarno Aretino,5153,11068,14427,80488
+2018,AR,Chitignano,51014,Casentino,365,48,1202,147
+2018,AR,Chiusi della Verna,51015,Casentino,6942,3141,14876,5687
+2018,AR,Civitella in Val di Chiana,51016,Valdichiana  Aretina,3000,1864,6341,9999
+2018,AR,Cortona,51017,Valdichiana  Aretina,22512,29511,46187,144543
+2018,AR,Foiano della Chiana,51018,Valdichiana  Aretina,4272,3605,8371,18705
+2018,AR,Laterina Pergine Valdarno,51042,Valdarno Aretino,6487,7021,13176,26818
+2018,AR,Loro Ciuffenna,51020,Valdarno Aretino,1691,10092,3515,45185
+2018,AR,Lucignano,51021,Valdichiana  Aretina,1157,1521,4237,11532
+2018,AR,Marciano della Chiana,51022,Valdichiana  Aretina,118,236,626,1742
+2018,AR,Monte San Savino,51025,Valdichiana  Aretina,6797,4841,11819,19703
+2018,AR,Montemignaio,51023,Casentino,236,813,2843,3606
+2018,AR,Monterchi,51024,Valtiberina,65,202,250,1368
+2018,AR,Montevarchi,51026,Valdarno Aretino,13087,7223,32587,25492
+2018,AR,Ortignano Raggiolo,51027,Casentino,579,578,1311,5647
+2018,AR,Pieve Santo Stefano,51030,Valtiberina,6241,3399,13581,7308
+2018,AR,Poppi,51031,Casentino,17018,5644,44617,25606
+2018,AR,Pratovecchio Stia,51041,Casentino,4211,2159,8823,9598
+2018,AR,San Giovanni Valdarno,51033,Valdarno Aretino,1185,673,5444,4149
+2018,AR,Sansepolcro,51034,Valtiberina,21405,8407,41093,25375
+2018,AR,Sestino,51035,Valtiberina,114,94,284,782
+2018,AR,Subbiano,51037,Casentino,3372,2341,8929,12036
+2018,AR,Talla,51038,Casentino,772,40,2534,261
+2018,AR,Terranuova Bracciolini,51039,Valdarno Aretino,21236,11626,44868,27019
+2018,FI,Bagno a Ripoli,48001,Firenze e Area Fiorentina,10531,18627,42954,81178
+2018,FI,Barberino Val d'Elsa,48003,Chianti,9073,26189,19309,116933
+2018,FI,Barberino di Mugello,48002,Mugello,30621,14528,61845,35555
+2018,FI,Borgo San Lorenzo,48004,Mugello,13414,14176,28356,43565
+2018,FI,Calenzano,48005,Firenze e Area Fiorentina,59823,106697,127960,218487
+2018,FI,Campi Bisenzio,48006,Firenze e Area Fiorentina,43116,61148,144990,149535
+2018,FI,Capraia e Limite,48008,Empolese/Valdelsa,3345,2512,17422,14960
+2018,FI,Castelfiorentino,48010,Empolese/Valdelsa,4115,5671,14812,35594
+2018,FI,Cerreto Guidi,48011,Empolese/Valdelsa,1485,2539,10663,23509
+2018,FI,Certaldo,48012,Empolese/Valdelsa,8349,17083,19442,90472
+2018,FI,Dicomano,48013,Mugello,814,1672,3495,13958
+2018,FI,Empoli,48014,Empolese/Valdelsa,9036,3161,29217,20725
+2018,FI,Fiesole,48015,Firenze e Area Fiorentina,14988,36563,34596,118204
+2018,FI,Figline e Incisa Valdarno,48052,Firenze e Area Fiorentina,33084,60699,182171,440881
+2018,FI,Firenze,48017,Firenze e Area Fiorentina,1043395,2902056,2833148,7868192
+2018,FI,Firenzuola,48018,Mugello,4260,1605,12402,11418
+2018,FI,Fucecchio,48019,Empolese/Valdelsa,3898,3114,19121,15987
+2018,FI,Gambassi Terme,48020,Empolese/Valdelsa,6023,9759,13152,55719
+2018,FI,Greve in Chianti,48021,Chianti,8652,43029,25830,184852
+2018,FI,Impruneta,48022,Firenze e Area Fiorentina,15695,32967,45505,90994
+2018,FI,Lastra a Signa,48024,Firenze e Area Fiorentina,12274,10964,42090,40490
+2018,FI,Londa,48025,Firenze e Area Fiorentina,295,549,1751,3454
+2018,FI,Marradi,48026,Mugello,3296,1021,19241,8777
+2018,FI,Montaione,48027,Empolese/Valdelsa,12455,41394,36461,264618
+2018,FI,Montelupo Fiorentino,48028,Empolese/Valdelsa,4166,1721,10465,8186
+2018,FI,Montespertoli,48030,Empolese/Valdelsa,7725,18473,31545,121626
+2018,FI,Palazzuolo sul Senio,48031,Mugello,2845,1851,9993,14993
+2018,FI,Pelago,48032,Firenze e Area Fiorentina,3306,3029,18460,20055
+2018,FI,Pontassieve,48033,Firenze e Area Fiorentina,7759,53709,21011,92479
+2018,FI,Reggello,48035,Firenze e Area Fiorentina,17623,55181,48401,123704
+2018,FI,Rignano sull'Arno,48036,Firenze e Area Fiorentina,5011,21123,12819,78640
+2018,FI,Rufina,48037,Firenze e Area Fiorentina,913,1096,3309,5306
+2018,FI,San Casciano in Val di Pesa,48038,Chianti,11774,29870,37671,127112
+2018,FI,San Godenzo,48039,Mugello,2187,371,7315,2565
+2018,FI,Scandicci,48041,Firenze e Area Fiorentina,11816,4809,36247,19415
+2018,FI,Scarperia e San Piero,48053,Mugello,20608,13763,50327,60807
+2018,FI,Sesto Fiorentino,48043,Firenze e Area Fiorentina,37339,61902,160997,232841
+2018,FI,Signa,48044,Firenze e Area Fiorentina,13812,39350,40397,51790
+2018,FI,Tavarnelle Val di Pesa,48045,Chianti,11781,29140,29880,134748
+2018,FI,Vaglia,48046,Firenze e Area Fiorentina,5002,8171,21661,26171
+2018,FI,Vicchio,48049,Mugello,3047,4511,13210,24585
+2018,FI,Vinci,48050,Empolese/Valdelsa,12305,10148,27699,35461
+2018,GR,Arcidosso,53001,Amiata,2701,863,6816,3798
+2018,GR,Campagnatico,53002,Maremma,687,814,3374,6313
+2018,GR,Capalbio,53003,Maremma,32114,5652,125657,25408
+2018,GR,Castel del Piano,53004,Amiata,10913,2659,24071,8951
+2018,GR,Castell'Azzara,53005,Amiata,969,492,3328,3007
+2018,GR,Castiglione della Pescaia,53006,Maremma Area Nord,152726,73695,846886,514809
+2018,GR,Cinigiano,53007,Maremma,2448,4800,6833,19540
+2018,GR,Civitella Paganico,53008,Maremma,7543,6339,19571,23915
+2018,GR,Follonica,53009,Maremma Area Nord,76279,20085,446307,145889
+2018,GR,Gavorrano,53010,Maremma Area Nord,8278,9413,24564,59828
+2018,GR,Grosseto,53011,Maremma,213048,38511,919607,204853
+2018,GR,Isola del Giglio,53012,Maremma,17900,2018,69756,12441
+2018,GR,Magliano in Toscana,53013,Maremma,15274,5611,50644,30558
+2018,GR,Manciano,53014,Maremma,69221,14110,154978,41453
+2018,GR,Massa Marittima,53015,Maremma Area Nord,21045,16321,92400,102160
+2018,GR,Monte Argentario,53016,Maremma,41254,17941,128074,55539
+2018,GR,Monterotondo Marittimo,53027,Maremma Area Nord,1769,982,4927,6669
+2018,GR,Montieri,53017,Maremma Area Nord,1059,806,2992,5040
+2018,GR,Orbetello,53018,Maremma,175674,29779,970012,177613
+2018,GR,Pitigliano,53019,Maremma,10761,2963,19168,7245
+2018,GR,Roccalbegna,53020,Amiata,1207,483,2533,2566
+2018,GR,Roccastrada,53021,Maremma Area Nord,5780,4018,19358,23833
+2018,GR,Santa Fiora,53022,Amiata,1563,306,4309,2032
+2018,GR,Scansano,53023,Maremma,7840,2559,22463,15360
+2018,GR,Scarlino,53024,Maremma Area Nord,35618,11435,185814,87265
+2018,GR,Seggiano,53025,Amiata,2000,1459,4486,6421
+2018,GR,Semproniano,53028,Maremma,6265,1017,13618,3120
+2018,GR,Sorano,53026,Maremma,14300,4969,32649,18719
+2018,LI,Bibbona,49001,Costa degli Etruschi,99895,55497,721877,403962
+2018,LI,Campiglia Marittima,49002,Costa degli Etruschi,20681,8644,77978,57262
+2018,LI,Campo nell'Elba,49003,Isola Elba,58659,23021,352617,162071
+2018,LI,Capoliveri,49004,Isola Elba,83106,49295,563516,404839
+2018,LI,Capraia Isola,49005,Livorno,5673,406,20240,1869
+2018,LI,Castagneto Carducci,49006,Costa degli Etruschi,71639,54018,465750,426408
+2018,LI,Cecina,49007,Costa degli Etruschi,66772,26721,414274,212287
+2018,LI,Collesalvetti,49008,Livorno,8601,5830,19735,11542
+2018,LI,Livorno,49009,Livorno,98714,70698,189486,158238
+2018,LI,Marciana,49010,Isola Elba,28353,13672,146663,74748
+2018,LI,Marciana Marina,49011,Isola Elba,16773,7957,66858,28123
+2018,LI,Piombino,49012,Costa degli Etruschi,119991,30736,613649,191344
+2018,LI,Porto Azzurro,49013,Isola Elba,22002,9822,147613,67266
+2018,LI,Portoferraio,49014,Isola Elba,63833,41146,302380,242560
+2018,LI,Rio,49021,Isola Elba,25311,8825,155897,63830
+2018,LI,Rosignano Marittimo,49017,Costa degli Etruschi,63011,46935,310708,310116
+2018,LI,San Vincenzo,49018,Costa degli Etruschi,85959,78621,465887,679904
+2018,LI,Sassetta,49019,Costa degli Etruschi,4724,2189,8840,10771
+2018,LI,Suvereto,49020,Costa degli Etruschi,8134,4150,33777,30648
+2018,LU,Altopascio,46001,Piana di Lucca,14691,4172,35653,11721
+2018,LU,Bagni di Lucca,46002,Garfagnana e Media Valle del Serchio,6435,2450,13141,9713
+2018,LU,Barga,46003,Garfagnana e Media Valle del Serchio,13522,17278,39688,63409
+2018,LU,Borgo a Mozzano,46004,Garfagnana e Media Valle del Serchio,2474,1556,6273,7575
+2018,LU,Camaiore,46005,Versilia,85525,57500,338039,247439
+2018,LU,Camporgiano,46006,Garfagnana e Media Valle del Serchio,822,1203,1513,9360
+2018,LU,Capannori e Villa Basilica,46007+46034,Piana di Lucca,22474,15811,59529,62870
+2018,LU,Careggine,46008,Garfagnana e Media Valle del Serchio,987,157,2261,659
+2018,LU,Castelnuovo di Garfagnana,46009,Garfagnana e Media Valle del Serchio,7173,2452,15558,9835
+2018,LU,Castiglione di Garfagnana,46010,Garfagnana e Media Valle del Serchio,5004,824,12112,5199
+2018,LU,Coreglia Antelminelli,46011,Garfagnana e Media Valle del Serchio,601,2113,3580,14175
+2018,LU,Fabbriche di Vergemoli,46036,Garfagnana e Media Valle del Serchio,21,50,31,372
+2018,LU,Forte dei Marmi,46013,Versilia,64464,59400,182281,235331
+2018,LU,Fosciandora,46014,Garfagnana e Media Valle del Serchio,408,325,788,2387
+2018,LU,Gallicano,46015,Garfagnana e Media Valle del Serchio,1154,555,2697,3461
+2018,LU,Lucca,46017,Piana di Lucca,105080,144361,185196,335989
+2018,LU,Massarosa,46018,Versilia,6003,3433,15836,17530
+2018,LU,Minucciano,46019,Garfagnana e Media Valle del Serchio,2350,845,5582,4670
+2018,LU,Molazzana,46020,Garfagnana e Media Valle del Serchio,85,591,363,4831
+2018,LU,Montecarlo,46021,Piana di Lucca,3203,2289,9011,10935
+2018,LU,Pescaglia,46022,Garfagnana e Media Valle del Serchio,730,1084,2183,6552
+2018,LU,Piazza al Serchio,46023,Garfagnana e Media Valle del Serchio,392,376,667,2351
+2018,LU,Pietrasanta,46024,Versilia,72113,55561,286133,223526
+2018,LU,Pieve Fosciana,46025,Garfagnana e Media Valle del Serchio,900,1238,1978,7072
+2018,LU,Porcari,46026,Piana di Lucca,4385,570,13540,1490
+2018,LU,San Romano in Garfagnana,46027,Garfagnana e Media Valle del Serchio,623,228,1498,1784
+2018,LU,Seravezza,46028,Versilia,1692,463,7123,2157
+2018,LU,Sillano Giuncugnano,46037,Garfagnana e Media Valle del Serchio,1213,195,5100,546
+2018,LU,Stazzema,46030,Versilia,2083,145,3368,543
+2018,LU,Vagli Sotto,46031,Garfagnana e Media Valle del Serchio,527,536,1255,3002
+2018,LU,Viareggio,46033,Versilia,140292,95526,627301,409643
+2018,LU,Villa Collemandina,46035,Garfagnana e Media Valle del Serchio,3802,526,12213,3201
+2018,MS,Aulla,45001,Lunigiana,3945,1708,14845,4352
+2018,MS,Bagnone,45002,Lunigiana,922,170,1535,408
+2018,MS,Carrara,45003,Riviera Apuana,15477,5906,54990,17326
+2018,MS,Casola in Lunigiana,45004,Lunigiana,197,584,495,2934
+2018,MS,Comano,45005,Lunigiana,408,363,1113,1355
+2018,MS,Filattiera,45006,Lunigiana,288,797,513,2064
+2018,MS,Fivizzano,45007,Lunigiana,1635,1858,2996,6388
+2018,MS,Fosdinovo,45008,Lunigiana,2902,1230,7922,3000
+2018,MS,Licciana Nardi,45009,Lunigiana,3055,1751,5545,6375
+2018,MS,Massa,45010,Riviera Apuana,148455,47442,676041,166359
+2018,MS,Montignoso,45011,Riviera Apuana,13569,5638,51263,22047
+2018,MS,Mulazzo,45012,Lunigiana,3850,1837,8244,8534
+2018,MS,Podenzana,45013,Lunigiana,1330,436,2245,1010
+2018,MS,Pontremoli,45014,Lunigiana,4269,2463,8098,5641
+2018,MS,Tresana,45015,Lunigiana,436,148,1532,353
+2018,MS,Villafranca in Lunigiana,45016,Lunigiana,1874,1647,5089,3385
+2018,MS,Zeri,45017,Lunigiana,456,75,1304,120
+2018,PI,Bientina,50001,Terre di Pisa,10817,1011,21315,2424
+2018,PI,Buti,50002,Terre di Pisa,169,318,481,2216
+2018,PI,Calci,50003,Terre di Pisa,855,1453,2228,8825
+2018,PI,Calcinaia,50004,Terre di Pisa,2714,4989,5633,9899
+2018,PI,Capannoli,50005,Terre di Pisa,198,793,1067,5079
+2018,PI,Casale Marittimo,50006,Costa degli Etruschi,1562,8430,7240,87528
+2018,PI,Casciana Terme Lari,50040,Terre di Pisa,5717,7000,19538,30951
+2018,PI,Cascina,50008,Terre di Pisa,8288,13322,14547,17955
+2018,PI,Castelfranco di Sotto,50009,Terre di Pisa,292,1171,665,9302
+2018,PI,Castellina Marittima,50010,Costa degli Etruschi,4434,1409,9387,5566
+2018,PI,Castelnuovo di Val di Cecina,50011,Terre di Valdelsa ed Etruria Volterrana,1987,1563,6257,13336
+2018,PI,Chianni,50012,Terre di Pisa,676,1561,2647,11679
+2018,PI,Crespina Lorenzana,50041,Terre di Pisa,1457,1780,5153,11348
+2018,PI,Fauglia e Orciano Pisano,50014+50023,Terre di Pisa,2357,1441,6912,7807
+2018,PI,Guardistallo,50015,Costa degli Etruschi,2397,3379,17132,27486
+2018,PI,Lajatico,50016,Terre di Pisa,872,2073,2141,14695
+2018,PI,Montecatini Val di Cecina,50019,Terre di Valdelsa ed Etruria Volterrana,6578,8603,15973,45771
+2018,PI,Montescudaio,50020,Costa degli Etruschi,2366,6862,12706,62696
+2018,PI,Monteverdi Marittimo,50021,Terre di Valdelsa ed Etruria Volterrana,2003,1593,4672,8189
+2018,PI,Montopoli in Val d'Arno,50022,Terre di Pisa,2662,4860,7017,27616
+2018,PI,Palaia,50024,Terre di Pisa,3225,9241,21472,75451
+2018,PI,Peccioli,50025,Terre di Pisa,1521,3813,2943,23761
+2018,PI,Pisa,50026,Terre di Pisa,297547,516649,981782,959558
+2018,PI,Pomarance,50027,Terre di Valdelsa ed Etruria Volterrana,6254,5911,30846,37990
+2018,PI,Ponsacco,50028,Terre di Pisa,4327,2089,8562,8919
+2018,PI,Pontedera,50029,Terre di Pisa,16024,26685,29865,38355
+2018,PI,Riparbella,50030,Costa degli Etruschi,5482,7213,18678,54217
+2018,PI,San Giuliano Terme,50031,Terre di Pisa,21575,21382,284234,97513
+2018,PI,San Miniato,50032,Terre di Pisa,12001,10756,21103,32363
+2018,PI,Santa Croce sull'Arno,50033,Terre di Pisa,230,89,280,1493
+2018,PI,Santa Luce,50034,Costa degli Etruschi,3997,2628,12852,21641
+2018,PI,Santa Maria a Monte,50035,Terre di Pisa,1867,5857,8141,7280
+2018,PI,Terricciola,50036,Terre di Pisa,1732,4962,4497,30331
+2018,PI,Vecchiano,50037,Terre di Pisa,5865,15988,10221,22365
+2018,PI,Vicopisano,50038,Terre di Pisa,890,715,1826,3672
+2018,PI,Volterra,50039,Terre di Valdelsa ed Etruria Volterrana,46670,41706,95215,163170
+2018,PO,Cantagallo,100001,Prato e Val Bisenzio,705,185,1229,805
+2018,PO,Carmignano,100002,Prato e Val Bisenzio,10356,11259,19217,45248
+2018,PO,Montemurlo,100003,Prato e Val Bisenzio,886,481,8044,1846
+2018,PO,Poggio a Caiano,100004,Prato e Val Bisenzio,3570,6135,11683,12878
+2018,PO,Prato,100005,Prato e Val Bisenzio,73586,148909,184786,260523
+2018,PO,Vaiano,100006,Prato e Val Bisenzio,847,693,1644,3074
+2018,PO,Vernio,100007,Prato e Val Bisenzio,1211,233,5839,949
+2018,PT,Abetone Cutigliano,47023,Pistoia e Montagna Pistoiese,40845,2126,104384,6311
+2018,PT,Agliana,47002,Pistoia e Montagna Pistoiese,1781,199,4206,405
+2018,PT,Buggiano,47003,Valdinievole,904,2473,2300,9446
+2018,PT,Chiesina Uzzanese,47022,Valdinievole,30051,1849,35496,2939
+2018,PT,Lamporecchio,47005,Valdinievole,6413,13883,13443,88344
+2018,PT,Larciano,47006,Valdinievole,4619,4105,9395,13485
+2018,PT,Marliana,47007,Valdinievole,1028,867,2341,3422
+2018,PT,Massa e Cozzile,47008,Valdinievole,296,921,684,6541
+2018,PT,Monsummano Terme,47009,Valdinievole,9374,5693,19780,27076
+2018,PT,Montale,47010,Pistoia e Montagna Pistoiese,1939,507,4908,2249
+2018,PT,Montecatini Terme,47011,Valdinievole,197099,465647,472291,1236877
+2018,PT,Pescia,47012,Valdinievole,9564,16126,17994,48243
+2018,PT,Pieve a Nievole,47013,Valdinievole,3028,428,3473,2175
+2018,PT,Pistoia,47014,Pistoia e Montagna Pistoiese,38693,29775,74674,85215
+2018,PT,Ponte Buggianese,47016,Valdinievole,1263,658,2294,2079
+2018,PT,Quarrata,47017,Pistoia e Montagna Pistoiese,3075,1710,7188,6347
+2018,PT,Sambuca Pistoiese,47018,Pistoia e Montagna Pistoiese,378,13,1026,13
+2018,PT,San Marcello Piteglio,47024,Pistoia e Montagna Pistoiese,12537,2313,49355,13228
+2018,PT,Serravalle Pistoiese,47020,Pistoia e Montagna Pistoiese,12905,9933,35472,23087
+2018,PT,Uzzano,47021,Valdinievole,424,602,1135,3133
+2018,SI,Abbadia San Salvatore,52001,Amiata,25355,1087,74917,2537
+2018,SI,Asciano,52002,Terre di Siena,19830,22174,38337,72632
+2018,SI,Buonconvento,52003,Terre di Siena,4618,6077,17732,26143
+2018,SI,Casole d'Elsa,52004,Terre di Valdelsa ed Etruria Volterrana,7225,17471,22606,90091
+2018,SI,Castellina in Chianti,52005,Chianti,11313,35317,24194,141781
+2018,SI,Castelnuovo Berardenga,52006,Chianti,21293,35990,50164,120134
+2018,SI,Castiglione d'Orcia,52007,Val d'Orcia,13101,6508,30342,21704
+2018,SI,Cetona,52008,Valdichiana Senese,2167,1898,7261,12666
+2018,SI,Chianciano Terme,52009,Valdichiana Senese,160006,115809,407071,238367
+2018,SI,Chiusdino,52010,Terre di Siena,7293,13730,18586,89912
+2018,SI,Chiusi,52011,Valdichiana Senese,17841,14923,30194,28585
+2018,SI,Colle di Val d'Elsa,52012,Terre di Valdelsa ed Etruria Volterrana,22539,22329,47254,72274
+2018,SI,Gaiole in Chianti,52013,Chianti,7046,21320,13480,74775
+2018,SI,Montalcino,52037,Val d'Orcia,27436,48212,55870,141180
+2018,SI,Montepulciano,52015,Valdichiana Senese,46533,52902,90221,153420
+2018,SI,Monteriggioni,52016,Terre di Valdelsa ed Etruria Volterrana,36845,31449,66054,107320
+2018,SI,Monteroni d'Arbia,52017,Terre di Siena,8757,7617,19494,35401
+2018,SI,Monticiano,52018,Terre di Siena,2496,1903,5373,7824
+2018,SI,Murlo,52019,Terre di Siena,8836,12891,17568,46790
+2018,SI,Piancastagnaio,52020,Amiata,1941,314,5909,1371
+2018,SI,Pienza,52021,Val d'Orcia,25029,37693,53069,101729
+2018,SI,Poggibonsi,52022,Terre di Valdelsa ed Etruria Volterrana,34230,39619,66848,102905
+2018,SI,Radda in Chianti,52023,Chianti,12022,24898,22277,85167
+2018,SI,Radicofani,52024,Val d'Orcia,3672,2786,7972,10677
+2018,SI,Radicondoli,52025,Terre di Valdelsa ed Etruria Volterrana,653,3249,2265,24546
+2018,SI,Rapolano Terme,52026,Terre di Siena,34097,9072,75496,38605
+2018,SI,San Casciano dei Bagni,52027,Valdichiana Senese,15421,5844,34375,33865
+2018,SI,San Gimignano,52028,Terre di Valdelsa ed Etruria Volterrana,67326,132144,135897,381657
+2018,SI,San Quirico d'Orcia,52030,Val d'Orcia,48471,22257,106058,70269
+2018,SI,Sarteano,52031,Valdichiana Senese,8009,12949,25354,82828
+2018,SI,Siena,52032,Terre di Siena,217368,296966,453275,613676
+2018,SI,Sinalunga,52033,Valdichiana Senese,12403,7710,23164,29044
+2018,SI,Sovicille,52034,Terre di Siena,12316,13722,30202,65899
+2018,SI,Torrita di Siena,52035,Valdichiana Senese,4246,6261,9361,27436
+2018,SI,Trequanda,52036,Valdichiana Senese,7710,8599,21250,32995
+2019,AR,Anghiari,51001,Val tiberina,6485,2423,13112,11142
+2019,AR,Arezzo,51002,Arezzo,141252,105132,252913,213406
+2019,AR,Badia Tedalda,51003,Val tiberina,795,200,3392,1177
+2019,AR,Bibbiena,51004,Casentino,7470,1576,17604,7461
+2019,AR,Bucine,51005,Valdarno aretino,4021,12720,18109,81710
+2019,AR,Capolona,51006,Arezzo,284,828,615,6286
+2019,AR,Caprese Michelangelo,51007,Val tiberina,694,636,1698,2730
+2019,AR,Castel Focognano,51008,Casentino,62,200,155,1627
+2019,AR,Castel San Niccol?,51010,Casentino,503,847,1133,4525
+2019,AR,Castelfranco Piandisco,51040,Valdarno aretino,649,1478,2388,10166
+2019,AR,Castiglion Fibocchi,51011,Arezzo,274,853,1108,5162
+2019,AR,Castiglion Fiorentino,51012,Valdichiana Aretina,12038,21356,25259,68815
+2019,AR,Cavriglia,51013,Valdarno aretino,5744,9051,18435,58340
+2019,AR,Chitignano,51014,Casentino,430,50,1610,134
+2019,AR,Chiusi della Verna,51015,Casentino,7592,3063,16644,4514
+2019,AR,Civitella in Val di Chiana,51016,Valdichiana Aretina,4185,2240,8254,11479
+2019,AR,Cortona,51017,Valdichiana Aretina,24457,31521,49099,146710
+2019,AR,Foiano della Chiana,51018,Valdichiana Aretina,5182,4255,9435,13625
+2019,AR,Laterina Pergine Valdarno,51042,Valdarno aretino,7671,7746,15251,24081
+2019,AR,Loro Ciuffenna,51020,Valdarno aretino,2684,11230,5708,48842
+2019,AR,Lucignano,51021,Valdichiana Aretina,1321,1811,3883,12324
+2019,AR,Marciano della Chiana,51022,Valdichiana Aretina,308,437,1485,2106
+2019,AR,Monte San Savino,51025,Valdichiana Aretina,7324,4585,12613,17636
+2019,AR,Montemignaio,51023,Casentino,467,893,5855,3219
+2019,AR,Monterchi,51024,Val tiberina,88,163,305,1238
+2019,AR,Montevarchi,51026,Valdarno aretino,13690,7373,22553,19023
+2019,AR,Ortignano Raggiolo,51027,Casentino,764,728,2362,4536
+2019,AR,Pieve Santo Stefano,51030,Val tiberina,6085,2773,12255,6884
+2019,AR,Poppi,51031,Casentino,17369,6648,40825,26409
+2019,AR,Pratovecchio Stia,51041,Casentino,4021,1928,10265,8938
+2019,AR,San Giovanni Valdarno,51033,Valdarno aretino,1332,764,4752,5171
+2019,AR,Sansepolcro,51034,Val tiberina,22426,8248,44224,24400
+2019,AR,Sestino,51035,Val tiberina,108,101,269,1816
+2019,AR,Subbiano,51037,Casentino,4776,3158,9200,14570
+2019,AR,Talla,51038,Casentino,844,40,3492,235
+2019,AR,Terranuova Bracciolini,51039,Valdarno aretino,21537,11661,44235,25531
+2019,FI,Bagno a Ripoli,48001,Firenze e area fiorentina,12003,19953,47502,86033
+2019,FI,Barberino Tavarnelle,48054,Chianti,22094,55219,58162,248541
+2019,FI,Barberino di Mugello,48002,Mugello,30976,14547,66559,36305
+2019,FI,Borgo San Lorenzo,48004,Mugello,13549,13685,27604,42860
+2019,FI,Calenzano,48005,Firenze e area fiorentina,63855,97618,151787,174607
+2019,FI,Campi Bisenzio,48006,Firenze e area fiorentina,46193,57497,131733,125738
+2019,FI,Capraia e Limite,48008,Empolese/Valdelsa,3360,2302,20394,15766
+2019,FI,Castelfiorentino,48010,Empolese/Valdelsa,4093,4857,13415,27770
+2019,FI,Cerreto Guidi,48011,Empolese/Valdelsa,1821,2163,9470,17843
+2019,FI,Certaldo,48012,Empolese/Valdelsa,8870,17696,22194,80862
+2019,FI,Dicomano,48013,Mugello,874,1919,2725,14590
+2019,FI,Empoli,48014,Empolese/Valdelsa,10422,3218,33300,24582
+2019,FI,Fiesole,48015,Firenze e area fiorentina,15325,34180,41957,111558
+2019,FI,Figline e Incisa Valdarno,48052,Firenze e area fiorentina,33399,57417,110053,409187
+2019,FI,Firenze,48017,Firenze e area fiorentina,1085321,2940034,2992770,8055948
+2019,FI,Firenzuola,48018,Mugello,5122,1709,12404,15583
+2019,FI,Fucecchio,48019,Empolese/Valdelsa,2512,2670,14721,13664
+2019,FI,Gambassi Terme,48020,Empolese/Valdelsa,6110,9280,14766,49065
+2019,FI,Greve in Chianti,48021,Chianti,9380,46922,25930,194641
+2019,FI,Impruneta,48022,Firenze e area fiorentina,14176,29442,61457,86467
+2019,FI,Lastra a Signa,48024,Firenze e area fiorentina,13418,12151,45365,43862
+2019,FI,Londa,48025,Firenze e area fiorentina,407,438,1862,2670
+2019,FI,Marradi,48026,Mugello,3804,1016,21393,8196
+2019,FI,Montaione,48027,Empolese/Valdelsa,12414,41478,49148,267462
+2019,FI,Montelupo Fiorentino,48028,Empolese/Valdelsa,4295,1381,17085,6547
+2019,FI,Montespertoli,48030,Empolese/Valdelsa,7915,18162,32408,120683
+2019,FI,Palazzuolo sul Senio,48031,Mugello,2953,1600,12317,12333
+2019,FI,Pelago,48032,Firenze e area fiorentina,4376,4430,19784,23642
+2019,FI,Pontassieve,48033,Firenze e area fiorentina,7139,55596,18451,94044
+2019,FI,Reggello,48035,Firenze e area fiorentina,20018,50550,58232,112865
+2019,FI,Rignano sull'Arno,48036,Firenze e area fiorentina,6113,23461,14229,76015
+2019,FI,Rufina,48037,Firenze e area fiorentina,1169,1302,4123,5897
+2019,FI,San Casciano in Val di Pesa,48038,Chianti,13333,29842,39454,120572
+2019,FI,San Godenzo,48039,Mugello,2180,381,6744,2417
+2019,FI,Scandicci,48041,Firenze e area fiorentina,12722,5241,41971,21160
+2019,FI,Scarperia e San Piero,48053,Mugello,23443,13719,49425,46691
+2019,FI,Sesto Fiorentino,48043,Firenze e area fiorentina,32867,44816,202427,301116
+2019,FI,Signa,48044,Firenze e area fiorentina,14458,33304,40420,47368
+2019,FI,Vaglia,48046,Firenze e area fiorentina,5775,11318,17974,22220
+2019,FI,Vicchio,48049,Mugello,2759,4108,18841,25269
+2019,FI,Vinci,48050,Empolese/Valdelsa,13589,11188,36716,40845
+2019,GR,Arcidosso,53001,Amiata,2217,968,5516,4961
+2019,GR,Campagnatico,53002,Maremma,644,881,3187,6240
+2019,GR,Capalbio,53003,Maremma,28445,5896,146659,23779
+2019,GR,Castel del Piano,53004,Amiata,10329,2679,22714,8482
+2019,GR,Castell'Azzara,53005,Amiata,1040,470,3818,2984
+2019,GR,Castiglione della Pescaia,53006,Maremma Area Nord,147822,70882,959870,538230
+2019,GR,Cinigiano,53007,Maremma,2091,4062,5563,14992
+2019,GR,Civitella Paganico,53008,Maremma,7149,3675,16155,16075
+2019,GR,Follonica,53009,Maremma Area Nord,73495,20303,409045,137174
+2019,GR,Gavorrano,53010,Maremma Area Nord,7624,9686,22313,56150
+2019,GR,Grosseto,53011,Maremma,214503,39137,926946,200883
+2019,GR,Isola del Giglio,53012,Maremma,19750,2548,78032,11011
+2019,GR,Magliano in Toscana,53013,Maremma,12071,3556,40467,17084
+2019,GR,Manciano,53014,Maremma,64201,14753,142204,38108
+2019,GR,Massa Marittima,53015,Maremma Area Nord,19591,15203,64573,94159
+2019,GR,Monte Argentario,53016,Maremma,40783,18704,120882,59404
+2019,GR,Monterotondo Marittimo,53027,Maremma Area Nord,1294,1475,4321,9138
+2019,GR,Montieri,53017,Maremma Area Nord,1387,1222,3955,6093
+2019,GR,Orbetello,53018,Maremma,171744,29192,1015360,152030
+2019,GR,Pitigliano,53019,Maremma,10331,3457,19174,7227
+2019,GR,Roccalbegna,53020,Amiata,985,820,1880,3948
+2019,GR,Roccastrada,53021,Maremma Area Nord,3148,4031,10572,23348
+2019,GR,Santa Fiora,53022,Amiata,1692,293,5165,1759
+2019,GR,Scansano,53023,Maremma,8106,2558,19404,11902
+2019,GR,Scarlino,53024,Maremma Area Nord,42597,13251,217118,86140
+2019,GR,Seggiano,53025,Amiata,2170,1722,4623,7546
+2019,GR,Semproniano,53028,Maremma,6117,1358,12843,3048
+2019,GR,Sorano,53026,Maremma,15462,4711,32747,13839
+2019,LI,Bibbona,49001,Costa degli etruschi,97762,55566,685324,400477
+2019,LI,Campiglia Marittima,49002,Costa degli etruschi,21852,7924,81445,50793
+2019,LI,Campo nell'Elba,49003,Isola Elba,58769,22358,347284,185304
+2019,LI,Capoliveri,49004,Isola Elba,87480,49410,589068,400598
+2019,LI,Capraia Isola,49005,Livorno,5327,305,16274,944
+2019,LI,Castagneto Carducci,49006,Costa degli etruschi,69340,53066,392310,406398
+2019,LI,Cecina,49007,Costa degli etruschi,68509,25438,431110,194120
+2019,LI,Collesalvetti,49008,Livorno,8787,5568,20767,11569
+2019,LI,Livorno,49009,Livorno,105616,70177,212062,156002
+2019,LI,Marciana,49010,Isola Elba,30458,12677,153524,67996
+2019,LI,Marciana Marina,49011,Isola Elba,18255,8951,72100,31203
+2019,LI,Piombino,49012,Costa degli etruschi,125215,31422,699699,180228
+2019,LI,Porto Azzurro,49013,Isola Elba,22365,9603,151712,60746
+2019,LI,Portoferraio,49014,Isola Elba,65343,40372,320588,237160
+2019,LI,Rio,49021,Isola Elba,24026,8424,148075,62525
+2019,LI,Rosignano Marittimo,49017,Costa degli etruschi,65481,46842,321442,292684
+2019,LI,San Vincenzo,49018,Costa degli etruschi,100357,79283,538368,650290
+2019,LI,Sassetta,49019,Costa degli etruschi,5929,2466,11002,10431
+2019,LI,Suvereto,49020,Costa degli etruschi,9288,4012,45665,28826
+2019,LU,Altopascio,46001,Piana di Lucca,13747,4153,32357,13150
+2019,LU,Bagni di Lucca,46002,Garfagnana e Media Valle del Serchio,7085,2653,14437,10194
+2019,LU,Barga,46003,Garfagnana e Media Valle del Serchio,13481,20299,46256,72536
+2019,LU,Borgo a Mozzano,46004,Garfagnana e Media Valle del Serchio,1367,952,9061,5565
+2019,LU,Camaiore,46005,Versilia,84479,55794,327230,232365
+2019,LU,Camporgiano,46006,Garfagnana e Media Valle del Serchio,602,945,1231,7862
+2019,LU,Capannori,46007,Piana di Lucca,17841,14821,40976,60301
+2019,LU,Careggine,46008,Garfagnana e Media Valle del Serchio,973,123,1648,564
+2019,LU,Castelnuovo di Garfagnana,46009,Garfagnana e Media Valle del Serchio,7901,2512,18001,10103
+2019,LU,Castiglione di Garfagnana,46010,Garfagnana e Media Valle del Serchio,5865,894,18916,5110
+2019,LU,Coreglia Antelminelli,46011,Garfagnana e Media Valle del Serchio,688,1824,3506,11201
+2019,LU,Fabbriche di Vergemoli,46036,Garfagnana e Media Valle del Serchio,57,116,1071,1019
+2019,LU,Forte dei Marmi,46013,Versilia,61776,57911,173875,237789
+2019,LU,Fosciandora,46014,Garfagnana e Media Valle del Serchio,254,179,586,1992
+2019,LU,Gallicano,46015,Garfagnana e Media Valle del Serchio,1361,628,2882,3627
+2019,LU,Lucca,46017,Piana di Lucca,104761,142580,179595,327019
+2019,LU,Massarosa,46018,Versilia,6847,3108,16791,15786
+2019,LU,Minucciano,46019,Garfagnana e Media Valle del Serchio,2345,913,5852,4610
+2019,LU,Molazzana,46020,Garfagnana e Media Valle del Serchio,123,588,689,5014
+2019,LU,Montecarlo,46021,Piana di Lucca,4042,2819,10455,13307
+2019,LU,Pescaglia,46022,Garfagnana e Media Valle del Serchio,291,835,881,5494
+2019,LU,Piazza al Serchio,46023,Garfagnana e Media Valle del Serchio,145,307,624,1887
+2019,LU,Pietrasanta,46024,Versilia,73591,56211,282247,221847
+2019,LU,Pieve Fosciana,46025,Garfagnana e Media Valle del Serchio,964,1020,2308,5734
+2019,LU,Porcari,46026,Piana di Lucca,4369,696,12870,1938
+2019,LU,San Romano in Garfagnana,46027,Garfagnana e Media Valle del Serchio,406,212,972,1630
+2019,LU,Seravezza,46028,Versilia,1514,395,5425,1350
+2019,LU,Sillano Giuncugnano,46037,Garfagnana e Media Valle del Serchio,1376,302,4366,913
+2019,LU,Stazzema,46030,Versilia,1535,137,2459,358
+2019,LU,Vagli Sotto,46031,Garfagnana e Media Valle del Serchio,851,656,2356,3581
+2019,LU,Viareggio,46033,Versilia,146116,92395,644685,396346
+2019,LU,Villa Basilica,46034,Piana di Lucca,32,66,81,380
+2019,LU,Villa Collemandina,46035,Garfagnana e Media Valle del Serchio,2883,554,8778,3480
+2019,MS,Aulla,45001,Lunigiana,2810,1643,8094,5761
+2019,MS,Bagnone,45002,Lunigiana,806,383,1836,2140
+2019,MS,Carrara,45003,Riviera Apuana,15428,6885,69746,19658
+2019,MS,Casola in Lunigiana,45004,Lunigiana,176,498,340,2354
+2019,MS,Comano,45005,Lunigiana,353,397,739,1310
+2019,MS,Filattiera,45006,Lunigiana,249,441,334,1398
+2019,MS,Fivizzano,45007,Lunigiana,1888,2022,3679,8863
+2019,MS,Fosdinovo,45008,Lunigiana,2796,1196,5843,2999
+2019,MS,Licciana Nardi,45009,Lunigiana,2790,1640,5411,5805
+2019,MS,Massa,45010,Riviera Apuana,148335,42400,663846,150401
+2019,MS,Montignoso,45011,Riviera Apuana,14037,4938,54981,20419
+2019,MS,Mulazzo,45012,Lunigiana,4196,1746,11446,6654
+2019,MS,Podenzana,45013,Lunigiana,1405,482,2157,1627
+2019,MS,Pontremoli,45014,Lunigiana,4388,2422,6503,4964
+2019,MS,Tresana,45015,Lunigiana,258,108,937,333
+2019,MS,Villafranca in Lunigiana,45016,Lunigiana,2101,1747,5351,3419
+2019,MS,Zeri,45017,Lunigiana,741,138,1916,215
+2019,PI,Bientina,50001,Terre di Pisa,10586,1038,20765,2004
+2019,PI,Buti,50002,Terre di Pisa,192,480,496,3003
+2019,PI,Calci,50003,Terre di Pisa,752,1253,2150,7799
+2019,PI,Calcinaia,50004,Terre di Pisa,3854,8377,7313,12402
+2019,PI,Capannoli,50005,Terre di Pisa,181,563,1271,3196
+2019,PI,Casale Marittimo,50006,Costa degli etruschi,1731,7002,8003,73196
+2019,PI,Casciana Terme Lari,50040,Terre di Pisa,5253,7366,18242,32591
+2019,PI,Cascina,50008,Terre di Pisa,9297,12655,17447,18445
+2019,PI,Castelfranco di Sotto,50009,Terre di Pisa,372,1356,1118,8870
+2019,PI,Castellina Marittima,50010,Costa degli etruschi,4288,1585,10914,5703
+2019,PI,Castelnuovo di Val di Cecina,50011,Terre di Valdelsa ed Etruria Volterrana,2119,1505,5702,10389
+2019,PI,Chianni,50012,Terre di Pisa,1305,2486,3385,14290
+2019,PI,Crespina Lorenzana,50041,Terre di Pisa,1416,1726,6825,13121
+2019,PI,Fauglia e Orciano Pisano,50014+50023,Terre di Pisa,2035,2024,5757,10931
+2019,PI,Guardistallo,50015,Costa degli etruschi,2650,3274,20523,26301
+2019,PI,Lajatico,50016,Terre di Pisa,1301,2805,2866,17078
+2019,PI,Montecatini Val di Cecina,50019,Terre di Valdelsa ed Etruria Volterrana,7216,7930,18049,40505
+2019,PI,Montescudaio,50020,Costa degli etruschi,2489,5439,13452,51872
+2019,PI,Monteverdi Marittimo,50021,Terre di Valdelsa ed Etruria Volterrana,3625,1463,7313,7580
+2019,PI,Montopoli in Val d'Arno,50022,Terre di Pisa,3130,5189,9922,30072
+2019,PI,Palaia,50024,Terre di Pisa,3163,9982,26782,74506
+2019,PI,Peccioli,50025,Terre di Pisa,1807,4372,4508,32978
+2019,PI,Pisa,50026,Terre di Pisa,299304,502245,978088,936750
+2019,PI,Pomarance,50027,Terre di Valdelsa ed Etruria Volterrana,6752,6974,20405,40259
+2019,PI,Ponsacco,50028,Terre di Pisa,4394,1976,8798,7938
+2019,PI,Pontedera,50029,Terre di Pisa,14952,25339,28232,35169
+2019,PI,Riparbella,50030,Costa degli etruschi,8175,9110,26081,63883
+2019,PI,San Giuliano Terme,50031,Terre di Pisa,24711,24147,306989,98964
+2019,PI,San Miniato,50032,Terre di Pisa,12398,11197,22865,36498
+2019,PI,Santa Croce sull'Arno,50033,Terre di Pisa,318,128,472,707
+2019,PI,Santa Luce,50034,Costa degli etruschi,4297,1929,13463,13523
+2019,PI,Santa Maria a Monte,50035,Terre di Pisa,2899,4377,6009,5222
+2019,PI,Terricciola,50036,Terre di Pisa,1415,4544,3270,26007
+2019,PI,Vecchiano,50037,Terre di Pisa,7383,18968,12368,24771
+2019,PI,Vicopisano,50038,Terre di Pisa,631,592,4897,2753
+2019,PI,Volterra,50039,Terre di Valdelsa ed Etruria Volterrana,48552,38205,96521,142433
+2019,PO,Cantagallo,100001,Prato e Val Bisenzio,731,190,1172,886
+2019,PO,Carmignano,100002,Prato e Val Bisenzio,11223,11906,20943,48460
+2019,PO,Montemurlo,100003,Prato e Val Bisenzio,546,340,7429,1659
+2019,PO,Poggio a Caiano,100004,Prato e Val Bisenzio,2407,5118,10120,9555
+2019,PO,Prato,100005,Prato e Val Bisenzio,78656,145764,186986,268085
+2019,PO,Vaiano,100006,Prato e Val Bisenzio,1073,749,2805,2987
+2019,PO,Vernio,100007,Prato e Val Bisenzio,1348,261,7920,1797
+2019,PT,Abetone Cutigliano,47023,Pistoia e Montagna pistoiese,34485,2095,90141,6214
+2019,PT,Agliana,47002,Pistoia e Montagna pistoiese,2123,285,4508,638
+2019,PT,Buggiano,47003,Val di nievole,1142,2552,4336,9205
+2019,PT,Chiesina Uzzanese,47022,Val di nievole,27974,1620,33480,2493
+2019,PT,Lamporecchio,47005,Val di nievole,6580,14795,13050,86332
+2019,PT,Larciano,47006,Val di nievole,4383,2868,10237,10590
+2019,PT,Marliana,47007,Val di nievole,1038,831,2362,3544
+2019,PT,Massa e Cozzile,47008,Val di nievole,367,1003,843,5690
+2019,PT,Monsummano Terme,47009,Val di nievole,9257,5857,19128,25586
+2019,PT,Montale,47010,Pistoia e Montagna pistoiese,1930,489,4553,1718
+2019,PT,Montecatini Terme,47011,Val di nievole,188160,459506,436722,1197360
+2019,PT,Pescia,47012,Val di nievole,9281,15307,19035,43232
+2019,PT,Pieve a Nievole,47013,Val di nievole,2099,356,3370,1914
+2019,PT,Pistoia,47014,Pistoia e Montagna pistoiese,41507,29643,82056,79675
+2019,PT,Ponte Buggianese,47016,Val di nievole,879,504,1806,1417
+2019,PT,Quarrata,47017,Pistoia e Montagna pistoiese,2405,1658,5770,5666
+2019,PT,Sambuca Pistoiese,47018,Pistoia e Montagna pistoiese,311,17,849,65
+2019,PT,San Marcello Piteglio,47024,Pistoia e Montagna pistoiese,12902,2221,51434,12050
+2019,PT,Serravalle Pistoiese,47020,Pistoia e Montagna pistoiese,12309,10246,30936,23349
+2019,PT,Uzzano,47021,Val di nievole,337,581,918,2857
+2019,SI,Abbadia San Salvatore,52001,Amiata,20756,1047,62111,2353
+2019,SI,Asciano,52002,Terre di Siena,21942,23926,43274,70571
+2019,SI,Buonconvento,52003,Terre di Siena,4537,6851,15184,28169
+2019,SI,Casole d'Elsa,52004,Terre di Valdelsa ed Etruria Volterrana,5832,14959,21091,81464
+2019,SI,Castellina in Chianti,52005,Chianti,12532,37328,26076,141858
+2019,SI,Castelnuovo Berardenga,52006,Chianti,22215,41743,50985,132656
+2019,SI,Castiglione d'Orcia,52007,Val dOrcia,11422,7766,25348,26256
+2019,SI,Cetona,52008,Valdichiana Senese,1653,1825,5726,10499
+2019,SI,Chianciano Terme,52009,Valdichiana Senese,167551,103367,405466,201841
+2019,SI,Chiusdino,52010,Terre di Siena,6674,12929,17387,81627
+2019,SI,Chiusi,52011,Valdichiana Senese,20432,13957,35727,26447
+2019,SI,Colle di Val d'Elsa,52012,Terre di Valdelsa ed Etruria Volterrana,26012,21533,52906,70949
+2019,SI,Gaiole in Chianti,52013,Chianti,7127,20388,14520,72003
+2019,SI,Montalcino,52037,Val dOrcia,27753,43059,58368,124273
+2019,SI,Montepulciano,52015,Valdichiana Senese,48483,57220,88900,156790
+2019,SI,Monteriggioni,52016,Terre di Valdelsa ed Etruria Volterrana,36748,33305,64851,93083
+2019,SI,Monteroni d'Arbia,52017,Terre di Siena,10207,7737,20992,34191
+2019,SI,Monticiano,52018,Terre di Siena,2902,2262,5581,9448
+2019,SI,Murlo,52019,Terre di Siena,9287,13529,18985,48172
+2019,SI,Piancastagnaio,52020,Amiata,1856,362,4537,1440
+2019,SI,Pienza,52021,Val dOrcia,25602,40732,53285,107606
+2019,SI,Poggibonsi,52022,Terre di Valdelsa ed Etruria Volterrana,29553,36782,61063,99676
+2019,SI,Radda in Chianti,52023,Chianti,13244,25265,25226,84144
+2019,SI,Radicofani,52024,Val dOrcia,3747,2606,7076,8115
+2019,SI,Radicondoli,52025,Terre di Valdelsa ed Etruria Volterrana,730,3120,2303,22790
+2019,SI,Rapolano Terme,52026,Terre di Siena,33926,9412,70625,38464
+2019,SI,San Casciano dei Bagni,52027,Valdichiana Senese,16182,5740,37314,26070
+2019,SI,San Gimignano,52028,Terre di Valdelsa ed Etruria Volterrana,70377,138628,134571,383329
+2019,SI,San Quirico d'Orcia,52030,Val dOrcia,49827,23000,110211,70749
+2019,SI,Sarteano,52031,Valdichiana Senese,8819,11819,25377,68723
+2019,SI,Siena,52032,Terre di Siena,226603,297601,472797,630991
+2019,SI,Sinalunga,52033,Valdichiana Senese,11749,7841,22076,28616
+2019,SI,Sovicille,52034,Terre di Siena,14331,15729,35393,73756
+2019,SI,Torrita di Siena,52035,Valdichiana Senese,4008,6839,8462,27264
+2019,SI,Trequanda,52036,Valdichiana Senese,8433,9641,20140,32866
+2020,AR,Anghiari,51001,Valtiberina Toscana,4000,745,11392,3900
+2020,AR,Arezzo,51002,Arezzo,76519,15875,165708,47050
+2020,AR,Badia Tedalda,51003,Valtiberina Toscana,925,48,4632,276
+2020,AR,Bibbiena,51004,Casentino,3746,593,12032,3015
+2020,AR,Bucine,51005,Valdarno Aretino,3399,3127,16072,22781
+2020,AR,Capolona,51006,Arezzo,391,509,1782,3539
+2020,AR,Caprese Michelangelo,51007,Valtiberina Toscana,754,143,2406,933
+2020,AR,Castel Focognano,51008,Casentino,57,57,431,486
+2020,AR,Castel San NiccolÃ²,51010,Casentino,230,234,824,1933
+2020,AR,Castelfranco PiandiscÃ²,51040,Valdarno Aretino,817,399,5157,3658
+2020,AR,Castiglion Fibocchi,51011,Arezzo,363,227,1132,1641
+2020,AR,Castiglion Fiorentino,51012,Val di Chiana Aretina,9576,3094,23449,18627
+2020,AR,Cavriglia,51013,Valdarno Aretino,7742,2793,28755,19957
+2020,AR,Chitignano,51014,Casentino,225,7,472,14
+2020,AR,Chiusi della Verna,51015,Casentino,5456,392,12566,776
+2020,AR,Civitella in Val di Chiana,51016,Val di Chiana Aretina,3251,861,9765,4055
+2020,AR,Cortona,51017,Val di Chiana Aretina,17398,7029,55955,37934
+2020,AR,Foiano della Chiana,51018,Val di Chiana Aretina,3206,820,8079,5189
+2020,AR,Laterina Pergine Valdarno,51042,Valdarno Aretino,6080,1692,17902,8111
+2020,AR,Loro Ciuffenna,51020,Valdarno Aretino,1963,1752,6615,9871
+2020,AR,Lucignano,51021,Val di Chiana Aretina,1040,583,4362,3917
+2020,AR,Marciano della Chiana,51022,Val di Chiana Aretina,196,51,671,336
+2020,AR,Monte San Savino,51025,Val di Chiana Aretina,6378,1341,17177,6654
+2020,AR,Montemignaio,51023,Casentino,493,226,6897,914
+2020,AR,Monterchi,51024,Valtiberina Toscana,69,53,415,432
+2020,AR,Montevarchi,51026,Valdarno Aretino,7553,1743,19673,4763
+2020,AR,Ortignano Raggiolo,51027,Casentino,522,261,2354,1984
+2020,AR,Pieve Santo Stefano,51030,Valtiberina Toscana,4825,504,12544,1576
+2020,AR,Poppi,51031,Casentino,13703,1790,37229,10302
+2020,AR,Pratovecchio Stia,51041,Casentino,2359,436,7052,2183
+2020,AR,San Giovanni Valdarno,51033,Valdarno Aretino,811,190,3571,1798
+2020,AR,Sansepolcro,51034,Valtiberina Toscana,12184,1574,30727,6418
+2020,AR,Sestino,51035,Valtiberina Toscana,88,46,250,387
+2020,AR,Subbiano,51037,Casentino,2889,693,5425,3496
+2020,AR,Talla,51038,Casentino,737,80,3076,579
+2020,AR,Terranuova Bracciolini,51039,Valdarno Aretino,13329,3054,41110,10127
+2020,FI,Bagno a Ripoli,48001,Firenze e Area Fiorentina,8258,4967,21841,18126
+2020,FI,Barberino Tavarnelle,48054,Chianti,11621,7878,32272,42564
+2020,FI,Barberino di Mugello,48002,Mugello,19267,3943,37363,8256
+2020,FI,Borgo San Lorenzo,48004,Mugello,8033,2645,16308,10866
+2020,FI,Calenzano,48005,Firenze e Area Fiorentina,23440,12588,56865,24434
+2020,FI,Campi Bisenzio,48006,Firenze e Area Fiorentina,15149,4454,30119,9848
+2020,FI,Capraia e Limite,48008,Empolese Valdelsa e Montalbano,1356,321,10148,1960
+2020,FI,Castelfiorentino,48010,Empolese Valdelsa e Montalbano,2775,926,11460,6009
+2020,FI,Cerreto Guidi,48011,Empolese Valdelsa e Montalbano,911,552,6063,3882
+2020,FI,Certaldo,48012,Empolese Valdelsa e Montalbano,4025,2559,12544,15215
+2020,FI,Dicomano,48013,Mugello,637,500,4459,3312
+2020,FI,Empoli,48014,Empolese Valdelsa e Montalbano,4820,585,18931,4443
+2020,FI,Fiesole,48015,Firenze e Area Fiorentina,9255,8198,21698,23722
+2020,FI,Figline e Incisa Valdarno,48052,Firenze e Area Fiorentina,18171,12478,50070,84230
+2020,FI,Firenze,48017,Firenze e Area Fiorentina,406615,407697,900885,1067175
+2020,FI,Firenzuola,48018,Mugello,3549,435,8555,1626
+2020,FI,Fucecchio,48019,Empolese Valdelsa e Montalbano,1021,589,5112,2933
+2020,FI,Gambassi Terme,48020,Empolese Valdelsa e Montalbano,4119,2559,10674,16265
+2020,FI,Greve in Chianti,48021,Chianti,7785,8235,24700,33981
+2020,FI,Impruneta,48022,Firenze e Area Fiorentina,7181,3095,26257,10758
+2020,FI,Lastra a Signa,48024,Firenze e Area Fiorentina,4611,1282,14624,5076
+2020,FI,Londa,48025,Firenze e Area Fiorentina,164,149,488,820
+2020,FI,Marradi,48026,Mugello,1421,270,7866,1917
+2020,FI,Montaione,48027,Empolese Valdelsa e Montalbano,8060,9782,34042,78460
+2020,FI,Montelupo Fiorentino,48028,Empolese Valdelsa e Montalbano,2234,415,12232,1888
+2020,FI,Montespertoli,48030,Empolese Valdelsa e Montalbano,2169,2695,8555,17373
+2020,FI,Palazzuolo sul Senio,48031,Mugello,1996,236,8100,1029
+2020,FI,Pelago,48032,Firenze e Area Fiorentina,1829,912,5606,5488
+2020,FI,Pontassieve,48033,Firenze e Area Fiorentina,3851,5785,12336,14684
+2020,FI,Reggello,48035,Firenze e Area Fiorentina,11676,5366,34986,18808
+2020,FI,Rignano sull'Arno,48036,Firenze e Area Fiorentina,3361,5133,9570,19012
+2020,FI,Rufina,48037,Firenze e Area Fiorentina,551,357,2056,1796
+2020,FI,San Casciano in Val di Pesa,48038,Chianti,9502,5850,29989,24752
+2020,FI,San Godenzo,48039,Mugello,446,61,1216,404
+2020,FI,Scandicci,48041,Firenze e Area Fiorentina,5508,826,16873,3833
+2020,FI,Scarperia e San Piero,48053,Mugello,18714,3139,31700,8530
+2020,FI,Sesto Fiorentino,48043,Firenze e Area Fiorentina,25064,9761,71340,40598
+2020,FI,Signa,48044,Firenze e Area Fiorentina,6541,2165,21501,5139
+2020,FI,Vaglia,48046,Firenze e Area Fiorentina,4361,1390,13476,3907
+2020,FI,Vicchio,48049,Mugello,1869,1384,8013,7123
+2020,FI,Vinci,48050,Empolese Valdelsa e Montalbano,5345,1993,12720,9511
+2020,GR,Arcidosso,53001,Amiata,1502,232,5378,1334
+2020,GR,Campagnatico,53002,Maremma Toscana Area Sud,790,416,4090,3834
+2020,GR,Capalbio,53003,Maremma Toscana Area Sud,22716,1747,125977,8786
+2020,GR,Castel del Piano,53004,Amiata,5912,529,14217,1756
+2020,GR,Castell'Azzara,53005,Amiata,589,189,2334,1236
+2020,GR,Castiglione della Pescaia,53006,Maremma Toscana Area Nord,139835,37487,851799,250027
+2020,GR,Cinigiano,53007,Maremma Toscana Area Sud,2235,1289,9789,5652
+2020,GR,Civitella Paganico,53008,Maremma Toscana Area Sud,3140,842,10293,4873
+2020,GR,Follonica,53009,Maremma Toscana Area Nord,58686,8723,310478,59674
+2020,GR,Gavorrano,53010,Maremma Toscana Area Nord,7002,3514,28904,22997
+2020,GR,Grosseto,53011,Maremma Toscana Area Sud,155994,16171,837591,87530
+2020,GR,Isola del Giglio,53012,Maremma Toscana Area Sud,13653,1160,56726,5598
+2020,GR,Magliano in Toscana,53013,Maremma Toscana Area Sud,11738,1185,53872,5818
+2020,GR,Manciano,53014,Maremma Toscana Area Sud,33757,4004,88856,12167
+2020,GR,Massa Marittima,53015,Maremma Toscana Area Nord,14002,4600,54570,31619
+2020,GR,Monte Argentario,53016,Maremma Toscana Area Sud,31831,5952,105446,20250
+2020,GR,Monterotondo Marittimo,53027,Maremma Toscana Area Nord,1303,330,5424,2304
+2020,GR,Montieri,53017,Maremma Toscana Area Nord,1525,382,4800,2411
+2020,GR,Orbetello,53018,Maremma Toscana Area Sud,140038,11799,802990,55665
+2020,GR,Pitigliano,53019,Maremma Toscana Area Sud,6223,936,13275,1977
+2020,GR,Roccalbegna,53020,Amiata,726,75,2383,296
+2020,GR,Roccastrada,53021,Maremma Toscana Area Nord,2928,1506,12718,9305
+2020,GR,Santa Fiora,53022,Amiata,896,75,3743,528
+2020,GR,Scansano,53023,Maremma Toscana Area Sud,2613,411,8724,2769
+2020,GR,Scarlino,53024,Maremma Toscana Area Nord,33786,5788,181103,39130
+2020,GR,Seggiano,53025,Amiata,1731,609,4493,2974
+2020,GR,Semproniano,53028,Maremma Toscana Area Sud,3944,456,9553,969
+2020,GR,Sorano,53026,Maremma Toscana Area Sud,7226,718,17878,2069
+2020,LI,Bibbona,49001,Costa degli Etruschi,84891,24878,580888,167707
+2020,LI,Campiglia Marittima,49002,Costa degli Etruschi,16737,2606,79354,15845
+2020,LI,Campo nell'Elba,49003,Elba e Isole di Toscana,41550,6563,250989,42974
+2020,LI,Capoliveri,49004,Elba e Isole di Toscana,70251,30083,480738,225785
+2020,LI,Capraia Isola,49005,Livorno,968,5,3778,21
+2020,LI,Castagneto Carducci,49006,Costa degli Etruschi,70253,27479,440782,197620
+2020,LI,Cecina,49007,Costa degli Etruschi,59496,11953,334433,77356
+2020,LI,Collesalvetti,49008,Livorno,4906,1375,17038,4070
+2020,LI,Livorno,49009,Livorno,74811,28825,175649,78696
+2020,LI,Marciana,49010,Elba e Isole di Toscana,22220,5140,126063,27790
+2020,LI,Marciana Marina,49011,Elba e Isole di Toscana,14774,2506,64775,10032
+2020,LI,Piombino,49012,Costa degli Etruschi,98393,13656,575297,80693
+2020,LI,Porto Azzurro,49013,Elba e Isole di Toscana,20393,5254,132501,35168
+2020,LI,Portoferraio,49014,Elba e Isole di Toscana,54644,18537,308930,112303
+2020,LI,Rio,49021,Elba e Isole di Toscana,19623,3925,119910,24858
+2020,LI,Rosignano Marittimo,49017,Costa degli Etruschi,63010,22535,324383,136540
+2020,LI,San Vincenzo,49018,Costa degli Etruschi,93495,29794,531154,245417
+2020,LI,Sassetta,49019,Costa degli Etruschi,4385,1720,9933,7153
+2020,LI,Suvereto,49020,Costa degli Etruschi,8239,1629,34651,11872
+2020,LU,Altopascio,46001,Piana di Lucca,6324,1035,21806,5128
+2020,LU,Bagni di Lucca,46002,Garfagnana e media valle del Serchio,3441,574,7551,1874
+2020,LU,Barga,46003,Garfagnana e media valle del Serchio,7368,3403,25578,11865
+2020,LU,Borgo a Mozzano,46004,Garfagnana e media valle del Serchio,248,63,2764,999
+2020,LU,Camaiore,46005,Versilia,48506,12432,204768,53698
+2020,LU,Camporgiano,46006,Garfagnana e media valle del Serchio,298,223,1798,2401
+2020,LU,Capannori,46007,Piana di Lucca,9635,2365,28029,11359
+2020,LU,Careggine,46008,Garfagnana e media valle del Serchio,70,46,309,185
+2020,LU,Castelnuovo di Garfagnana,46009,Garfagnana e media valle del Serchio,4019,497,8599,1644
+2020,LU,Castiglione di Garfagnana,46010,Garfagnana e media valle del Serchio,2334,202,8421,1368
+2020,LU,Coreglia Antelminelli,46011,Garfagnana e media valle del Serchio,330,62,1446,541
+2020,LU,Fabbriche di Vergemoli,46036,Garfagnana e media valle del Serchio,55,19,402,162
+2020,LU,Forte dei Marmi,46013,Versilia,38716,14371,122495,57551
+2020,LU,Fosciandora,46014,Garfagnana e media valle del Serchio,126,55,686,426
+2020,LU,Gallicano,46015,Garfagnana e media valle del Serchio,1150,252,2713,1821
+2020,LU,Lucca,46017,Piana di Lucca,42227,22378,77409,52435
+2020,LU,Massarosa,46018,Versilia,2513,573,8096,3639
+2020,LU,Minucciano,46019,Garfagnana e media valle del Serchio,3111,483,7693,1510
+2020,LU,Molazzana,46020,Garfagnana e media valle del Serchio,98,171,799,1516
+2020,LU,Montecarlo,46021,Piana di Lucca,2356,889,5936,3632
+2020,LU,Pescaglia,46022,Garfagnana e media valle del Serchio,114,270,601,2175
+2020,LU,Piazza al Serchio,46023,Garfagnana e media valle del Serchio,284,56,2189,416
+2020,LU,Pietrasanta,46024,Versilia,47821,8277,194299,36295
+2020,LU,Pieve Fosciana,46025,Garfagnana e media valle del Serchio,966,365,3385,2060
+2020,LU,Porcari,46026,Piana di Lucca,2079,185,6745,910
+2020,LU,San Romano in Garfagnana,46027,Garfagnana e media valle del Serchio,76,19,378,116
+2020,LU,Seravezza,46028,Versilia,817,94,5839,807
+2020,LU,Sillano Giuncugnano,46037,Garfagnana e media valle del Serchio,1791,373,5266,934
+2020,LU,Stazzema,46030,Versilia,627,40,1584,246
+2020,LU,Vagli Sotto,46031,Garfagnana e media valle del Serchio,181,38,425,237
+2020,LU,Viareggio,46033,Versilia,92117,27981,470662,106078
+2020,LU,Villa Basilica,46034,Piana di Lucca,41,31,225,194
+2020,LU,Villa Collemandina,46035,Garfagnana e media valle del Serchio,973,245,3743,1939
+2020,MS,Aulla,45001,Lunigiana,490,80,1406,101
+2020,MS,Bagnone e Villafranca in Lunigiana,45002+45016,Lunigiana,624,145,2015,400
+2020,MS,Carrara,45003,Riviera Apuana,12604,2947,57278,8189
+2020,MS,Casola in Lunigiana,45004,Lunigiana,163,158,396,680
+2020,MS,Comano,45005,Lunigiana,347,120,906,310
+2020,MS,Filattiera,45006,Lunigiana,349,280,690,810
+2020,MS,Fivizzano,45007,Lunigiana,2105,568,6775,2375
+2020,MS,Fosdinovo,45008,Lunigiana,2785,446,7557,1063
+2020,MS,Licciana Nardi,45009,Lunigiana,1212,386,2678,1133
+2020,MS,Massa,45010,Riviera Apuana,113015,14410,552951,53769
+2020,MS,Montignoso,45011,Riviera Apuana,10035,2047,44424,11423
+2020,MS,Mulazzo,45012,Lunigiana,3198,691,9594,3028
+2020,MS,Podenzana,45013,Lunigiana,828,192,1863,689
+2020,MS,Pontremoli,45014,Lunigiana,3927,809,7506,1891
+2020,MS,Tresana,45015,Lunigiana,453,94,1136,195
+2020,MS,Zeri,45017,Lunigiana,477,14,930,44
+2020,PI,Bientina,50001,Terre di Pisa,5568,221,14850,573
+2020,PI,Buti,50002,Terre di Pisa,120,126,977,1082
+2020,PI,Calci,50003,Terre di Pisa,411,400,2065,2922
+2020,PI,Calcinaia,50004,Terre di Pisa,585,454,1029,534
+2020,PI,Capannoli,50005,Terre di Pisa,293,219,1831,1146
+2020,PI,Casale Marittimo,50006,Costa degli Etruschi,2223,2915,10421,29601
+2020,PI,Casciana Terme Lari,50040,Terre di Pisa,3227,1622,16980,11301
+2020,PI,Cascina,50008,Terre di Pisa,3036,1213,9167,2731
+2020,PI,Castelfranco di Sotto,50009,Terre di Pisa,376,485,2381,3379
+2020,PI,Castellina Marittima,50010,Costa degli Etruschi,3856,663,9597,2654
+2020,PI,Castelnuovo di Val di Cecina,50011,Terre di Valdelsa e dellEtruria Volterrana,1601,545,5671,4158
+2020,PI,Chianni,50012,Terre di Pisa,505,304,2829,2725
+2020,PI,Crespina Lorenzana,50041,Terre di Pisa,965,606,5762,4489
+2020,PI,Fauglia e Orciano Pisano,50014+50023,Terre di Pisa,1306,576,6293,4443
+2020,PI,Guardistallo,50015,Costa degli Etruschi,2353,1498,17587,12380
+2020,PI,Lajatico,50016,Terre di Pisa,1273,737,5609,5104
+2020,PI,Montecatini Val di Cecina,50019,Terre di Valdelsa e dellEtruria Volterrana,6053,1777,18095,11312
+2020,PI,Montescudaio,50020,Costa degli Etruschi,1863,763,9332,6345
+2020,PI,Monteverdi Marittimo,50021,Terre di Valdelsa e dellEtruria Volterrana,2468,470,7863,2676
+2020,PI,Montopoli in Val d'Arno,50022,Terre di Pisa,1972,1124,8490,6771
+2020,PI,Palaia,50024,Terre di Pisa,2316,3022,20194,30608
+2020,PI,Peccioli,50025,Terre di Pisa,1895,1638,7295,12927
+2020,PI,Pisa,50026,Terre di Pisa,161094,106448,641497,231422
+2020,PI,Pomarance,50027,Terre di Valdelsa e dellEtruria Volterrana,5208,2655,21518,17427
+2020,PI,Ponsacco,50028,Terre di Pisa,3056,518,6573,2944
+2020,PI,Pontedera,50029,Terre di Pisa,7531,2546,15649,6092
+2020,PI,Riparbella,50030,Costa degli Etruschi,7170,2485,30138,19348
+2020,PI,San Giuliano Terme,50031,Terre di Pisa,13852,6089,284295,63870
+2020,PI,San Miniato,50032,Terre di Pisa,7786,2257,17462,8060
+2020,PI,Santa Croce sull'Arno,50033,Terre di Pisa,152,35,588,183
+2020,PI,Santa Luce,50034,Costa degli Etruschi,2959,591,10732,3840
+2020,PI,Santa Maria a Monte,50035,Terre di Pisa,1510,476,4071,725
+2020,PI,Terricciola,50036,Terre di Pisa,1259,1398,5631,9258
+2020,PI,Vecchiano,50037,Terre di Pisa,3537,2074,8367,4203
+2020,PI,Vicopisano,50038,Terre di Pisa,509,154,3506,608
+2020,PI,Volterra,50039,Terre di Valdelsa e dellEtruria Volterrana,28068,7961,66818,42007
+2020,PO,Cantagallo,100001,Area Pratese,329,31,971,208
+2020,PO,Carmignano,100002,Area Pratese,4771,2383,11517,9585
+2020,PO,Montemurlo,100003,Area Pratese,414,244,2374,954
+2020,PO,Poggio a Caiano,100004,Area Pratese,2132,2004,5603,3591
+2020,PO,Prato,100005,Area Pratese,46142,27262,114188,61627
+2020,PO,Vaiano,100006,Area Pratese,702,241,1921,1289
+2020,PO,Vernio,100007,Area Pratese,1047,38,6195,180
+2020,PT,Abetone Cutigliano,47023,Pistoia e Montagna Pistoiese,23306,1099,61359,3542
+2020,PT,Agliana,47002,Pistoia e Montagna Pistoiese,1357,68,3363,175
+2020,PT,Buggiano,47003,Valdinievole,860,946,3744,3653
+2020,PT,Chiesina Uzzanese e Ponte Buggianese,47022+47016,Valdinievole,18713,646,25021,1307
+2020,PT,Lamporecchio,47005,Valdinievole,4786,4313,13831,24319
+2020,PT,Larciano,47006,Valdinievole,3081,751,7685,4185
+2020,PT,Marliana,47007,Pistoia e Montagna Pistoiese,821,480,2397,2022
+2020,PT,Massa e Cozzile,47008,Valdinievole,344,187,1104,1008
+2020,PT,Monsummano Terme,47009,Valdinievole,3047,829,7851,4318
+2020,PT,Montale,47010,Pistoia e Montagna Pistoiese,1323,136,3001,387
+2020,PT,Montecatini Terme,47011,Valdinievole,76178,33180,209018,99379
+2020,PT,Pescia,47012,Valdinievole,3788,1234,10293,7067
+2020,PT,Pieve a Nievole,47013,Valdinievole,182,71,1624,531
+2020,PT,Pistoia,47014,Pistoia e Montagna Pistoiese,24569,7970,58078,23554
+2020,PT,Quarrata,47017,Pistoia e Montagna Pistoiese,1949,654,6562,2416
+2020,PT,Sambuca Pistoiese,47018,Pistoia e Montagna Pistoiese,140,13,463,34
+2020,PT,San Marcello Piteglio,47024,Pistoia e Montagna Pistoiese,6594,466,31989,2787
+2020,PT,Serravalle Pistoiese,47020,Pistoia e Montagna Pistoiese,9049,1562,30450,6940
+2020,PT,Uzzano,47021,Valdinievole,395,147,1603,844
+2020,SI,Abbadia San Salvatore,52001,Amiata,13305,515,39657,1144
+2020,SI,Asciano,52002,Terre di Siena,14046,4382,38224,19748
+2020,SI,Buonconvento,52003,Terre di Siena,4216,1371,14382,7798
+2020,SI,Casole d'Elsa,52004,Terre di Valdelsa e dellEtruria Volterrana,3176,3503,17066,23506
+2020,SI,Castellina in Chianti,52005,Chianti,10368,8957,28846,42711
+2020,SI,Castelnuovo Berardenga,52006,Chianti,14494,8357,40089,30330
+2020,SI,Castiglione d'Orcia,52007,Val d'Orcia,8298,1854,22080,7164
+2020,SI,Cetona,52008,Val di Chiana Senese,1487,565,6448,3307
+2020,SI,Chianciano Terme,52009,Val di Chiana Senese,73199,8560,188218,18103
+2020,SI,Chiusdino,52010,Terre di Siena,5885,4017,22192,28995
+2020,SI,Chiusi,52011,Val di Chiana Senese,11940,2233,22499,5211
+2020,SI,Colle di Val d'Elsa,52012,Terre di Valdelsa e dellEtruria Volterrana,16522,4017,41312,14417
+2020,SI,Gaiole in Chianti,52013,Chianti,7262,4308,17884,18324
+2020,SI,Montalcino,52037,Val d'Orcia,24696,7955,57573,28139
+2020,SI,Montepulciano,52015,Val di Chiana Senese,39057,12288,89285,37222
+2020,SI,Monteriggioni,52016,Terre di Valdelsa e dellEtruria Volterrana,24898,7244,52460,25265
+2020,SI,Monteroni d'Arbia,52017,Terre di Siena,5560,1558,18500,9744
+2020,SI,Monticiano,52018,Terre di Siena,2127,829,6335,3605
+2020,SI,Murlo,52019,Terre di Siena,7226,3346,19653,14016
+2020,SI,Piancastagnaio,52020,Amiata,1616,71,4024,216
+2020,SI,Pienza,52021,Val d'Orcia,24069,7214,57156,22763
+2020,SI,Poggibonsi,52022,Terre di Valdelsa e dellEtruria Volterrana,15289,4700,39234,19878
+2020,SI,Radda in Chianti,52023,Chianti,9081,4044,20120,16964
+2020,SI,Radicofani,52024,Val d'Orcia,3481,545,9846,2015
+2020,SI,Radicondoli,52025,Terre di Valdelsa e dellEtruria Volterrana,1084,966,6074,7164
+2020,SI,Rapolano Terme,52026,Terre di Siena,22499,1969,53233,8253
+2020,SI,San Casciano dei Bagni,52027,Val di Chiana Senese,8803,1428,29071,8287
+2020,SI,San Gimignano,52028,Terre di Valdelsa e dellEtruria Volterrana,65791,32189,144016,94775
+2020,SI,San Quirico d'Orcia,52030,Val d'Orcia,37550,5377,88318,18603
+2020,SI,Sarteano,52031,Val di Chiana Senese,6698,2407,25114,13997
+2020,SI,Siena,52032,Terre di Siena,141268,59594,324979,127242
+2020,SI,Sinalunga,52033,Val di Chiana Senese,8799,2257,21871,9376
+2020,SI,Sovicille,52034,Terre di Siena,9249,3873,29201,20403
+2020,SI,Torrita di Siena,52035,Val di Chiana Senese,3821,1809,9809,7380
+2020,SI,Trequanda,52036,Val di Chiana Senese,8050,2464,22488,8816
+2021,AR,Anghiari,51001,Valtiberina Toscana,4483,1326,10146,7019
+2021,AR,Arezzo,51002,Arezzo,128409,27940,244971,86075
+2021,AR,Badia Tedalda,51003,Valtiberina Toscana,879,44,4457,219
+2021,AR,Bibbiena,51004,Casentino,5165,1317,15692,8865
+2021,AR,Bucine,51005,Valdarno Aretino,4578,7754,16104,50749
+2021,AR,Capolona,51006,Arezzo,575,926,1721,6893
+2021,AR,Caprese Michelangelo,51007,Valtiberina Toscana,864,296,2046,1594
+2021,AR,Castel Focognano,51008,Casentino,33,260,103,2090
+2021,AR,Castel San Niccolï¿½,51010,Casentino,112,166,195,1777
+2021,AR,Castelfranco Piandiscï¿½,51040,Valdarno Aretino,979,819,3653,5636
+2021,AR,Castiglion Fibocchi,51011,Arezzo,486,438,1120,2262
+2021,AR,Castiglion Fiorentino,51012,Val di Chiana Aretina,14177,6568,31870,30957
+2021,AR,Cavriglia,51013,Valdarno Aretino,9768,8451,33388,53541
+2021,AR,Chitignano,51014,Casentino,364,54,1083,301
+2021,AR,Chiusi della Verna,51015,Casentino,7122,1273,15190,2425
+2021,AR,Civitella in Val di Chiana,51016,Val di Chiana Aretina,5108,1669,13408,8826
+2021,AR,Cortona,51017,Val di Chiana Aretina,20693,14594,50482,77572
+2021,AR,Foiano della Chiana,51018,Val di Chiana Aretina,4780,1643,8548,7011
+2021,AR,Laterina Pergine Valdarno,51042,Valdarno Aretino,7342,2936,18696,18737
+2021,AR,Loro Ciuffenna,51020,Valdarno Aretino,3098,4721,9366,22683
+2021,AR,Lucignano,51021,Val di Chiana Aretina,1701,1094,4545,7636
+2021,AR,Marciano della Chiana,51022,Val di Chiana Aretina,263,106,795,706
+2021,AR,Monte San Savino,51025,Val di Chiana Aretina,7851,2737,21062,12639
+2021,AR,Montemignaio,51023,Casentino,485,359,8767,1488
+2021,AR,Monterchi,51024,Valtiberina Toscana,102,167,638,1226
+2021,AR,Montevarchi,51026,Valdarno Aretino,12876,3835,25753,12917
+2021,AR,Ortignano Raggiolo,51027,Casentino,475,429,1596,3331
+2021,AR,Pieve Santo Stefano,51030,Valtiberina Toscana,6582,1209,19099,3438
+2021,AR,Poppi,51031,Casentino,19881,3665,45464,18079
+2021,AR,Pratovecchio Stia,51041,Casentino,2997,775,9002,4906
+2021,AR,San Giovanni Valdarno,51033,Valdarno Aretino,1274,562,6638,3096
+2021,AR,Sansepolcro,51034,Valtiberina Toscana,16550,2816,42733,11821
+2021,AR,Sestino,51035,Valtiberina Toscana,125,40,366,231
+2021,AR,Subbiano,51037,Casentino,3360,910,6501,9576
+2021,AR,Talla,51038,Casentino,848,117,2396,778
+2021,AR,Terranuova Bracciolini,51039,Valdarno Aretino,12857,3106,41200,11411
+2021,FI,Bagno a Ripoli,48001,Firenze e Area Fiorentina,14819,10658,36096,32777
+2021,FI,Barberino Tavarnelle,48054,Chianti,20012,22259,49004,108220
+2021,FI,Barberino di Mugello,48002,Mugello,26004,7222,60802,15929
+2021,FI,Borgo San Lorenzo,48004,Mugello,12689,6212,24373,22382
+2021,FI,Calenzano,48005,Firenze e Area Fiorentina,44229,10767,115653,22205
+2021,FI,Campi Bisenzio,48006,Firenze e Area Fiorentina,23094,7127,42464,15078
+2021,FI,Capraia e Limite,48008,Empolese Valdelsa e Montalbano,2217,1817,12894,7399
+2021,FI,Castelfiorentino,48010,Empolese Valdelsa e Montalbano,3124,2169,9873,12846
+2021,FI,Cerreto Guidi,48011,Empolese Valdelsa e Montalbano,2523,2598,9849,12122
+2021,FI,Certaldo,48012,Empolese Valdelsa e Montalbano,8268,8911,22957,34230
+2021,FI,Dicomano,48013,Mugello,1043,939,4451,5859
+2021,FI,Empoli,48014,Empolese Valdelsa e Montalbano,7312,1261,22514,4309
+2021,FI,Fiesole,48015,Firenze e Area Fiorentina,16159,17931,35907,50998
+2021,FI,Figline e Incisa Valdarno,48052,Firenze e Area Fiorentina,24697,21458,60203,151656
+2021,FI,Firenze,48017,Firenze e Area Fiorentina,716453,705419,1411029,1741025
+2021,FI,Firenzuola,48018,Mugello,4005,1149,7902,3295
+2021,FI,Fucecchio,48019,Empolese Valdelsa e Montalbano,937,989,3360,6031
+2021,FI,Gambassi Terme,48020,Empolese Valdelsa e Montalbano,5746,5616,11624,31007
+2021,FI,Greve in Chianti,48021,Chianti,11678,20434,27528,79565
+2021,FI,Impruneta,48022,Firenze e Area Fiorentina,12375,8880,32667,27089
+2021,FI,Lastra a Signa,48024,Firenze e Area Fiorentina,6188,2371,17941,12074
+2021,FI,Londa,48025,Firenze e Area Fiorentina,379,411,825,2466
+2021,FI,Marradi,48026,Mugello,2112,539,11768,4021
+2021,FI,Montaione,48027,Empolese Valdelsa e Montalbano,11589,22682,36594,146092
+2021,FI,Montelupo Fiorentino,48028,Empolese Valdelsa e Montalbano,3187,690,13232,3216
+2021,FI,Montespertoli,48030,Empolese Valdelsa e Montalbano,6639,8969,19723,44035
+2021,FI,Palazzuolo sul Senio,48031,Mugello,2792,757,8583,2830
+2021,FI,Pelago,48032,Firenze e Area Fiorentina,2663,1647,7628,8362
+2021,FI,Pontassieve,48033,Firenze e Area Fiorentina,4649,5069,12454,23724
+2021,FI,Reggello,48035,Firenze e Area Fiorentina,16129,9280,42098,38140
+2021,FI,Rignano sull'Arno,48036,Firenze e Area Fiorentina,4731,12009,12037,46622
+2021,FI,Rufina,48037,Firenze e Area Fiorentina,1316,841,4499,3830
+2021,FI,San Casciano in Val di Pesa,48038,Chianti,10826,9766,29488,41869
+2021,FI,San Godenzo,48039,Mugello,1135,93,3358,594
+2021,FI,Scandicci,48041,Firenze e Area Fiorentina,10587,2559,29592,10359
+2021,FI,Scarperia e San Piero,48053,Mugello,25499,7457,40466,18284
+2021,FI,Sesto Fiorentino,48043,Firenze e Area Fiorentina,48786,16417,89544,26206
+2021,FI,Signa,48044,Firenze e Area Fiorentina,11128,2915,31567,7339
+2021,FI,Vaglia,48046,Firenze e Area Fiorentina,3257,1463,7456,4866
+2021,FI,Vicchio,48049,Mugello,2893,2773,9571,13127
+2021,FI,Vinci,48050,Empolese Valdelsa e Montalbano,13430,5339,23162,21704
+2021,GR,Arcidosso,53001,Amiata,1989,481,6603,2478
+2021,GR,Campagnatico,53002,Maremma Toscana Area Sud,954,799,4486,6200
+2021,GR,Capalbio,53003,Maremma Toscana Area Sud,21866,3428,112868,16979
+2021,GR,Castel del Piano,53004,Amiata,8040,966,18308,3440
+2021,GR,Castell'Azzara,53005,Amiata,861,273,3210,1845
+2021,GR,Castiglione della Pescaia,53006,Maremma Toscana Area Nord,152788,66133,953571,484131
+2021,GR,Cinigiano,53007,Maremma Toscana Area Sud,2436,3402,12401,12520
+2021,GR,Civitella Paganico,53008,Maremma Toscana Area Sud,6185,1954,18073,10028
+2021,GR,Follonica,53009,Maremma Toscana Area Nord,65063,16278,328704,107335
+2021,GR,Gavorrano,53010,Maremma Toscana Area Nord,9049,5246,30902,36323
+2021,GR,Grosseto,53011,Maremma Toscana Area Sud,184628,26138,969600,138636
+2021,GR,Isola del Giglio,53012,Maremma Toscana Area Sud,16196,2086,67263,10117
+2021,GR,Magliano in Toscana,53013,Maremma Toscana Area Sud,15964,3060,66570,13928
+2021,GR,Manciano,53014,Maremma Toscana Area Sud,50359,8011,183142,29794
+2021,GR,Massa Marittima,53015,Maremma Toscana Area Nord,19327,9829,73509,59933
+2021,GR,Monte Argentario,53016,Maremma Toscana Area Sud,30721,9789,124404,32673
+2021,GR,Monterotondo Marittimo,53027,Maremma Toscana Area Nord,1618,1089,7681,7819
+2021,GR,Montieri,53017,Maremma Toscana Area Nord,1930,605,6278,3363
+2021,GR,Orbetello,53018,Maremma Toscana Area Sud,154735,19988,831302,112818
+2021,GR,Pitigliano,53019,Maremma Toscana Area Sud,7208,1422,14936,3285
+2021,GR,Roccalbegna,53020,Amiata,843,308,2120,1476
+2021,GR,Roccastrada,53021,Maremma Toscana Area Nord,4757,3850,16025,20193
+2021,GR,Santa Fiora,53022,Amiata,162,76,1030,802
+2021,GR,Scansano,53023,Maremma Toscana Area Sud,6125,1270,17894,6310
+2021,GR,Scarlino,53024,Maremma Toscana Area Nord,40139,10528,227809,74912
+2021,GR,Seggiano,53025,Amiata,3479,1630,8361,7695
+2021,GR,Semproniano,53028,Maremma Toscana Area Sud,4970,845,11449,2118
+2021,GR,Sorano,53026,Maremma Toscana Area Sud,10391,1577,26872,5772
+2021,LI,Bibbona,49001,Costa degli Etruschi,114348,40213,808583,286139
+2021,LI,Campiglia Marittima,49002,Costa degli Etruschi,25080,7647,101910,47117
+2021,LI,Campo nell'Elba,49003,Elba e Isole di Toscana,55744,16459,332311,111152
+2021,LI,Capoliveri,49004,Elba e Isole di Toscana,88491,48987,603755,376702
+2021,LI,Capraia Isola,49005,Livorno,1823,10,10279,24
+2021,LI,Castagneto Carducci,49006,Costa degli Etruschi,86819,50816,602151,403838
+2021,LI,Cecina,49007,Costa degli Etruschi,74419,25429,426278,163514
+2021,LI,Collesalvetti,49008,Livorno,7856,3124,19849,8116
+2021,LI,Livorno,49009,Livorno,98665,44716,235069,113297
+2021,LI,Marciana,49010,Elba e Isole di Toscana,29183,8607,153568,47057
+2021,LI,Marciana Marina,49011,Elba e Isole di Toscana,18083,4208,77110,18127
+2021,LI,Piombino,49012,Costa degli Etruschi,119801,22738,698012,138641
+2021,LI,Porto Azzurro,49013,Elba e Isole di Toscana,27739,9060,151893,59821
+2021,LI,Portoferraio,49014,Elba e Isole di Toscana,68329,29882,358584,180211
+2021,LI,Rio,49021,Elba e Isole di Toscana,25855,6827,164072,42005
+2021,LI,Rosignano Marittimo,49017,Costa degli Etruschi,65650,36488,328872,210732
+2021,LI,San Vincenzo,49018,Costa degli Etruschi,96935,44385,575154,392237
+2021,LI,Sassetta,49019,Costa degli Etruschi,7153,2411,14852,12016
+2021,LI,Suvereto,49020,Costa degli Etruschi,8487,3048,38302,21742
+2021,LU,Altopascio,46001,Piana di Lucca,9678,2437,19483,7428
+2021,LU,Bagni di Lucca,46002,Garfagnana e media valle del Serchio,3854,1145,8276,4750
+2021,LU,Barga,46003,Garfagnana e media valle del Serchio,12360,6201,33128,21700
+2021,LU,Borgo a Mozzano,46004,Garfagnana e media valle del Serchio,1698,665,11779,2511
+2021,LU,Camaiore,46005,Versilia,74375,28013,306859,118276
+2021,LU,Camporgiano,46006,Garfagnana e media valle del Serchio,2331,760,4927,6286
+2021,LU,Capannori,46007,Piana di Lucca,13163,5699,33045,30181
+2021,LU,Careggine,46008,Garfagnana e media valle del Serchio,1054,58,1764,1466
+2021,LU,Castelnuovo di Garfagnana,46009,Garfagnana e media valle del Serchio,6089,974,13230,3342
+2021,LU,Castiglione di Garfagnana,46010,Garfagnana e media valle del Serchio,3729,485,17461,3277
+2021,LU,Coreglia Antelminelli,46011,Garfagnana e media valle del Serchio,526,1289,1296,7952
+2021,LU,Fabbriche di Vergemoli,46036,Garfagnana e media valle del Serchio,14,93,48,885
+2021,LU,Forte dei Marmi,46013,Versilia,55148,29359,174260,125456
+2021,LU,Fosciandora,46014,Garfagnana e media valle del Serchio,104,152,338,1027
+2021,LU,Gallicano,46015,Garfagnana e media valle del Serchio,1770,469,3550,3016
+2021,LU,Lucca,46017,Piana di Lucca,77081,59324,140522,150736
+2021,LU,Massarosa,46018,Versilia,3492,1238,10519,7276
+2021,LU,Minucciano,46019,Garfagnana e media valle del Serchio,2878,903,7365,3447
+2021,LU,Molazzana,46020,Garfagnana e media valle del Serchio,199,366,1946,3984
+2021,LU,Montecarlo,46021,Piana di Lucca,3718,1848,9687,7975
+2021,LU,Pescaglia,46022,Garfagnana e media valle del Serchio,182,750,773,5596
+2021,LU,Piazza al Serchio,46023,Garfagnana e media valle del Serchio,290,155,2194,936
+2021,LU,Pietrasanta,46024,Versilia,67151,19596,274171,82125
+2021,LU,Pieve Fosciana,46025,Garfagnana e media valle del Serchio,1916,647,6766,3473
+2021,LU,Porcari,46026,Piana di Lucca,3890,450,11521,1443
+2021,LU,San Romano in Garfagnana,46027,Garfagnana e media valle del Serchio,226,265,667,1896
+2021,LU,Seravezza,46028,Versilia,2041,276,7069,1254
+2021,LU,Sillano Giuncugnano,46037,Garfagnana e media valle del Serchio,1843,783,5772,2279
+2021,LU,Stazzema,46030,Versilia,848,104,5717,525
+2021,LU,Vagli Sotto,46031,Garfagnana e media valle del Serchio,288,94,683,578
+2021,LU,Viareggio,46033,Versilia,112977,50816,667695,226845
+2021,LU,Villa Basilica,46034,Piana di Lucca,47,39,159,209
+2021,LU,Villa Collemandina,46035,Garfagnana e media valle del Serchio,1596,342,5058,2792
+2021,MS,Aulla,45001,Lunigiana,596,163,1499,213
+2021,MS,Bagnone,45002,Lunigiana,83,396,217,2535
+2021,MS,Carrara,45003,Riviera Apuana,15288,4980,49625,14823
+2021,MS,Casola in Lunigiana,45004,Lunigiana,202,159,535,687
+2021,MS,Comano,45005,Lunigiana,321,172,650,364
+2021,MS,Filattiera,45006,Lunigiana,468,551,662,1446
+2021,MS,Fivizzano,45007,Lunigiana,2013,854,4777,3276
+2021,MS,Fosdinovo,45008,Lunigiana,2991,852,7923,2151
+2021,MS,Licciana Nardi,45009,Lunigiana,1868,424,4223,2632
+2021,MS,Massa,45010,Riviera Apuana,138628,28104,675658,110705
+2021,MS,Montignoso,45011,Riviera Apuana,13247,3433,55696,15582
+2021,MS,Mulazzo,45012,Lunigiana,4529,1528,17289,6225
+2021,MS,Podenzana,45013,Lunigiana,800,373,1627,1585
+2021,MS,Pontremoli,45014,Lunigiana,4473,1132,8449,3107
+2021,MS,Tresana,45015,Lunigiana,586,227,2149,598
+2021,MS,Villafranca in Lunigiana,45016,Lunigiana,1021,398,2748,1059
+2021,MS,Zeri,45017,Lunigiana,422,49,858,145
+2021,PI,Bientina,50001,Terre di Pisa,7107,618,16014,1976
+2021,PI,Buti,50002,Terre di Pisa,389,606,1317,5155
+2021,PI,Calci,50003,Terre di Pisa,421,768,1885,5993
+2021,PI,Calcinaia,50004,Terre di Pisa,1224,255,2319,504
+2021,PI,Capannoli,50005,Terre di Pisa,128,226,654,1246
+2021,PI,Casale Marittimo,50006,Costa degli Etruschi,1649,4327,7276,45996
+2021,PI,Casciana Terme Lari,50040,Terre di Pisa,4290,3784,15840,26089
+2021,PI,Cascina,50008,Terre di Pisa,7844,1970,20830,5649
+2021,PI,Castelfranco di Sotto,50009,Terre di Pisa,532,907,2324,6520
+2021,PI,Castellina Marittima,50010,Costa degli Etruschi,3999,1283,10646,5000
+2021,PI,Castelnuovo di Val di Cecina,50011,Terre di Valdelsa e dellEtruria Volterrana,2110,1278,6798,9590
+2021,PI,Chianni,50012,Terre di Pisa,2961,1097,7496,7551
+2021,PI,Crespina Lorenzana,50041,Terre di Pisa,1395,1086,8160,8129
+2021,PI,Fauglia,50014,Terre di Pisa,991,854,7368,5196
+2021,PI,Guardistallo,50015,Costa degli Etruschi,3251,2710,13862,21097
+2021,PI,Lajatico,50016,Terre di Pisa,1853,1929,6125,12579
+2021,PI,Montecatini Val di Cecina,50019,Terre di Valdelsa e dellEtruria Volterrana,6877,4033,19629,26534
+2021,PI,Montescudaio,50020,Costa degli Etruschi,6149,7501,40475,69446
+2021,PI,Monteverdi Marittimo,50021,Terre di Valdelsa e dellEtruria Volterrana,4980,1160,13063,4992
+2021,PI,Montopoli in Val d'Arno,50022,Terre di Pisa,3208,3410,11738,17598
+2021,PI,Palaia,50024,Terre di Pisa,3633,5831,10823,33554
+2021,PI,Peccioli,50025,Terre di Pisa,2761,2805,7585,23406
+2021,PI,Pisa,50026,Terre di Pisa,230258,182935,748182,393078
+2021,PI,Pomarance,50027,Terre di Valdelsa e dellEtruria Volterrana,5317,5159,19156,31278
+2021,PI,Ponsacco,50028,Terre di Pisa,4783,1034,9238,5529
+2021,PI,Pontedera,50029,Terre di Pisa,9667,2653,21852,9066
+2021,PI,Riparbella,50030,Costa degli Etruschi,8969,7414,38141,53120
+2021,PI,San Giuliano Terme,50031,Terre di Pisa,18453,9845,264608,58846
+2021,PI,San Miniato,50032,Terre di Pisa,10559,5221,22482,18032
+2021,PI,Santa Croce sull'Arno e Orciano Pisano,50023+50033,Terre di Pisa,104,0,912,0
+2021,PI,Santa Croce sull'Arno e Orciano Pisano,50023+50034,Terre di Pisa,0,72,0,522
+2021,PI,Santa Luce,50034,Costa degli Etruschi,3448,1507,13758,9613
+2021,PI,Santa Maria a Monte,50035,Terre di Pisa,1188,238,3200,750
+2021,PI,Terricciola,50036,Terre di Pisa,933,2610,3329,18795
+2021,PI,Vecchiano,50037,Terre di Pisa,2765,1442,8119,6046
+2021,PI,Vicopisano,50038,Terre di Pisa,792,319,4144,1680
+2021,PI,Volterra,50039,Terre di Valdelsa e dellEtruria Volterrana,38684,23418,82463,96829
+2021,PO,Cantagallo,100001,Area Pratese,495,106,1305,558
+2021,PO,Carmignano,100002,Area Pratese,7794,4543,15376,16974
+2021,PO,Montemurlo,100003,Area Pratese,666,350,1965,1657
+2021,PO,Poggio a Caiano,100004,Area Pratese,2478,2093,5715,4308
+2021,PO,Prato,100005,Area Pratese,74443,26075,177277,62029
+2021,PO,Vaiano,100006,Area Pratese,929,514,3469,2604
+2021,PO,Vernio,100007,Area Pratese,2048,87,11977,346
+2021,PT,Abetone Cutigliano,47023,Pistoia e Montagna Pistoiese,21995,1158,53338,2848
+2021,PT,Agliana,47002,Pistoia e Montagna Pistoiese,1579,120,6373,564
+2021,PT,Chiesina Uzzanese,47022,Valdinievole,19757,788,24534,1076
+2021,PT,Lamporecchio,47005,Valdinievole,6551,10149,17747,60305
+2021,PT,Larciano,47006,Valdinievole,4172,1429,9552,7850
+2021,PT,Marliana,47007,Pistoia e Montagna Pistoiese,931,938,1978,3370
+2021,PT,Massa e Cozzile,47008,Valdinievole,316,721,834,3987
+2021,PT,Monsummano Terme,47009,Valdinievole,3426,2774,9775,12339
+2021,PT,Montale,47010,Pistoia e Montagna Pistoiese,1041,152,1805,359
+2021,PT,Montecatini Terme,47011,Valdinievole,126896,61451,304927,226202
+2021,PT,Pescia,47012,Valdinievole,5790,3454,12242,15154
+2021,PT,Pieve a Nievole,47013,Valdinievole,1313,445,2700,2223
+2021,PT,Pistoia,47014,Pistoia e Montagna Pistoiese,36234,13808,76016,46342
+2021,PT,Ponte Buggianese e Buggiano,47016+47003,Valdinievole,2142,0,7818,0
+2021,PT,Ponte Buggianese e Buggiano,47016+47004,Valdinievole,0,1838,0,7068
+2021,PT,Quarrata,47017,Pistoia e Montagna Pistoiese,2071,1103,7816,4119
+2021,PT,San Marcello Piteglio e Sambuca Pistoiese,47024,Pistoia e Montagna Pistoiese,11557,904,48831,4597
+2021,PT,Serravalle Pistoiese,47020,Pistoia e Montagna Pistoiese,9135,2653,26585,12740
+2021,PT,Uzzano,47021,Valdinievole,506,398,1777,1911
+2021,SI,Abbadia San Salvatore,52001,Amiata,21886,1284,51054,2414
+2021,SI,Asciano,52002,Terre di Siena,19433,10180,43363,42071
+2021,SI,Buonconvento,52003,Terre di Siena,6870,2694,20978,13312
+2021,SI,Casole d'Elsa,52004,Terre di Valdelsa e dellEtruria Volterrana,5268,9098,21740,51512
+2021,SI,Castellina in Chianti,52005,Chianti,13550,20754,31439,91135
+2021,SI,Castelnuovo Berardenga,52006,Chianti,17333,19856,44085,76233
+2021,SI,Castiglione d'Orcia,52007,Val d'Orcia,12447,3810,33766,15081
+2021,SI,Cetona,52008,Val di Chiana Senese,1917,1268,8163,7442
+2021,SI,Chianciano Terme,52009,Val di Chiana Senese,104496,21239,249803,51224
+2021,SI,Chiusdino,52010,Terre di Siena,8163,9252,22864,58592
+2021,SI,Chiusi,52011,Val di Chiana Senese,14788,4671,28660,12816
+2021,SI,Colle di Val d'Elsa,52012,Terre di Valdelsa e dellEtruria Volterrana,21572,9229,51486,32322
+2021,SI,Gaiole in Chianti,52013,Chianti,9518,9775,20671,38822
+2021,SI,Montalcino,52037,Val d'Orcia,34474,23223,75716,79236
+2021,SI,Montepulciano,52015,Val di Chiana Senese,59662,28104,123271,86316
+2021,SI,Monteriggioni,52016,Terre di Valdelsa e dellEtruria Volterrana,34167,14796,68054,61169
+2021,SI,Monteroni d'Arbia,52017,Terre di Siena,7108,4121,22101,21411
+2021,SI,Monticiano,52018,Terre di Siena,3082,1420,6649,5592
+2021,SI,Murlo,52019,Terre di Siena,6592,3705,16840,18285
+2021,SI,Piancastagnaio,52020,Amiata,2268,257,5952,624
+2021,SI,Pienza,52021,Val d'Orcia,33703,16635,77336,52861
+2021,SI,Poggibonsi,52022,Terre di Valdelsa e dellEtruria Volterrana,22991,10005,53319,38638
+2021,SI,Radda in Chianti,52023,Chianti,9877,9937,20748,37112
+2021,SI,Radicofani,52024,Val d'Orcia,3844,1009,9483,4493
+2021,SI,Radicondoli,52025,Terre di Valdelsa e dellEtruria Volterrana,1148,1858,4997,13972
+2021,SI,Rapolano Terme,52026,Terre di Siena,30382,5694,67473,25433
+2021,SI,San Casciano dei Bagni,52027,Val di Chiana Senese,16075,2716,40639,11617
+2021,SI,San Gimignano,52028,Terre di Valdelsa e dellEtruria Volterrana,75039,64076,149293,203135
+2021,SI,San Quirico d'Orcia,52030,Val d'Orcia,52248,11221,126451,38690
+2021,SI,Sarteano,52031,Val di Chiana Senese,9353,5654,29886,32478
+2021,SI,Siena,52032,Terre di Siena,178874,116610,392975,267905
+2021,SI,Sinalunga,52033,Val di Chiana Senese,11837,4404,23259,17465
+2021,SI,Sovicille,52034,Terre di Siena,12035,8346,33150,37752
+2021,SI,Torrita di Siena,52035,Val di Chiana Senese,4385,4499,10013,19206
+2021,SI,Trequanda,52036,Val di Chiana Senese,11379,6576,29099,23709
+2022,AR,Anghiari,51001,Valtiberina Toscana,5955,2161,11588,10284
+2022,AR,Arezzo,51002,Arezzo,151124,61774,260431,174587
+2022,AR,Badia Tedalda,51003,Valtiberina Toscana,937,154,4976,781
+2022,AR,Bibbiena,51004,Casentino,5603,2285,15570,14611
+2022,AR,Bucine,51005,Valdarno Aretino,4380,16758,11909,94051
+2022,AR,Capolona,51006,Arezzo,534,1349,1488,9211
+2022,AR,Caprese Michelangelo,51007,Valtiberina Toscana,1562,698,3832,3246
+2022,AR,Castel Focognano,51008,Casentino,89,240,301,2265
+2022,AR,Castel San Niccolï¿½,51010,Casentino,968,538,3108,3082
+2022,AR,Castelfranco Piandiscï¿½,51040,Valdarno Aretino,801,1416,2744,9491
+2022,AR,Castiglion Fibocchi,51011,Arezzo,853,1360,2363,8391
+2022,AR,Castiglion Fiorentino,51012,Val di Chiana Aretina,16328,17481,32675,60778
+2022,AR,Cavriglia,51013,Valdarno Aretino,13591,8416,55347,45403
+2022,AR,Chitignano,51014,Casentino,309,79,1203,305
+2022,AR,Chiusi della Verna,51015,Casentino,8232,2602,17431,5786
+2022,AR,Civitella in Val di Chiana,51016,Val di Chiana Aretina,6281,2773,14916,15277
+2022,AR,Cortona,51017,Val di Chiana Aretina,23317,30099,50473,144897
+2022,AR,Foiano della Chiana,51018,Val di Chiana Aretina,6354,2861,10697,13589
+2022,AR,Laterina Pergine Valdarno,51042,Valdarno Aretino,9226,6158,20293,32390
+2022,AR,Loro Ciuffenna,51020,Valdarno Aretino,2431,8497,5960,39150
+2022,AR,Lucignano,51021,Val di Chiana Aretina,1427,2044,3946,13296
+2022,AR,Marciano della Chiana,51022,Val di Chiana Aretina,424,271,1174,1590
+2022,AR,Monte San Savino,51025,Val di Chiana Aretina,6907,5144,19177,21310
+2022,AR,Montemignaio,51023,Casentino,637,707,8067,2028
+2022,AR,Monterchi,51024,Valtiberina Toscana,25,203,124,1770
+2022,AR,Montevarchi,51026,Valdarno Aretino,14629,5997,25439,15577
+2022,AR,Ortignano Raggiolo,51027,Casentino,399,749,1042,4765
+2022,AR,Pieve Santo Stefano,51030,Valtiberina Toscana,7428,2718,16039,6307
+2022,AR,Poppi,51031,Casentino,18243,7693,44060,33181
+2022,AR,Pratovecchio Stia,51041,Casentino,3404,1507,7580,8096
+2022,AR,San Giovanni Valdarno,51033,Valdarno Aretino,1593,962,6974,4200
+2022,AR,Sansepolcro,51034,Valtiberina Toscana,19859,6298,40118,23031
+2022,AR,Sestino,51035,Valtiberina Toscana,143,29,390,254
+2022,AR,Subbiano,51037,Casentino,4548,1668,7679,8050
+2022,AR,Talla,51038,Casentino,1019,129,2670,989
+2022,AR,Terranuova Bracciolini,51039,Valdarno Aretino,22381,7794,55237,22499
+2022,FI,Bagno a Ripoli,48001,Firenze e Area Fiorentina,15320,22854,40671,70146
+2022,FI,Barberino Tavarnelle,48054,Chianti,23109,46688,52101,203672
+2022,FI,Barberino di Mugello,48002,Mugello,31693,11647,72869,25842
+2022,FI,Borgo San Lorenzo,48004,Mugello,13201,12893,24451,40559
+2022,FI,Calenzano,48005,Firenze e Area Fiorentina,58312,39698,128379,74464
+2022,FI,Campi Bisenzio,48006,Firenze e Area Fiorentina,40600,29682,70728,56909
+2022,FI,Capraia e Limite,48008,Empolese Valdelsa e Montalbano,3494,3304,15302,14382
+2022,FI,Castelfiorentino,48010,Empolese Valdelsa e Montalbano,3591,4114,9603,21660
+2022,FI,Cerreto Guidi,48011,Empolese Valdelsa e Montalbano,3452,5734,8898,23002
+2022,FI,Certaldo,48012,Empolese Valdelsa e Montalbano,9545,18644,23662,68941
+2022,FI,Dicomano,48013,Mugello,1150,1455,4536,8780
+2022,FI,Empoli,48014,Empolese Valdelsa e Montalbano,8815,3030,20421,9760
+2022,FI,Fiesole,48015,Firenze e Area Fiorentina,17913,35690,37268,105430
+2022,FI,Figline e Incisa Valdarno,48052,Firenze e Area Fiorentina,32971,53539,88319,397263
+2022,FI,Firenze,48017,Firenze e Area Fiorentina,1037437,2220924,1911743,5502897
+2022,FI,Firenzuola,48018,Mugello,5503,2226,10240,5943
+2022,FI,Fucecchio,48019,Empolese Valdelsa e Montalbano,2704,1941,6952,9876
+2022,FI,Gambassi Terme,48020,Empolese Valdelsa e Montalbano,6353,10691,11091,50690
+2022,FI,Greve in Chianti,48021,Chianti,13190,45274,29377,165370
+2022,FI,Impruneta,48022,Firenze e Area Fiorentina,16890,23155,36557,69760
+2022,FI,Lastra a Signa,48024,Firenze e Area Fiorentina,7669,5298,17344,22967
+2022,FI,Londa,48025,Firenze e Area Fiorentina,436,648,953,3342
+2022,FI,Marradi,48026,Mugello,2703,815,15625,5559
+2022,FI,Montaione,48027,Empolese Valdelsa e Montalbano,11753,38617,32860,228449
+2022,FI,Montelupo Fiorentino,48028,Empolese Valdelsa e Montalbano,3754,1678,18837,8386
+2022,FI,Montespertoli,48030,Empolese Valdelsa e Montalbano,7546,15749,22508,71666
+2022,FI,Palazzuolo sul Senio,48031,Mugello,3474,1659,11242,12246
+2022,FI,Pelago,48032,Firenze e Area Fiorentina,3203,3759,8764,16791
+2022,FI,Pontassieve,48033,Firenze e Area Fiorentina,6011,9873,13234,41032
+2022,FI,Reggello,48035,Firenze e Area Fiorentina,22537,20631,60536,75217
+2022,FI,Rignano sull'Arno,48036,Firenze e Area Fiorentina,7441,22075,16461,80720
+2022,FI,Rufina,48037,Firenze e Area Fiorentina,1350,1234,4831,5162
+2022,FI,San Casciano in Val di Pesa,48038,Chianti,13016,23102,32226,92104
+2022,FI,San Godenzo,48039,Mugello,1317,183,4482,993
+2022,FI,Scandicci,48041,Firenze e Area Fiorentina,17179,6646,36882,20777
+2022,FI,Scarperia e San Piero,48053,Mugello,28177,12724,44699,32224
+2022,FI,Sesto Fiorentino,48043,Firenze e Area Fiorentina,57238,56119,96508,86978
+2022,FI,Signa,48044,Firenze e Area Fiorentina,17130,9269,40452,21169
+2022,FI,Vaglia,48046,Firenze e Area Fiorentina,4117,2783,8490,7986
+2022,FI,Vicchio,48049,Mugello,2865,4510,9615,21576
+2022,FI,Vinci,48050,Empolese Valdelsa e Montalbano,19277,10457,34292,39868
+2022,GR,Arcidosso,53001,Amiata,3516,1433,8786,7586
+2022,GR,Campagnatico,53002,Maremma Toscana Area Sud,1487,1673,5368,11183
+2022,GR,Capalbio,53003,Maremma Toscana Area Sud,26760,4414,128482,18741
+2022,GR,Castel del Piano,53004,Amiata,9411,1803,19371,7107
+2022,GR,Castell'Azzara,53005,Amiata,924,417,3514,2859
+2022,GR,Castiglione della Pescaia,53006,Maremma Toscana Area Nord,152673,76209,851503,523830
+2022,GR,Cinigiano,53007,Maremma Toscana Area Sud,3011,4984,10296,19885
+2022,GR,Civitella Paganico,53008,Maremma Toscana Area Sud,4125,2405,13704,14735
+2022,GR,Follonica,53009,Maremma Toscana Area Nord,78160,22174,385565,151747
+2022,GR,Gavorrano,53010,Maremma Toscana Area Nord,7684,7756,27408,47845
+2022,GR,Grosseto,53011,Maremma Toscana Area Sud,195386,40110,903736,201610
+2022,GR,Isola del Giglio,53012,Maremma Toscana Area Sud,18904,3544,74280,15611
+2022,GR,Magliano in Toscana,53013,Maremma Toscana Area Sud,17095,5034,60319,22446
+2022,GR,Manciano,53014,Maremma Toscana Area Sud,68526,19130,164159,47404
+2022,GR,Massa Marittima,53015,Maremma Toscana Area Nord,22747,16484,71648,104074
+2022,GR,Monte Argentario,53016,Maremma Toscana Area Sud,32033,16261,109056,52088
+2022,GR,Monterotondo Marittimo,53027,Maremma Toscana Area Nord,1090,1245,4119,9249
+2022,GR,Montieri,53017,Maremma Toscana Area Nord,2015,1183,6062,7179
+2022,GR,Orbetello,53018,Maremma Toscana Area Sud,180526,33019,912183,152658
+2022,GR,Pitigliano,53019,Maremma Toscana Area Sud,7721,2609,15128,5303
+2022,GR,Roccalbegna,53020,Amiata,1000,676,2408,3177
+2022,GR,Roccastrada,53021,Maremma Toscana Area Nord,4452,6922,14641,33860
+2022,GR,Santa Fiora,53022,Amiata,568,272,2168,2657
+2022,GR,Scansano,53023,Maremma Toscana Area Sud,7681,2569,22603,13330
+2022,GR,Scarlino,53024,Maremma Toscana Area Nord,43980,15664,226878,108734
+2022,GR,Seggiano,53025,Amiata,2969,2664,6998,11612
+2022,GR,Semproniano,53028,Maremma Toscana Area Sud,5642,1469,12674,3946
+2022,GR,Sorano,53026,Maremma Toscana Area Sud,11340,3564,24847,8654
+2022,LI,Bibbona,49001,Costa degli Etruschi,109210,56680,905434,396825
+2022,LI,Campiglia Marittima,49002,Costa degli Etruschi,27693,10267,101086,57779
+2022,LI,Campo nell'Elba,49003,Elba e Isole di Toscana,59320,26534,352546,185210
+2022,LI,Capoliveri,49004,Elba e Isole di Toscana,86616,61547,565370,468480
+2022,LI,Capraia Isola,49005,Livorno,1939,11,13389,71
+2022,LI,Castagneto Carducci,49006,Costa degli Etruschi,89612,65230,577840,502621
+2022,LI,Cecina,49007,Costa degli Etruschi,73652,36629,472752,232823
+2022,LI,Collesalvetti,49008,Livorno,9795,5702,24157,14704
+2022,LI,Livorno,49009,Livorno,111655,74029,231788,166635
+2022,LI,Marciana,49010,Elba e Isole di Toscana,33215,14215,159704,76227
+2022,LI,Marciana Marina,49011,Elba e Isole di Toscana,17337,7325,70114,27148
+2022,LI,Piombino,49012,Costa degli Etruschi,130393,35642,681037,201039
+2022,LI,Porto Azzurro,49013,Elba e Isole di Toscana,27351,12725,141609,80027
+2022,LI,Portoferraio,49014,Elba e Isole di Toscana,67911,43500,329296,263739
+2022,LI,Rio,49021,Elba e Isole di Toscana,24407,8465,143712,56832
+2022,LI,Rosignano Marittimo,49017,Costa degli Etruschi,66516,51913,335099,312268
+2022,LI,San Vincenzo,49018,Costa degli Etruschi,102935,75994,519752,610002
+2022,LI,Sassetta,49019,Costa degli Etruschi,7953,3998,14185,18262
+2022,LI,Suvereto,49020,Costa degli Etruschi,8289,4635,31977,32520
+2022,LU,Altopascio,46001,Piana di Lucca,7844,2869,16256,8718
+2022,LU,Bagni di Lucca,46002,Garfagnana e media valle del Serchio,3890,1986,8602,8924
+2022,LU,Barga,46003,Garfagnana e media valle del Serchio,11524,14679,33591,57852
+2022,LU,Borgo a Mozzano,46004,Garfagnana e media valle del Serchio,1510,725,9997,2925
+2022,LU,Camaiore,46005,Versilia,85039,54074,306891,220984
+2022,LU,Camporgiano,46006,Garfagnana e media valle del Serchio,2234,1395,4350,9805
+2022,LU,Capannori,46007,Piana di Lucca,15763,11944,38006,56831
+2022,LU,Careggine,46008,Garfagnana e media valle del Serchio,1053,185,2249,615
+2022,LU,Castelnuovo di Garfagnana,46009,Garfagnana e media valle del Serchio,8445,2433,18389,7587
+2022,LU,Castiglione di Garfagnana,46010,Garfagnana e media valle del Serchio,4730,786,27384,4389
+2022,LU,Coreglia Antelminelli,46011,Garfagnana e media valle del Serchio,614,1072,3273,7411
+2022,LU,Fabbriche di Vergemoli,46036,Garfagnana e media valle del Serchio,161,419,542,3743
+2022,LU,Forte dei Marmi,46013,Versilia,57125,46552,177311,198841
+2022,LU,Fosciandora,46014,Garfagnana e media valle del Serchio,45,137,143,1236
+2022,LU,Gallicano,46015,Garfagnana e media valle del Serchio,2206,801,4307,3799
+2022,LU,Lucca,46017,Piana di Lucca,112879,129807,201479,319358
+2022,LU,Massarosa,46018,Versilia,7090,3275,17130,14576
+2022,LU,Minucciano,46019,Garfagnana e media valle del Serchio,2667,1268,7887,6059
+2022,LU,Molazzana,46020,Garfagnana e media valle del Serchio,316,727,2471,6017
+2022,LU,Montecarlo,46021,Piana di Lucca,5307,3070,11979,12252
+2022,LU,Pescaglia,46022,Garfagnana e media valle del Serchio,294,927,967,6433
+2022,LU,Piazza al Serchio,46023,Garfagnana e media valle del Serchio,366,289,1612,2014
+2022,LU,Pietrasanta,46024,Versilia,71555,41156,258414,177797
+2022,LU,Pieve Fosciana,46025,Garfagnana e media valle del Serchio,1491,1096,6468,6256
+2022,LU,Porcari,46026,Piana di Lucca,4484,758,10499,2082
+2022,LU,San Romano in Garfagnana,46027,Garfagnana e media valle del Serchio,410,412,1997,2633
+2022,LU,Seravezza,46028,Versilia,2094,368,6879,1217
+2022,LU,Sillano Giuncugnano,46037,Garfagnana e media valle del Serchio,3011,1111,10315,2701
+2022,LU,Stazzema,46030,Versilia,1868,231,4607,738
+2022,LU,Vagli Sotto,46031,Garfagnana e media valle del Serchio,235,174,935,830
+2022,LU,Viareggio,46033,Versilia,161737,79734,637160,311006
+2022,LU,Villa Basilica,46034,Piana di Lucca,126,142,375,900
+2022,LU,Villa Collemandina,46035,Garfagnana e media valle del Serchio,1695,495,6606,4526
+2022,MS,Aulla,45001,Lunigiana,1329,635,3091,946
+2022,MS,Bagnone,45002,Lunigiana,238,503,526,3336
+2022,MS,Carrara,45003,Riviera Apuana,20931,8949,56829,23432
+2022,MS,Casola in Lunigiana,45004,Lunigiana,267,542,741,2394
+2022,MS,Comano,45005,Lunigiana,388,1456,944,4580
+2022,MS,Filattiera,45006,Lunigiana,354,461,500,1449
+2022,MS,Fivizzano,45007,Lunigiana,1672,1711,3607,9138
+2022,MS,Fosdinovo,45008,Lunigiana,3988,2457,7309,5519
+2022,MS,Licciana Nardi,45009,Lunigiana,2410,1101,5184,5349
+2022,MS,Massa,45010,Riviera Apuana,160448,45674,703000,172986
+2022,MS,Montignoso,45011,Riviera Apuana,13074,5316,49870,23049
+2022,MS,Mulazzo,45012,Lunigiana,4767,3223,14904,10426
+2022,MS,Podenzana,45013,Lunigiana,656,333,1437,1379
+2022,MS,Pontremoli,45014,Lunigiana,4836,2107,8449,6218
+2022,MS,Tresana,45015,Lunigiana,514,227,2424,418
+2022,MS,Villafranca in Lunigiana,45016,Lunigiana,1192,582,3561,1852
+2022,MS,Zeri,45017,Lunigiana,1451,357,2611,454
+2022,PI,Bientina,50001,Terre di Pisa,6523,918,14530,2099
+2022,PI,Buti,50002,Terre di Pisa,587,731,3261,5074
+2022,PI,Calci,50003,Terre di Pisa,651,1336,1662,9496
+2022,PI,Calcinaia,50004,Terre di Pisa,2177,534,4121,1011
+2022,PI,Capannoli,50005,Terre di Pisa,163,374,307,1986
+2022,PI,Casale Marittimo,50006,Costa degli Etruschi,1423,6233,5587,65325
+2022,PI,Casciana Terme Lari,50040,Terre di Pisa,5712,6290,19063,27524
+2022,PI,Cascina,50008,Terre di Pisa,12645,5969,28612,12686
+2022,PI,Castelfranco di Sotto,50009,Terre di Pisa,594,1515,2242,10252
+2022,PI,Castellina Marittima,50010,Costa degli Etruschi,4587,1467,11349,4814
+2022,PI,Castelnuovo di Val di Cecina,50011,Terre di Valdelsa e dellEtruria Volterrana,1839,2241,4960,16675
+2022,PI,Chianni,50012,Terre di Pisa,887,1552,2421,10732
+2022,PI,Crespina Lorenzana,50041,Terre di Pisa,1571,1554,6451,10695
+2022,PI,Fauglia e Orciano Pisano,50014+50023,Terre di Pisa,1795,0,6520,0
+2022,PI,Fauglia e Orciano Pisano,50014+50024,Terre di Pisa,0,1611,0,9906
+2022,PI,Guardistallo,50015,Costa degli Etruschi,3127,4126,12908,30736
+2022,PI,Lajatico,50016,Terre di Pisa,1881,3601,6054,19517
+2022,PI,Montecatini Val di Cecina,50019,Terre di Valdelsa e dellEtruria Volterrana,8639,6843,23596,42304
+2022,PI,Montescudaio,50020,Costa degli Etruschi,6339,11800,32741,114562
+2022,PI,Monteverdi Marittimo,50021,Terre di Valdelsa e dellEtruria Volterrana,4575,1728,10418,7465
+2022,PI,Montopoli in Val d'Arno,50022,Terre di Pisa,4127,3952,12413,18714
+2022,PI,Palaia,50024,Terre di Pisa,3719,9828,9142,52823
+2022,PI,Peccioli,50025,Terre di Pisa,4004,5342,8469,38200
+2022,PI,Pisa,50026,Terre di Pisa,283942,436990,846386,839683
+2022,PI,Pomarance,50027,Terre di Valdelsa e dellEtruria Volterrana,5335,7664,16636,46273
+2022,PI,Ponsacco,50028,Terre di Pisa,4525,1981,8818,8288
+2022,PI,Pontedera,50029,Terre di Pisa,12472,4705,24392,15277
+2022,PI,Riparbella,50030,Costa degli Etruschi,6957,8851,24051,64457
+2022,PI,San Giuliano Terme,50031,Terre di Pisa,24923,23180,217172,70471
+2022,PI,San Miniato,50032,Terre di Pisa,8388,6082,16273,22291
+2022,PI,Santa Croce sull'Arno,50033,Terre di Pisa,97,60,1686,497
+2022,PI,Santa Luce,50034,Costa degli Etruschi,4439,2195,14215,14082
+2022,PI,Santa Maria a Monte,50035,Terre di Pisa,1789,500,5937,1834
+2022,PI,Terricciola,50036,Terre di Pisa,724,3656,1870,24496
+2022,PI,Vecchiano,50037,Terre di Pisa,3808,2901,7762,8836
+2022,PI,Vicopisano,50038,Terre di Pisa,794,585,3170,2585
+2022,PI,Volterra,50039,Terre di Valdelsa e dellEtruria Volterrana,41108,45002,85730,159235
+2022,PO,Cantagallo,100001,Area Pratese,351,120,951,650
+2022,PO,Carmignano,100002,Area Pratese,6672,9522,13025,28728
+2022,PO,Montemurlo,100003,Area Pratese,2536,2085,4281,5611
+2022,PO,Poggio a Caiano,100004,Area Pratese,4602,3799,9436,8203
+2022,PO,Prato,100005,Area Pratese,96171,62009,186876,147388
+2022,PO,Vaiano,100006,Area Pratese,958,893,3932,4679
+2022,PO,Vernio,100007,Area Pratese,1670,266,6919,736
+2022,PT,Abetone Cutigliano,47023,Pistoia e Montagna Pistoiese,34891,2069,86620,5467
+2022,PT,Agliana,47002,Pistoia e Montagna Pistoiese,1360,193,9066,762
+2022,PT,Buggiano e Ponte Buggianese,47003+47016,Valdinievole,3474,0,9351,0
+2022,PT,Buggiano e Ponte Buggianese,47003+47017,Valdinievole,0,3778,0,14612
+2022,PT,Chiesina Uzzanese,47022,Valdinievole,24803,1301,33059,2449
+2022,PT,Lamporecchio,47005,Valdinievole,7436,12574,16888,71722
+2022,PT,Larciano,47006,Valdinievole,4267,2581,9546,12440
+2022,PT,Marliana,47007,Pistoia e Montagna Pistoiese,1489,1248,3162,4025
+2022,PT,Massa e Cozzile,47008,Valdinievole,297,696,822,3850
+2022,PT,Monsummano Terme,47009,Valdinievole,5571,8906,12680,28931
+2022,PT,Montale,47010,Pistoia e Montagna Pistoiese,775,149,1843,441
+2022,PT,Montecatini Terme,47011,Valdinievole,184880,234387,434175,750998
+2022,PT,Pescia,47012,Valdinievole,8515,7063,17036,29758
+2022,PT,Pieve a Nievole,47013,Valdinievole,1684,489,2723,1950
+2022,PT,Pistoia,47014,Pistoia e Montagna Pistoiese,45013,24442,82973,74842
+2022,PT,Quarrata,47017,Pistoia e Montagna Pistoiese,2224,1406,10159,4789
+2022,PT,Sambuca Pistoiese,47018,Pistoia e Montagna Pistoiese,160,22,247,32
+2022,PT,San Marcello Piteglio,47024,Pistoia e Montagna Pistoiese,12792,1760,50024,8577
+2022,PT,Serravalle Pistoiese,47020,Pistoia e Montagna Pistoiese,12690,7278,29419,22436
+2022,PT,Uzzano,47021,Valdinievole,406,670,1060,3402
+2022,SI,Abbadia San Salvatore,52001,Amiata,26747,1906,62126,3774
+2022,SI,Asciano,52002,Terre di Siena,21432,18691,44335,69666
+2022,SI,Buonconvento,52003,Terre di Siena,6862,6681,22510,26973
+2022,SI,Casole d'Elsa,52004,Terre di Valdelsa e dellEtruria Volterrana,5077,15305,17721,82120
+2022,SI,Castellina in Chianti,52005,Chianti,11321,35166,23509,138268
+2022,SI,Castelnuovo Berardenga,52006,Chianti,19158,47741,41821,156289
+2022,SI,Castiglione d'Orcia,52007,Val d'Orcia,11861,7396,29273,26611
+2022,SI,Cetona,52008,Val di Chiana Senese,2485,2170,7625,12604
+2022,SI,Chianciano Terme,52009,Val di Chiana Senese,129864,58688,297386,124772
+2022,SI,Chiusdino,52010,Terre di Siena,7136,14379,18839,88256
+2022,SI,Chiusi,52011,Val di Chiana Senese,19422,11001,37159,27501
+2022,SI,Colle di Val d'Elsa,52012,Terre di Valdelsa e dellEtruria Volterrana,27364,22754,60114,71667
+2022,SI,Gaiole in Chianti,52013,Chianti,8070,20050,15638,72349
+2022,SI,Montalcino,52037,Val d'Orcia,33417,48835,66701,143476
+2022,SI,Montepulciano,52015,Val di Chiana Senese,52616,57055,102895,164555
+2022,SI,Monteriggioni,52016,Terre di Valdelsa e dellEtruria Volterrana,34802,29931,65621,108101
+2022,SI,Monteroni d'Arbia,52017,Terre di Siena,8206,8289,24740,38433
+2022,SI,Monticiano,52018,Terre di Siena,2901,2086,5627,10547
+2022,SI,Murlo,52019,Terre di Siena,6824,8738,16500,37203
+2022,SI,Piancastagnaio,52020,Amiata,2770,723,7619,1568
+2022,SI,Pienza,52021,Val d'Orcia,28210,35534,60924,104518
+2022,SI,Poggibonsi,52022,Terre di Valdelsa e dellEtruria Volterrana,30796,21700,64920,74670
+2022,SI,Radda in Chianti,52023,Chianti,9696,20978,19067,73423
+2022,SI,Radicofani,52024,Val d'Orcia,4325,3621,7964,11424
+2022,SI,Radicondoli,52025,Terre di Valdelsa e dellEtruria Volterrana,1347,3568,3926,23991
+2022,SI,Rapolano Terme,52026,Terre di Siena,35708,11480,74477,45886
+2022,SI,San Casciano dei Bagni,52027,Val di Chiana Senese,16266,4916,36710,22353
+2022,SI,San Gimignano,52028,Terre di Valdelsa e dellEtruria Volterrana,69409,127678,131217,378501
+2022,SI,San Quirico d'Orcia,52030,Val d'Orcia,55150,25419,126073,77176
+2022,SI,Sarteano,52031,Val di Chiana Senese,10504,11904,30107,54758
+2022,SI,Siena,52032,Terre di Siena,206030,255347,428312,574114
+2022,SI,Sinalunga,52033,Val di Chiana Senese,11432,5768,21165,22550
+2022,SI,Sovicille,52034,Terre di Siena,12983,17623,29983,84251
+2022,SI,Torrita di Siena,52035,Val di Chiana Senese,4756,7321,10981,31215
+2022,SI,Trequanda,52036,Val di Chiana Senese,10918,13217,27093,44638
+2023,AR,Anghiari,51001,Valtiberina Toscana,5895,2517,12998,11712
+2023,AR,Arezzo,51002,Arezzo,159822,79112,292380,186038
+2023,AR,Badia Tedalda,51003,Valtiberina Toscana,1007,168,3849,943
+2023,AR,Bibbiena,51004,Casentino,5444,2828,13250,20447
+2023,AR,Bucine,51005,Valdarno Aretino,5589,18881,15606,98758
+2023,AR,Capolona,51006,Arezzo,929,1700,3183,13408
+2023,AR,Caprese Michelangelo,51007,Valtiberina Toscana,1460,966,3401,3585
+2023,AR,Castel Focognano,51008,Casentino,73,263,265,2302
+2023,AR,Castel San Niccolò,51010,Casentino,1001,396,2507,2336
+2023,AR,Castelfranco Piandiscò,51040,Valdarno Aretino,904,1647,3570,10467
+2023,AR,Castiglion Fibocchi,51011,Arezzo,723,1446,2804,8200
+2023,AR,Castiglion Fiorentino,51012,Val di Chiana Aretina,17761,27791,34500,76332
+2023,AR,Cavriglia,51013,Valdarno Aretino,11248,10603,37484,65403
+2023,AR,Chitignano,51014,Casentino,299,24,2191,197
+2023,AR,Chiusi della Verna,51015,Casentino,9994,3225,21199,7459
+2023,AR,Civitella in Val di Chiana,51016,Val di Chiana Aretina,5665,2908,13960,16345
+2023,AR,Cortona,51017,Val di Chiana Aretina,19827,31675,43812,151474
+2023,AR,Foiano della Chiana,51018,Val di Chiana Aretina,7564,6531,13029,21633
+2023,AR,Laterina Pergine Valdarno,51042,Valdarno Aretino,8935,11171,20451,33077
+2023,AR,Loro Ciuffenna,51020,Valdarno Aretino,2869,8300,6210,37949
+2023,AR,Lucignano,51021,Val di Chiana Aretina,1165,1642,3307,10465
+2023,AR,Marciano della Chiana,51022,Val di Chiana Aretina,342,314,913,1998
+2023,AR,Monte San Savino,51025,Val di Chiana Aretina,8414,6978,22697,30470
+2023,AR,Montemignaio,51023,Casentino,942,692,8665,3578
+2023,AR,Monterchi,51024,Valtiberina Toscana,116,151,426,1288
+2023,AR,Montevarchi,51026,Valdarno Aretino,15233,6810,27107,19242
+2023,AR,Ortignano Raggiolo,51027,Casentino,468,771,1056,4603
+2023,AR,Pieve Santo Stefano,51030,Valtiberina Toscana,7355,4198,15488,8316
+2023,AR,Poppi,51031,Casentino,21550,7028,58420,29044
+2023,AR,Pratovecchio Stia,51041,Casentino,5119,2358,10008,9548
+2023,AR,San Giovanni Valdarno,51033,Valdarno Aretino,1639,891,5025,3747
+2023,AR,Sansepolcro,51034,Valtiberina Toscana,19677,6435,38062,21772
+2023,AR,Sestino,51035,Valtiberina Toscana,165,82,480,463
+2023,AR,Subbiano,51037,Casentino,4608,1808,7702,8099
+2023,AR,Talla,51038,Casentino,786,109,2526,1026
+2023,AR,Terranuova Bracciolini,51039,Valdarno Aretino,29792,13447,67535,33527
+2023,FI,Bagno a Ripoli,48001,Firenze e Area Fiorentina,11810,24099,37919,72660
+2023,FI,Barberino Tavarnelle,48054,Chianti,25591,53012,50626,212288
+2023,FI,Barberino di Mugello,48002,Mugello,31770,12335,62573,25210
+2023,FI,Borgo San Lorenzo,48004,Mugello,13087,16694,27757,48682
+2023,FI,Calenzano,48005,Firenze e Area Fiorentina,61170,77143,132614,117103
+2023,FI,Campi Bisenzio,48006,Firenze e Area Fiorentina,46544,59407,85371,86734
+2023,FI,Capraia e Limite,48008,Empolese Valdelsa e Montalbano,3482,3090,16421,13181
+2023,FI,Castelfiorentino,48010,Empolese Valdelsa e Montalbano,1794,3508,5173,18916
+2023,FI,Cerreto Guidi,48011,Empolese Valdelsa e Montalbano,3672,8059,8634,27752
+2023,FI,Certaldo,48012,Empolese Valdelsa e Montalbano,10011,23984,24747,86479
+2023,FI,Dicomano,48013,Mugello,1050,1516,3692,8759
+2023,FI,Empoli,48014,Empolese Valdelsa e Montalbano,8629,4262,21211,13096
+2023,FI,Fiesole,48015,Firenze e Area Fiorentina,17093,36616,36617,104199
+2023,FI,Figline e Incisa Valdarno,48052,Firenze e Area Fiorentina,34814,63523,82327,438099
+2023,FI,Firenze,48017,Firenze e Area Fiorentina,953763,2974299,1751553,7176219
+2023,FI,Firenzuola,48018,Mugello,4278,2028,8645,4723
+2023,FI,Fucecchio,48019,Empolese Valdelsa e Montalbano,3208,2267,7876,10586
+2023,FI,Gambassi Terme,48020,Empolese Valdelsa e Montalbano,6878,11539,12302,51706
+2023,FI,Greve in Chianti,48021,Chianti,13950,51953,29724,179679
+2023,FI,Impruneta,48022,Firenze e Area Fiorentina,14189,27685,34602,74595
+2023,FI,Lastra a Signa,48024,Firenze e Area Fiorentina,7915,6615,16791,23905
+2023,FI,Londa,48025,Firenze e Area Fiorentina,431,829,802,4118
+2023,FI,Marradi,48026,Mugello,2334,799,16050,5134
+2023,FI,Montaione,48027,Empolese Valdelsa e Montalbano,11520,41485,31895,237512
+2023,FI,Montelupo Fiorentino,48028,Empolese Valdelsa e Montalbano,3313,1980,15360,8850
+2023,FI,Montespertoli,48030,Empolese Valdelsa e Montalbano,8938,17166,27605,75056
+2023,FI,Palazzuolo sul Senio,48031,Mugello,2574,1135,8026,7937
+2023,FI,Pelago,48032,Firenze e Area Fiorentina,4689,5881,11141,20839
+2023,FI,Pontassieve,48033,Firenze e Area Fiorentina,5335,11088,10789,41511
+2023,FI,Reggello,48035,Firenze e Area Fiorentina,23126,29332,61036,89257
+2023,FI,Rignano sull'Arno,48036,Firenze e Area Fiorentina,8059,26021,18909,86167
+2023,FI,Rufina,48037,Firenze e Area Fiorentina,1202,1421,4208,5462
+2023,FI,San Casciano in Val di Pesa,48038,Chianti,10885,25289,24096,94140
+2023,FI,San Godenzo,48039,Mugello,1884,198,5549,1057
+2023,FI,Scandicci,48041,Firenze e Area Fiorentina,16550,8401,32407,24791
+2023,FI,Scarperia e San Piero,48053,Mugello,27555,17054,45049,38661
+2023,FI,Sesto Fiorentino,48043,Firenze e Area Fiorentina,56556,92623,94120,131095
+2023,FI,Signa,48044,Firenze e Area Fiorentina,20530,24704,46915,43274
+2023,FI,Vaglia,48046,Firenze e Area Fiorentina,4893,4459,11176,10768
+2023,FI,Vicchio,48049,Mugello,2013,2814,7154,15105
+2023,FI,Vinci,48050,Empolese Valdelsa e Montalbano,20313,14695,36317,47977
+2023,GR,Arcidosso,53001,Amiata,5200,2093,13189,12033
+2023,GR,Campagnatico,53002,Maremma Toscana Area Sud,1534,1853,4106,10577
+2023,GR,Capalbio,53003,Maremma Toscana Area Sud,27488,6115,82821,21645
+2023,GR,Castel del Piano,53004,Amiata,9454,2224,22794,8873
+2023,GR,Castell'Azzara,53005,Amiata,854,397,2909,2543
+2023,GR,Castiglione della Pescaia,53006,Maremma Toscana Area Nord,163846,86316,858231,559333
+2023,GR,Cinigiano,53007,Maremma Toscana Area Sud,2497,6115,6754,23149
+2023,GR,Civitella Paganico,53008,Maremma Toscana Area Sud,4480,2961,11932,13671
+2023,GR,Follonica,53009,Maremma Toscana Area Nord,87188,30453,397822,181327
+2023,GR,Gavorrano,53010,Maremma Toscana Area Nord,8327,7477,29839,41563
+2023,GR,Grosseto,53011,Maremma Toscana Area Sud,194488,41435,881841,203153
+2023,GR,Isola del Giglio,53012,Maremma Toscana Area Sud,16917,2714,64141,11928
+2023,GR,Magliano in Toscana,53013,Maremma Toscana Area Sud,13822,4683,48133,22656
+2023,GR,Manciano,53014,Maremma Toscana Area Sud,64489,24942,148165,58408
+2023,GR,Massa Marittima,53015,Maremma Toscana Area Nord,20577,16156,66449,94295
+2023,GR,Monte Argentario,53016,Maremma Toscana Area Sud,36564,20403,111091,58141
+2023,GR,Monterotondo Marittimo,53027,Maremma Toscana Area Nord,1617,1904,5093,10683
+2023,GR,Montieri,53017,Maremma Toscana Area Nord,2049,1130,5531,6476
+2023,GR,Orbetello,53018,Maremma Toscana Area Sud,178709,35843,959867,166652
+2023,GR,Pitigliano,53019,Maremma Toscana Area Sud,6552,2948,12518,6551
+2023,GR,Roccalbegna,53020,Amiata,738,931,1626,4772
+2023,GR,Roccastrada,53021,Maremma Toscana Area Nord,3740,6704,11856,34263
+2023,GR,Santa Fiora,53022,Amiata,3386,543,9134,4710
+2023,GR,Scansano,53023,Maremma Toscana Area Sud,8361,4254,21842,17940
+2023,GR,Scarlino,53024,Maremma Toscana Area Nord,43451,16320,271768,113591
+2023,GR,Seggiano,53025,Amiata,3504,3477,7722,14250
+2023,GR,Semproniano,53028,Maremma Toscana Area Sud,5141,1666,13696,6702
+2023,GR,Sorano,53026,Maremma Toscana Area Sud,12391,4372,26844,11166
+2023,LI,Bibbona,49001,Costa degli Etruschi,111807,63919,690817,432307
+2023,LI,Campiglia Marittima,49002,Costa degli Etruschi,34258,13860,111251,69319
+2023,LI,Campo nell'Elba,49003,Elba e Isole di Toscana,55599,26709,316122,182436
+2023,LI,Capoliveri,49004,Elba e Isole di Toscana,89772,62504,558637,463062
+2023,LI,Capraia Isola,49005,Livorno,2972,1525,7785,3687
+2023,LI,Castagneto Carducci,49006,Costa degli Etruschi,88886,65334,587448,472220
+2023,LI,Cecina,49007,Costa degli Etruschi,74976,40604,469136,253153
+2023,LI,Collesalvetti,49008,Livorno,10702,5828,26528,13899
+2023,LI,Livorno,49009,Livorno,117839,85837,256069,185787
+2023,LI,Marciana,49010,Elba e Isole di Toscana,28426,12040,136071,64192
+2023,LI,Marciana Marina,49011,Elba e Isole di Toscana,15588,7429,58911,26723
+2023,LI,Piombino,49012,Costa degli Etruschi,132161,36776,808640,206990
+2023,LI,Porto Azzurro,49013,Elba e Isole di Toscana,26134,13044,126745,83591
+2023,LI,Portoferraio,49014,Elba e Isole di Toscana,66709,42939,313350,241201
+2023,LI,Rio,49021,Elba e Isole di Toscana,26410,7289,143939,47728
+2023,LI,Rosignano Marittimo,49017,Costa degli Etruschi,61605,57987,330992,369084
+2023,LI,San Vincenzo,49018,Costa degli Etruschi,96264,74091,459532,596640
+2023,LI,Sassetta,49019,Costa degli Etruschi,7965,4397,12982,18623
+2023,LI,Suvereto,49020,Costa degli Etruschi,9621,4715,36991,32095
+2023,LU,Altopascio,46001,Piana di Lucca,7512,3878,14242,11445
+2023,LU,Bagni di Lucca,46002,Garfagnana e media valle del Serchio,3527,2072,9120,9175
+2023,LU,Barga,46003,Garfagnana e media valle del Serchio,12282,18932,30467,60790
+2023,LU,Borgo a Mozzano,46004,Garfagnana e media valle del Serchio,2959,2519,5991,8648
+2023,LU,Camaiore,46005,Versilia,83300,58145,275893,231179
+2023,LU,Camporgiano,46006,Garfagnana e media valle del Serchio,1011,1869,2087,12328
+2023,LU,Capannori,46007,Piana di Lucca,22376,14600,50274,64295
+2023,LU,Careggine,46008,Garfagnana e media valle del Serchio,1095,150,1960,851
+2023,LU,Castelnuovo di Garfagnana,46009,Garfagnana e media valle del Serchio,10287,2442,30898,10923
+2023,LU,Castiglione di Garfagnana,46010,Garfagnana e media valle del Serchio,4559,781,10421,3980
+2023,LU,Coreglia Antelminelli,46011,Garfagnana e media valle del Serchio,616,1171,2333,7188
+2023,LU,Fabbriche di Vergemoli,46036,Garfagnana e media valle del Serchio,185,406,572,3081
+2023,LU,Forte dei Marmi,46013,Versilia,55468,51444,156652,193985
+2023,LU,Fosciandora,46014,Garfagnana e media valle del Serchio,85,385,187,2888
+2023,LU,Gallicano,46015,Garfagnana e media valle del Serchio,2568,866,5710,3969
+2023,LU,Lucca,46017,Piana di Lucca,112048,157843,196520,368965
+2023,LU,Massarosa,46018,Versilia,6922,3667,17146,17961
+2023,LU,Minucciano,46019,Garfagnana e media valle del Serchio,2881,1304,7199,6093
+2023,LU,Molazzana,46020,Garfagnana e media valle del Serchio,345,784,1200,5863
+2023,LU,Montecarlo,46021,Piana di Lucca,4755,3201,9365,12915
+2023,LU,Pescaglia,46022,Garfagnana e media valle del Serchio,341,1054,1166,6921
+2023,LU,Piazza al Serchio,46023,Garfagnana e media valle del Serchio,597,110,2754,628
+2023,LU,Pietrasanta,46024,Versilia,72603,48645,244662,183358
+2023,LU,Pieve Fosciana,46025,Garfagnana e media valle del Serchio,1902,1365,4631,6504
+2023,LU,Porcari,46026,Piana di Lucca,4950,885,11813,2280
+2023,LU,San Romano in Garfagnana,46027,Garfagnana e media valle del Serchio,347,313,1170,2147
+2023,LU,Seravezza,46028,Versilia,2167,334,7630,909
+2023,LU,Sillano Giuncugnano,46037,Garfagnana e media valle del Serchio,2661,903,7715,1929
+2023,LU,Stazzema,46030,Versilia,2214,247,4306,575
+2023,LU,Vagli Sotto,46031,Garfagnana e media valle del Serchio,776,348,2232,1775
+2023,LU,Viareggio,46033,Versilia,141357,87721,798167,312859
+2023,LU,Villa Basilica,46034,Piana di Lucca,131,146,335,770
+2023,LU,Villa Collemandina,46035,Garfagnana e media valle del Serchio,2284,764,6140,4651
+2023,MS,Aulla,45001,Lunigiana,1316,742,4388,1062
+2023,MS,Bagnone,45002,Lunigiana,218,514,461,3345
+2023,MS,Carrara,45003,Riviera Apuana,20986,11143,54836,26920
+2023,MS,Casola in Lunigiana,45004,Lunigiana,189,348,347,1307
+2023,MS,Comano,45005,Lunigiana,360,315,641,640
+2023,MS,Filattiera,45006,Lunigiana,454,613,745,1889
+2023,MS,Fivizzano,45007,Lunigiana,1667,1724,3835,9735
+2023,MS,Fosdinovo,45008,Lunigiana,2931,3186,4686,8004
+2023,MS,Licciana Nardi,45009,Lunigiana,2276,1474,4379,5330
+2023,MS,Massa,45010,Riviera Apuana,145337,50449,664524,194265
+2023,MS,Montignoso,45011,Riviera Apuana,10338,5295,46812,22640
+2023,MS,Mulazzo,45012,Lunigiana,3523,3051,10798,8702
+2023,MS,Podenzana,45013,Lunigiana,812,248,1540,1295
+2023,MS,Pontremoli,45014,Lunigiana,6119,2591,10297,6192
+2023,MS,Tresana,45015,Lunigiana,699,383,4063,885
+2023,MS,Villafranca in Lunigiana,45016,Lunigiana,1213,697,2986,1971
+2023,MS,Zeri,45017,Lunigiana,1450,379,2604,520
+2023,PI,Bientina,50001,Terre di Pisa,5358,906,12567,2032
+2023,PI,Buti,50002,Terre di Pisa,367,875,1143,5030
+2023,PI,Calci,50003,Terre di Pisa,805,2238,1846,11854
+2023,PI,Calcinaia,50004,Terre di Pisa,1953,459,3289,934
+2023,PI,Capannoli,50005,Terre di Pisa,231,884,666,4150
+2023,PI,Casale Marittimo,50006,Costa degli Etruschi,1665,6124,6276,61865
+2023,PI,Casciana Terme Lari,50040,Terre di Pisa,5241,6178,14930,24055
+2023,PI,Cascina,50008,Terre di Pisa,13742,9426,32552,18047
+2023,PI,Castelfranco di Sotto,50009,Terre di Pisa,572,1853,1845,11668
+2023,PI,Castellina Marittima,50010,Costa degli Etruschi,4661,1872,11216,6042
+2023,PI,Castelnuovo di Val di Cecina,50011,Terre di Valdelsa e dell?Etruria Volterrana,1845,2351,5587,15847
+2023,PI,Chianni,50012,Terre di Pisa,633,1739,2017,11497
+2023,PI,Crespina Lorenzana,50041,Terre di Pisa,1372,1732,6948,13224
+2023,PI,Fauglia e Orciano Pisano,50014+50023,Terre di Pisa,1083,1603,4084,8425
+2023,PI,Guardistallo,50015,Costa degli Etruschi,3704,4320,15023,29920
+2023,PI,Lajatico,50016,Terre di Pisa,1919,3041,4843,15319
+2023,PI,Montecatini Val di Cecina,50019,Terre di Valdelsa e dell?Etruria Volterrana,9546,9077,24056,47350
+2023,PI,Montescudaio,50020,Costa degli Etruschi,6364,12933,30289,122905
+2023,PI,Monteverdi Marittimo,50021,Terre di Valdelsa e dell?Etruria Volterrana,3738,1654,8956,7237
+2023,PI,Montopoli in Val d'Arno,50022,Terre di Pisa,3793,5451,11886,22289
+2023,PI,Palaia,50024,Terre di Pisa,4088,12900,9694,63672
+2023,PI,Peccioli,50025,Terre di Pisa,4187,5363,9621,34182
+2023,PI,Pisa,50026,Terre di Pisa,284017,534146,850472,973042
+2023,PI,Pomarance,50027,Terre di Valdelsa e dell?Etruria Volterrana,6670,9001,19271,49588
+2023,PI,Ponsacco,50028,Terre di Pisa,5556,2514,10142,9309
+2023,PI,Pontedera,50029,Terre di Pisa,12875,5833,26332,15535
+2023,PI,Riparbella,50030,Costa degli Etruschi,7462,8945,25897,61871
+2023,PI,San Giuliano Terme,50031,Terre di Pisa,23459,27330,262255,92272
+2023,PI,San Miniato,50032,Terre di Pisa,10488,10372,19564,32874
+2023,PI,Santa Croce sull'Arno,50033,Terre di Pisa,15,50,78,296
+2023,PI,Santa Luce,50034,Costa degli Etruschi,4727,2399,14183,15389
+2023,PI,Santa Maria a Monte,50035,Terre di Pisa,1668,433,4673,1513
+2023,PI,Terricciola,50036,Terre di Pisa,1642,4965,4004,29475
+2023,PI,Vecchiano,50037,Terre di Pisa,3681,2677,7190,7560
+2023,PI,Vicopisano,50038,Terre di Pisa,705,657,2444,2448
+2023,PI,Volterra,50039,Terre di Valdelsa e dell?Etruria Volterrana,35900,47190,72269,156995
+2023,PO,Cantagallo,100001,Area Pratese,591,194,899,773
+2023,PO,Carmignano,100002,Area Pratese,6820,11994,13745,34814
+2023,PO,Montemurlo,100003,Area Pratese,3319,3706,4939,9587
+2023,PO,Poggio a Caiano,100004,Area Pratese,5969,5755,10907,13237
+2023,PO,Prato,100005,Area Pratese,96918,106306,172667,211937
+2023,PO,Vaiano,100006,Area Pratese,1405,987,3911,4506
+2023,PO,Vernio,100007,Area Pratese,2175,260,9315,499
+2023,PT,Abetone Cutigliano,47023,Pistoia e Montagna Pistoiese,35352,2000,89997,5097
+2023,PT,Agliana,47002,Pistoia e Montagna Pistoiese,1568,494,8418,1813
+2023,PT,Buggiano,47003,Valdinievole,1542,3821,4995,15015
+2023,PT,Chiesina Uzzanese e Ponte Buggianese,47022+47016,Valdinievole,28157,1733,40657,3220
+2023,PT,Lamporecchio,47005,Valdinievole,7518,14658,16252,85039
+2023,PT,Larciano,47006,Valdinievole,5050,4919,9718,16325
+2023,PT,Marliana,47007,Pistoia e Montagna Pistoiese,1489,1346,4117,4962
+2023,PT,Massa e Cozzile,47008,Valdinievole,942,2167,1593,11614
+2023,PT,Monsummano Terme,47009,Valdinievole,8953,12022,18340,37824
+2023,PT,Montale,47010,Pistoia e Montagna Pistoiese,2127,542,4930,1101
+2023,PT,Montecatini Terme,47011,Valdinievole,199825,388628,458009,1087026
+2023,PT,Pescia,47012,Valdinievole,8093,11277,17856,37208
+2023,PT,Pieve a Nievole,47013,Valdinievole,1833,777,3394,3479
+2023,PT,Pistoia,47014,Pistoia e Montagna Pistoiese,44642,29433,78554,92067
+2023,PT,Quarrata,47017,Pistoia e Montagna Pistoiese,2026,1579,9968,5446
+2023,PT,Sambuca Pistoiese,47018,Pistoia e Montagna Pistoiese,200,26,392,47
+2023,PT,San Marcello Piteglio,47024,Pistoia e Montagna Pistoiese,13432,1970,52410,9135
+2023,PT,Serravalle Pistoiese,47020,Pistoia e Montagna Pistoiese,14434,9788,29838,24793
+2023,PT,Uzzano,47021,Valdinievole,458,1021,1153,4813
+2023,SI,Abbadia San Salvatore,52001,Amiata,28465,2835,66445,4865
+2023,SI,Asciano,52002,Terre di Siena,14512,25643,29527,82633
+2023,SI,Buonconvento,52003,Terre di Siena,6204,7373,20866,29019
+2023,SI,Casole d'Elsa,52004,Terre di Valdelsa e dell?Etruria Volterrana,4792,15145,15325,77193
+2023,SI,Castellina in Chianti,52005,Chianti,12756,41503,26020,149513
+2023,SI,Castelnuovo Berardenga,52006,Chianti,18787,48885,43847,150252
+2023,SI,Castiglione d'Orcia,52007,Val d'Orcia,10528,9131,28511,31313
+2023,SI,Cetona,52008,Val di Chiana Senese,2384,2178,7110,11538
+2023,SI,Chianciano Terme,52009,Val di Chiana Senese,131918,92057,298115,184080
+2023,SI,Chiusdino,52010,Terre di Siena,6526,15611,17262,90512
+2023,SI,Chiusi,52011,Val di Chiana Senese,18676,14679,29791,31387
+2023,SI,Colle di Val d'Elsa,52012,Terre di Valdelsa e dell?Etruria Volterrana,27614,28527,59743,84116
+2023,SI,Gaiole in Chianti,52013,Chianti,8355,25187,17297,83364
+2023,SI,Montalcino,52037,Val d'Orcia,30566,59423,60264,158628
+2023,SI,Montepulciano,52015,Val di Chiana Senese,53640,75110,99559,202692
+2023,SI,Monteriggioni,52016,Terre di Valdelsa e dell?Etruria Volterrana,35292,37180,64016,117827
+2023,SI,Monteroni d'Arbia,52017,Terre di Siena,8453,10966,23571,43648
+2023,SI,Monticiano,52018,Terre di Siena,4010,2525,7361,11076
+2023,SI,Murlo,52019,Terre di Siena,7229,9941,16350,37737
+2023,SI,Piancastagnaio,52020,Amiata,3181,1060,7203,2330
+2023,SI,Pienza,52021,Val d'Orcia,27827,45387,59542,125729
+2023,SI,Poggibonsi,52022,Terre di Valdelsa e dell?Etruria Volterrana,35273,34312,73610,94508
+2023,SI,Radda in Chianti,52023,Chianti,8415,23862,18577,79067
+2023,SI,Radicofani,52024,Val d'Orcia,3291,3324,7108,10882
+2023,SI,Radicondoli,52025,Terre di Valdelsa e dell?Etruria Volterrana,1465,4017,5316,27782
+2023,SI,Rapolano Terme,52026,Terre di Siena,34732,10769,73237,42519
+2023,SI,San Casciano dei Bagni,52027,Val di Chiana Senese,18179,5997,38987,23639
+2023,SI,San Gimignano,52028,Terre di Valdelsa e dell?Etruria Volterrana,62825,145950,115623,410189
+2023,SI,San Quirico d'Orcia,52030,Val d'Orcia,53767,29727,122204,84271
+2023,SI,Sarteano,52031,Val di Chiana Senese,10476,12755,29134,54051
+2023,SI,Siena,52032,Terre di Siena,195879,301336,415711,681992
+2023,SI,Sinalunga,52033,Val di Chiana Senese,12032,5586,25316,20604
+2023,SI,Sovicille,52034,Terre di Siena,13833,21004,33105,91072
+2023,SI,Torrita di Siena,52035,Val di Chiana Senese,4096,7968,8727,31328
+2023,SI,Trequanda,52036,Val di Chiana Senese,8484,13536,22304,43732
+2024,AR,Anghiari,051001,Valtiberina Toscana,6377,2480,13292,12298
+2024,AR,Arezzo,051002,Arezzo,160053,84273,292457,182728
+2024,AR,Badia Tedalda,051003,Valtiberina Toscana,1192,127,5053,747
+2024,AR,Bibbiena,051004,Casentino,5534,3794,13797,22326
+2024,AR,Bucine,051005,Valdarno Aretino,4534,18648,13348,92508
+2024,AR,Capolona,051006,Arezzo,1044,1760,2385,9959
+2024,AR,Caprese Michelangelo,051007,Valtiberina Toscana,1540,859,4200,2894
+2024,AR,Castel Focognano,051008,Casentino,65,513,306,4290
+2024,AR,Castel San NiccolÃ²,051010,Casentino,1358,486,3976,2729
+2024,AR,Castelfranco PiandiscÃ²,051040,Valdarno Aretino,833,1943,3871,11851
+2024,AR,Castiglion Fibocchi,051011,Arezzo,533,1382,1627,8218
+2024,AR,Castiglion Fiorentino,051012,Val di Chiana Aretina,15335,29768,32459,87519
+2024,AR,Cavriglia,051013,Valdarno Aretino,10956,14997,35384,89252
+2024,AR,Chitignano,051014,Casentino,298,8,1158,34
+2024,AR,Chiusi della Verna,051015,Casentino,10473,4327,21336,7303
+2024,AR,Civitella in Val di Chiana,051016,Val di Chiana Aretina,6641,3927,13172,17078
+2024,AR,Cortona,051017,Val di Chiana Aretina,20153,33044,43360,156233
+2024,AR,Foiano della Chiana,051018,Val di Chiana Aretina,7909,6804,13519,22361
+2024,AR,Laterina Pergine Valdarno,051042,Valdarno Aretino,6707,10030,15233,35470
+2024,AR,Loro Ciuffenna,051020,Valdarno Aretino,2938,10109,6336,38533
+2024,AR,Lucignano,051021,Val di Chiana Aretina,867,1963,2291,11899
+2024,AR,Marciano della Chiana,051022,Val di Chiana Aretina,248,322,466,2256
+2024,AR,Monte San Savino,051025,Val di Chiana Aretina,7571,7073,17976,30899
+2024,AR,Montemignaio,051023,Casentino,916,502,10784,2810
+2024,AR,Monterchi,051024,Valtiberina Toscana,39,194,128,1653
+2024,AR,Montevarchi,051026,Valdarno Aretino,14122,7025,25720,20682
+2024,AR,Ortignano Raggiolo,051027,Casentino,402,741,958,4744
+2024,AR,Pieve Santo Stefano,051030,Valtiberina Toscana,7911,3622,16274,6997
+2024,AR,Poppi,051031,Casentino,25958,8223,71935,34739
+2024,AR,Pratovecchio Stia,051041,Casentino,6304,3127,11755,11143
+2024,AR,San Giovanni Valdarno,051033,Valdarno Aretino,1705,682,5222,2966
+2024,AR,Sansepolcro,051034,Valtiberina Toscana,19700,7001,39775,22606
+2024,AR,Sestino,051035,Valtiberina Toscana,65,87,171,693
+2024,AR,Subbiano,051037,Casentino,5721,1702,10134,8427
+2024,AR,Talla,051038,Casentino,672,149,2452,1009
+2024,AR,Terranuova Bracciolini,051039,Valdarno Aretino,25145,11141,59617,30318
+2024,FI,Bagno a Ripoli,048001,Firenze e Area Fiorentina,11765,24314,32377,68235
+2024,FI,Barberino Tavarnelle,048054,Chianti,21602,54344,41322,206572
+2024,FI,Barberino di Mugello,048002,Mugello,30542,13724,55808,30376
+2024,FI,Borgo San Lorenzo,048004,Mugello,11767,17208,26675,46403
+2024,FI,Calenzano,048005,Firenze e Area Fiorentina,49073,69456,107789,111083
+2024,FI,Campi Bisenzio,048006,Firenze e Area Fiorentina,42431,60779,75188,88579
+2024,FI,Capraia e Limite,048008,Empolese Valdelsa e Montalbano,4894,2576,15481,11046
+2024,FI,Castelfiorentino,048010,Empolese Valdelsa e Montalbano,2617,4085,6550,21445
+2024,FI,Cerreto Guidi,048011,Empolese Valdelsa e Montalbano,3457,6983,8122,26631
+2024,FI,Certaldo,048012,Empolese Valdelsa e Montalbano,10471,24078,24882,88442
+2024,FI,Dicomano,048013,Mugello,1023,1231,2981,7168
+2024,FI,Empoli,048014,Empolese Valdelsa e Montalbano,10434,4421,23624,13276
+2024,FI,Fiesole,048015,Firenze e Area Fiorentina,17206,38804,36867,105944
+2024,FI,Figline e Incisa Valdarno,048052,Firenze e Area Fiorentina,38172,64653,95895,444672
+2024,FI,Firenze,048017,Firenze e Area Fiorentina,848382,3068328,1545036,7442943
+2024,FI,Firenzuola,048018,Mugello,4966,2644,8807,5416
+2024,FI,Fucecchio,048019,Empolese Valdelsa e Montalbano,4852,3623,14993,13915
+2024,FI,Gambassi Terme,048020,Empolese Valdelsa e Montalbano,5948,11091,11698,49306
+2024,FI,Greve in Chianti,048021,Chianti,13316,51534,28276,178483
+2024,FI,Impruneta,048022,Firenze e Area Fiorentina,10804,30457,28522,81320
+2024,FI,Lastra a Signa,048024,Firenze e Area Fiorentina,6664,5478,20514,22649
+2024,FI,Londa,048025,Firenze e Area Fiorentina,390,692,657,3621
+2024,FI,Marradi,048026,Mugello,2578,927,17893,6204
+2024,FI,Montaione,048027,Empolese Valdelsa e Montalbano,11277,41080,29909,230507
+2024,FI,Montelupo Fiorentino,048028,Empolese Valdelsa e Montalbano,2958,2130,15810,10449
+2024,FI,Montespertoli,048030,Empolese Valdelsa e Montalbano,6842,17700,15398,73426
+2024,FI,Palazzuolo sul Senio,048031,Mugello,2122,1357,5651,9526
+2024,FI,Pelago,048032,Firenze e Area Fiorentina,4913,7065,13609,23515
+2024,FI,Pontassieve,048033,Firenze e Area Fiorentina,5315,11774,10995,42138
+2024,FI,Reggello,048035,Firenze e Area Fiorentina,22114,33496,67081,103461
+2024,FI,Rignano sull'Arno,048036,Firenze e Area Fiorentina,7650,29148,18646,95484
+2024,FI,Rufina,048037,Firenze e Area Fiorentina,946,1311,4211,5743
+2024,FI,San Casciano in Val di Pesa,048038,Chianti,9723,23180,22520,84854
+2024,FI,San Godenzo,048039,Mugello,1689,134,5228,803
+2024,FI,Scandicci,048041,Firenze e Area Fiorentina,16965,8608,34153,25168
+2024,FI,Scarperia e San Piero,048053,Mugello,21742,16684,38061,45342
+2024,FI,Sesto Fiorentino,048043,Firenze e Area Fiorentina,51412,100749,81707,133615
+2024,FI,Signa,048044,Firenze e Area Fiorentina,13753,17186,36512,34720
+2024,FI,Vaglia,048046,Firenze e Area Fiorentina,4578,4026,10151,9839
+2024,FI,Vicchio,048049,Mugello,2509,3924,7599,18603
+2024,FI,Vinci,048050,Empolese Valdelsa e Montalbano,19252,13732,32346,44392
+2024,GR,Arcidosso,053001,Amiata,6743,2374,16927,13347
+2024,GR,Campagnatico,053002,Maremma Toscana Area Sud,1377,1865,3427,10472
+2024,GR,Capalbio,053003,Maremma Toscana Area Sud,32055,7816,104799,28552
+2024,GR,Castel del Piano,053004,Amiata,10546,3041,22035,10637
+2024,GR,Castell'Azzara,053005,Amiata,778,534,3243,3690
+2024,GR,Castiglione della Pescaia,053006,Maremma Toscana Area Nord,158611,94262,832097,610499
+2024,GR,Cinigiano,053007,Maremma Toscana Area Sud,2797,6070,7192,25121
+2024,GR,Civitella Paganico,053008,Maremma Toscana Area Sud,6676,5403,19234,28285
+2024,GR,Follonica,053009,Maremma Toscana Area Nord,76673,25501,368914,158544
+2024,GR,Gavorrano,053010,Maremma Toscana Area Nord,5348,6080,20582,37122
+2024,GR,Grosseto,053011,Maremma Toscana Area Sud,182069,44978,735758,198531
+2024,GR,Isola del Giglio,053012,Maremma Toscana Area Sud,18305,2825,61626,11610
+2024,GR,Magliano in Toscana,053013,Maremma Toscana Area Sud,16017,5780,61304,28552
+2024,GR,Manciano,053014,Maremma Toscana Area Sud,59924,24683,140163,59593
+2024,GR,Massa Marittima,053015,Maremma Toscana Area Nord,20844,18658,65411,109545
+2024,GR,Monte Argentario,053016,Maremma Toscana Area Sud,34740,25149,99801,69527
+2024,GR,Monterotondo Marittimo,053027,Maremma Toscana Area Nord,1301,2156,4167,12039
+2024,GR,Montieri,053017,Maremma Toscana Area Nord,1813,1380,4600,7227
+2024,GR,Orbetello,053018,Maremma Toscana Area Sud,181519,42987,912905,198255
+2024,GR,Pitigliano,053019,Maremma Toscana Area Sud,7121,4612,14252,9385
+2024,GR,Roccalbegna,053020,Amiata,1023,1272,1965,5042
+2024,GR,Roccastrada,053021,Maremma Toscana Area Nord,4087,8030,11893,39267
+2024,GR,Santa Fiora,053022,Amiata,3867,2207,9875,7696
+2024,GR,Scansano,053023,Maremma Toscana Area Sud,8633,6020,20704,24240
+2024,GR,Scarlino,053024,Maremma Toscana Area Nord,45205,17612,273323,119817
+2024,GR,Seggiano,053025,Amiata,2870,3693,5978,14180
+2024,GR,Semproniano,053028,Maremma Toscana Area Sud,4566,1980,10886,4812
+2024,GR,Sorano,053026,Maremma Toscana Area Sud,12175,5083,26470,12415
+2024,LI,Bibbona,049001,Costa degli Etruschi,106761,67019,684228,467787
+2024,LI,Campiglia Marittima,049002,Costa degli Etruschi,33990,15335,105836,70302
+2024,LI,Campo nell'Elba,049003,Elba e Isole di Toscana,58919,31114,332512,205886
+2024,LI,Capoliveri,049004,Elba e Isole di Toscana,94905,69431,583634,489419
+2024,LI,Capraia Isola,049005,Livorno,3164,1512,9368,3705
+2024,LI,Castagneto Carducci,049006,Costa degli Etruschi,86831,69674,518306,478363
+2024,LI,Cecina,049007,Costa degli Etruschi,84701,47181,498475,271541
+2024,LI,Collesalvetti,049008,Livorno,10490,5418,25820,14507
+2024,LI,Livorno,049009,Livorno,119290,88183,247175,185807
+2024,LI,Marciana,049010,Elba e Isole di Toscana,32243,16245,153284,82674
+2024,LI,Marciana Marina,049011,Elba e Isole di Toscana,14734,7544,58060,28891
+2024,LI,Piombino,049012,Costa degli Etruschi,127944,42614,726243,232875
+2024,LI,Porto Azzurro,049013,Elba e Isole di Toscana,25252,13765,122661,81258
+2024,LI,Portoferraio,049014,Elba e Isole di Toscana,64642,45740,300840,256456
+2024,LI,Rio,049021,Elba e Isole di Toscana,24507,7417,133643,46166
+2024,LI,Rosignano Marittimo,049017,Costa degli Etruschi,64112,55327,345183,323724
+2024,LI,San Vincenzo,049018,Costa degli Etruschi,93306,67787,444345,527027
+2024,LI,Sassetta,049019,Costa degli Etruschi,8798,4074,13798,16921
+2024,LI,Suvereto,049020,Costa degli Etruschi,9510,5466,33551,33594
+2024,LU,Altopascio,046001,Piana di Lucca,892,858,927,860
+2024,LU,Bagni di Lucca,046002,Garfagnana e media valle del Serchio,3091,2468,6222,10074
+2024,LU,Barga,046003,Garfagnana e media valle del Serchio,14868,17256,36580,56759
+2024,LU,Borgo a Mozzano,046004,Garfagnana e media valle del Serchio,3167,3432,6254,10942
+2024,LU,Camaiore,046005,Versilia,89575,65003,279412,251301
+2024,LU,Camporgiano,046006,Garfagnana e media valle del Serchio,1120,3029,2209,18318
+2024,LU,Capannori e Villa Basilica,046007+046034,Piana di Lucca,21848,18459,43706,68882
+2024,LU,Careggine,046008,Garfagnana e media valle del Serchio,861,143,1369,502
+2024,LU,Castelnuovo di Garfagnana,046009,Garfagnana e media valle del Serchio,8360,2450,22301,10833
+2024,LU,Castiglione di Garfagnana,046010,Garfagnana e media valle del Serchio,5930,1271,14259,5967
+2024,LU,Coreglia Antelminelli,046011,Garfagnana e media valle del Serchio,539,1101,1271,7239
+2024,LU,Fabbriche di Vergemoli,046036,Garfagnana e media valle del Serchio,193,527,592,3427
+2024,LU,Forte dei Marmi,046013,Versilia,52786,55373,139199,206143
+2024,LU,Fosciandora,046014,Garfagnana e media valle del Serchio,94,365,272,2407
+2024,LU,Gallicano,046015,Garfagnana e media valle del Serchio,2037,1052,4026,4801
+2024,LU,Lucca,046017,Piana di Lucca,112463,172493,191087,398498
+2024,LU,Massarosa,046018,Versilia,6961,3749,20011,16972
+2024,LU,Minucciano,046019,Garfagnana e media valle del Serchio,1249,819,3474,4522
+2024,LU,Molazzana,046020,Garfagnana e media valle del Serchio,786,898,1604,6546
+2024,LU,Montecarlo,046021,Piana di Lucca,4657,3428,9886,13775
+2024,LU,Pescaglia,046022,Garfagnana e media valle del Serchio,315,1036,919,7051
+2024,LU,Piazza al Serchio,046023,Garfagnana e media valle del Serchio,410,111,884,547
+2024,LU,Pietrasanta,046024,Versilia,77545,53738,252323,197543
+2024,LU,Pieve Fosciana,046025,Garfagnana e media valle del Serchio,1561,1303,3749,6476
+2024,LU,Porcari,046026,Piana di Lucca,5328,1090,12988,3163
+2024,LU,San Romano in Garfagnana,046027,Garfagnana e media valle del Serchio,1034,274,2664,1386
+2024,LU,Seravezza,046028,Versilia,2378,212,7571,589
+2024,LU,Sillano Giuncugnano,046037,Garfagnana e media valle del Serchio,2512,835,8008,1908
+2024,LU,Stazzema,046030,Versilia,2271,278,3978,712
+2024,LU,Vagli Sotto,046031,Garfagnana e media valle del Serchio,477,470,742,2956
+2024,LU,Viareggio,046033,Versilia,137549,101148,603506,367446
+2024,LU,Villa Collemandina,046035,Garfagnana e media valle del Serchio,2004,730,5255,4935
+2024,MS,Aulla,045001,Lunigiana,1923,1253,4968,1856
+2024,MS,Bagnone,045002,Lunigiana,320,819,699,4895
+2024,MS,Carrara,045003,Riviera Apuana,19186,9077,49999,24485
+2024,MS,Casola in Lunigiana,045004,Lunigiana,80,237,131,1352
+2024,MS,Comano,045005,Lunigiana,327,349,857,869
+2024,MS,Filattiera,045006,Lunigiana,495,999,795,2908
+2024,MS,Fivizzano,045007,Lunigiana,1585,1411,3037,6054
+2024,MS,Fosdinovo,045008,Lunigiana,3283,2959,5108,7844
+2024,MS,Licciana Nardi,045009,Lunigiana,2619,1064,4883,4301
+2024,MS,Massa,045010,Riviera Apuana,146503,50019,643532,188530
+2024,MS,Montignoso,045011,Riviera Apuana,11868,5614,45536,23733
+2024,MS,Mulazzo,045012,Lunigiana,3060,2601,7818,6774
+2024,MS,Podenzana,045013,Lunigiana,796,214,1654,1134
+2024,MS,Pontremoli,045014,Lunigiana,7432,2931,12601,6095
+2024,MS,Tresana,045015,Lunigiana,512,292,2119,776
+2024,MS,Villafranca in Lunigiana,045016,Lunigiana,1011,484,2638,1429
+2024,MS,Zeri,045017,Lunigiana,1031,292,1970,344
+2024,PI,Bientina,050001,Terre di Pisa,6236,891,14863,2242
+2024,PI,Buti,050002,Terre di Pisa,366,747,1782,4346
+2024,PI,Calci,050003,Terre di Pisa,758,2064,2036,11642
+2024,PI,Calcinaia,050004,Terre di Pisa,2116,442,3300,882
+2024,PI,Capannoli,050005,Terre di Pisa,332,1417,670,5224
+2024,PI,Casale Marittimo,050006,Costa degli Etruschi,1010,7643,4975,74062
+2024,PI,Casciana Terme Lari,050040,Terre di Pisa,6223,6853,15021,26346
+2024,PI,Cascina,050008,Terre di Pisa,13097,10244,27424,17606
+2024,PI,Castelfranco di Sotto,050009,Terre di Pisa,549,1972,1659,12823
+2024,PI,Castellina Marittima,050010,Costa degli Etruschi,4660,2578,11429,8924
+2024,PI,Castelnuovo di Val di Cecina,050011,Terre di Valdelsa e dell'Etruria Volterrana,2067,2329,6023,15233
+2024,PI,Chianni,050012,Terre di Pisa,833,2201,4010,14634
+2024,PI,Crespina Lorenzana,050041,Terre di Pisa,1305,1468,5916,9723
+2024,PI,Guardistallo,050015,Costa degli Etruschi,3860,4492,13990,30301
+2024,PI,Lajatico,050016,Terre di Pisa,1630,3449,4900,16806
+2024,PI,Montecatini Val di Cecina,050019,Terre di Valdelsa e dell'Etruria Volterrana,10957,9223,27460,49687
+2024,PI,Montescudaio,050020,Costa degli Etruschi,6635,14916,29549,124913
+2024,PI,Monteverdi Marittimo,050021,Terre di Valdelsa e dell'Etruria Volterrana,3187,1803,7070,7082
+2024,PI,Montopoli in Val d'Arno,050022,Terre di Pisa,3860,5070,12642,21437
+2024,PI,Orciano Pisano e Fauglia,050014+050023,Terre di Pisa,1438,1690,4500,8284
+2024,PI,Palaia,050024,Terre di Pisa,4302,14395,9325,67416
+2024,PI,Peccioli,050025,Terre di Pisa,5395,6423,10708,39452
+2024,PI,Pisa,050026,Terre di Pisa,284627,574378,826981,1034969
+2024,PI,Pomarance,050027,Terre di Valdelsa e dell'Etruria Volterrana,5523,10249,17072,54592
+2024,PI,Ponsacco,050028,Terre di Pisa,5828,2083,11301,7478
+2024,PI,Pontedera,050029,Terre di Pisa,12319,4944,28171,11795
+2024,PI,Riparbella,050030,Costa degli Etruschi,10313,15045,30788,90447
+2024,PI,San Giuliano Terme,050031,Terre di Pisa,26430,32251,140763,102689
+2024,PI,San Miniato,050032,Terre di Pisa,13735,13746,24574,36971
+2024,PI,Santa Croce sull'Arno,050033,Terre di Pisa,78,16,905,226
+2024,PI,Santa Luce,050034,Costa degli Etruschi,5087,2900,15639,16353
+2024,PI,Santa Maria a Monte,050035,Terre di Pisa,1703,627,3145,1718
+2024,PI,Terricciola,050036,Terre di Pisa,1334,4892,3526,28262
+2024,PI,Vecchiano,050037,Terre di Pisa,3217,2370,5994,7774
+2024,PI,Vicopisano,050038,Terre di Pisa,1006,863,2406,3011
+2024,PI,Volterra,050039,Terre di Valdelsa e dell'Etruria Volterrana,35268,52959,67336,168311
+2024,PO,Cantagallo,100001,Area Pratese,390,243,592,958
+2024,PO,Carmignano,100002,Area Pratese,6072,13177,10426,35589
+2024,PO,Montemurlo,100003,Area Pratese,3335,4529,4921,11900
+2024,PO,Poggio a Caiano,100004,Area Pratese,5564,5856,10314,12985
+2024,PO,Prato,100005,Area Pratese,98445,133794,179379,246150
+2024,PO,Vaiano,100006,Area Pratese,1430,958,3838,4366
+2024,PO,Vernio,100007,Area Pratese,1929,153,11236,1023
+2024,PT,Abetone Cutigliano,047023,Pistoia e Montagna Pistoiese,30485,2051,83945,5347
+2024,PT,Agliana,047002,Pistoia e Montagna Pistoiese,1926,409,9255,1620
+2024,PT,Buggiano,047003,Valdinievole,1598,3883,4682,15111
+2024,PT,Chiesina Uzzanese e Ponte Buggianese,047022+047016,Valdinievole,28893,1893,44558,3698
+2024,PT,Lamporecchio,047005,Valdinievole,5996,13556,12046,74863
+2024,PT,Larciano,047006,Valdinievole,4660,3628,9626,14212
+2024,PT,Marliana,047007,Pistoia e Montagna Pistoiese,1652,1397,4198,5519
+2024,PT,Massa e Cozzile,047008,Valdinievole,905,1980,1432,10308
+2024,PT,Monsummano Terme,047009,Valdinievole,8423,11040,17725,32567
+2024,PT,Montale,047010,Pistoia e Montagna Pistoiese,1917,539,3593,1301
+2024,PT,Montecatini Terme,047011,Valdinievole,183014,429923,413928,1150180
+2024,PT,Pescia,047012,Valdinievole,9873,15269,19568,45596
+2024,PT,Pieve a Nievole,047013,Valdinievole,1967,942,3905,3801
+2024,PT,Pistoia,047014,Pistoia e Montagna Pistoiese,44257,30712,78338,91349
+2024,PT,Quarrata,047017,Pistoia e Montagna Pistoiese,2313,1711,9220,5410
+2024,PT,Sambuca Pistoiese,047018,Pistoia e Montagna Pistoiese,178,30,461,41
+2024,PT,San Marcello Piteglio,047024,Pistoia e Montagna Pistoiese,15722,2327,55642,10624
+2024,PT,Serravalle Pistoiese,047020,Pistoia e Montagna Pistoiese,13971,10038,33085,27102
+2024,PT,Uzzano,047021,Valdinievole,435,1036,1121,4184
+2024,SI,Abbadia San Salvatore,052001,Amiata,24660,2531,61717,4605
+2024,SI,Asciano,052002,Terre di Siena,13299,31142,28393,90187
+2024,SI,Buonconvento,052003,Terre di Siena,5978,7680,15416,27618
+2024,SI,Casole d'Elsa,052004,Terre di Valdelsa e dell'Etruria Volterrana,4604,15906,16397,80554
+2024,SI,Castellina in Chianti,052005,Chianti,11834,41401,23653,144712
+2024,SI,Castelnuovo Berardenga,052006,Chianti,20906,55507,47517,165949
+2024,SI,Castiglione d'Orcia,052007,Val d'Orcia,11277,10468,30493,33766
+2024,SI,Cetona,052008,Val di Chiana Senese,2255,2263,6938,11864
+2024,SI,Chianciano Terme,052009,Val di Chiana Senese,117756,113587,258802,211037
+2024,SI,Chiusdino,052010,Terre di Siena,6394,16937,17224,92939
+2024,SI,Chiusi,052011,Val di Chiana Senese,17410,13303,28512,28576
+2024,SI,Colle di Val d'Elsa,052012,Terre di Valdelsa e dell'Etruria Volterrana,28965,30513,60693,87889
+2024,SI,Gaiole in Chianti,052013,Chianti,9681,27509,17973,90336
+2024,SI,Montalcino,052037,Val d'Orcia,33951,64027,67071,165537
+2024,SI,Montepulciano,052015,Val di Chiana Senese,52341,81538,96345,213239
+2024,SI,Monteriggioni,052016,Terre di Valdelsa e dell'Etruria Volterrana,36841,41952,65819,128171
+2024,SI,Monteroni d'Arbia,052017,Terre di Siena,9802,13394,25912,48019
+2024,SI,Monticiano,052018,Terre di Siena,2453,1788,5061,8552
+2024,SI,Murlo,052019,Terre di Siena,5718,9633,13798,36353
+2024,SI,Piancastagnaio,052020,Amiata,2714,1483,6164,3800
+2024,SI,Pienza,052021,Val d'Orcia,29275,51445,58898,131379
+2024,SI,Poggibonsi,052022,Terre di Valdelsa e dell'Etruria Volterrana,35721,43234,69696,107617
+2024,SI,Radda in Chianti,052023,Chianti,6586,24496,12843,81297
+2024,SI,Radicofani,052024,Val d'Orcia,3415,3484,7167,9789
+2024,SI,Radicondoli,052025,Terre di Valdelsa e dell'Etruria Volterrana,1415,4475,5303,27318
+2024,SI,Rapolano Terme,052026,Terre di Siena,36548,11119,74134,41794
+2024,SI,San Casciano dei Bagni,052027,Val di Chiana Senese,16552,6695,34871,24788
+2024,SI,San Gimignano,052028,Terre di Valdelsa e dell'Etruria Volterrana,56506,148581,104320,412419
+2024,SI,San Quirico d'Orcia,052030,Val d'Orcia,55133,33882,126347,92598
+2024,SI,Sarteano,052031,Val di Chiana Senese,7794,12310,24839,55048
+2024,SI,Siena,052032,Terre di Siena,187894,305921,385328,702957
+2024,SI,Sinalunga,052033,Val di Chiana Senese,11129,6552,22990,22692
+2024,SI,Sovicille,052034,Terre di Siena,12970,22662,33624,104266
+2024,SI,Torrita di Siena,052035,Val di Chiana Senese,4144,9224,9541,36644
+2024,SI,Trequanda,052036,Val di Chiana Senese,8787,16327,21551,49884
+2025,AR,Anghiari,51001,Valtiberina Toscana,5703,3233,11619,14705
+2025,AR,Arezzo,51002,Arezzo,161666,78172,279756,166611
+2025,AR,Badia Tedalda,51003,Valtiberina Toscana,1135,53,6130,443
+2025,AR,Bibbiena,51004,Casentino,6288,4041,15725,22294
+2025,AR,Bucine,51005,Valdarno Aretino,3719,19866,10635,92673
+2025,AR,Capolona,51006,Arezzo,1212,1899,2970,11150
+2025,AR,Caprese Michelangelo,51007,Valtiberina Toscana,808,707,1946,3474
+2025,AR,Castel Focognano,51008,Casentino,115,840,404,5704
+2025,AR,Castel San Niccol•,51010,Casentino,1101,469,2863,2392
+2025,AR,Castelfranco Piandisc•,51040,Valdarno Aretino,762,2129,3506,13004
+2025,AR,Castiglion Fibocchi,51011,Arezzo,703,1935,2518,12215
+2025,AR,Castiglion Fiorentino,51012,Val di Chiana Aretina,15181,31874,32055,84049
+2025,AR,Cavriglia,51013,Valdarno Aretino,9590,13987,27678,80937
+2025,AR,Chitignano,51014,Casentino,229,28,959,103
+2025,AR,Chiusi della Verna,51015,Casentino,14636,7093,29475,12224
+2025,AR,Civitella in Val di Chiana,51016,Val di Chiana Aretina,8427,4685,16004,17480
+2025,AR,Cortona,51017,Val di Chiana Aretina,15314,31037,33751,152284
+2025,AR,Foiano della Chiana,51018,Val di Chiana Aretina,8090,8100,12781,21940
+2025,AR,Laterina Pergine Valdarno,51042,Valdarno Aretino,6238,7096,13723,28730
+2025,AR,Loro Ciuffenna,51020,Valdarno Aretino,3508,12682,6793,45569
+2025,AR,Lucignano,51021,Val di Chiana Aretina,1275,2396,2905,13855
+2025,AR,Marciano della Chiana,51022,Val di Chiana Aretina,366,335,859,1728
+2025,AR,Monte San Savino,51025,Val di Chiana Aretina,5872,6348,11735,28373
+2025,AR,Montemignaio,51023,Casentino,342,118,9134,2753
+2025,AR,Monterchi,51024,Valtiberina Toscana,9,154,19,1253
+2025,AR,Montevarchi,51026,Valdarno Aretino,14762,7816,24858,19288
+2025,AR,Ortignano Raggiolo,51027,Casentino,516,894,1274,5290
+2025,AR,Pieve Santo Stefano,51030,Valtiberina Toscana,6753,3706,12621,6956
+2025,AR,Poppi,51031,Casentino,30330,9231,70778,37951
+2025,AR,Pratovecchio Stia,51041,Casentino,5664,3287,15965,14102
+2025,AR,San Giovanni Valdarno,51033,Valdarno Aretino,1603,607,5634,2766
+2025,AR,Sansepolcro,51034,Valtiberina Toscana,20245,7767,39849,24560
+2025,AR,Sestino,51035,Valtiberina Toscana,113,63,274,433
+2025,AR,Subbiano,51037,Casentino,6219,1922,11548,9724
+2025,AR,Talla,51038,Casentino,766,569,2363,4225
+2025,AR,Terranuova Bracciolini,51039,Valdarno Aretino,29339,12143,63508,31385
+2025,FI,Bagno a Ripoli,48001,Firenze e Area Fiorentina,11891,26686,30109,75784
+2025,FI,Barberino Tavarnelle,48054,Chianti,24699,53395,46771,204485
+2025,FI,Barberino di Mugello,48002,Mugello,31467,11829,58239,25481
+2025,FI,Borgo San Lorenzo,48004,Mugello,11287,15702,23889,41226
+2025,FI,Calenzano,48005,Firenze e Area Fiorentina,50904,47640,138439,81554
+2025,FI,Campi Bisenzio,48006,Firenze e Area Fiorentina,38003,57926,67208,84174
+2025,FI,Capraia e Limite,48008,Empolese Valdelsa e Montalbano,4818,2248,15187,11322
+2025,FI,Castelfiorentino,48010,Empolese Valdelsa e Montalbano,2450,3651,6720,21138
+2025,FI,Cerreto Guidi,48011,Empolese Valdelsa e Montalbano,3553,6891,7655,28249
+2025,FI,Certaldo,48012,Empolese Valdelsa e Montalbano,9045,20981,22759,78223
+2025,FI,Dicomano,48013,Mugello,1259,1543,4190,9290
+2025,FI,Empoli,48014,Empolese Valdelsa e Montalbano,11175,4652,24602,13004
+2025,FI,Fiesole,48015,Firenze e Area Fiorentina,16327,30417,35835,81713
+2025,FI,Figline e Incisa Valdarno,48052,Firenze e Area Fiorentina,41967,65738,105354,415113
+2025,FI,Firenze,48017,Firenze e Area Fiorentina,918540,3258795,1672245,7979834
+2025,FI,Firenzuola,48018,Mugello,6200,3488,11195,6553
+2025,FI,Fucecchio,48019,Empolese Valdelsa e Montalbano,3788,2615,7655,9657
+2025,FI,Gambassi Terme,48020,Empolese Valdelsa e Montalbano,6433,15619,12159,61916
+2025,FI,Greve in Chianti,48021,Chianti,16665,56468,34034,183315
+2025,FI,Impruneta,48022,Firenze e Area Fiorentina,11115,13136,25301,41745
+2025,FI,Lastra a Signa,48024,Firenze e Area Fiorentina,8110,6156,23021,25554
+2025,FI,Londa,48025,Firenze e Area Fiorentina,483,914,735,4431
+2025,FI,Marradi,48026,Mugello,2511,706,17060,4555
+2025,FI,Montaione,48027,Empolese Valdelsa e Montalbano,9360,42821,24739,235533
+2025,FI,Montelupo Fiorentino,48028,Empolese Valdelsa e Montalbano,2975,2538,16242,11151
+2025,FI,Montespertoli,48030,Empolese Valdelsa e Montalbano,9092,20546,24585,84064
+2025,FI,Palazzuolo sul Senio,48031,Mugello,1655,326,4735,1214
+2025,FI,Pelago,48032,Firenze e Area Fiorentina,3972,8028,9000,26448
+2025,FI,Pontassieve,48033,Firenze e Area Fiorentina,5481,11348,10215,42379
+2025,FI,Reggello,48035,Firenze e Area Fiorentina,14893,25394,38477,73611
+2025,FI,Rignano sull'Arno,48036,Firenze e Area Fiorentina,9063,26867,22170,92430
+2025,FI,Rufina,48037,Firenze e Area Fiorentina,1209,1280,6297,5624
+2025,FI,San Casciano in Val di Pesa,48038,Chianti,9376,24316,23116,87783
+2025,FI,San Godenzo,48039,Mugello,2038,250,5713,1313
+2025,FI,Scandicci,48041,Firenze e Area Fiorentina,17215,7078,30929,19596
+2025,FI,Scarperia e San Piero,48053,Mugello,25657,15692,43314,40361
+2025,FI,Sesto Fiorentino,48043,Firenze e Area Fiorentina,51998,110530,83580,151003
+2025,FI,Signa,48044,Firenze e Area Fiorentina,16249,25691,37561,39604
+2025,FI,Vaglia,48046,Firenze e Area Fiorentina,4871,4140,9822,10260
+2025,FI,Vicchio,48049,Mugello,3006,5768,8665,24531
+2025,FI,Vinci,48050,Empolese Valdelsa e Montalbano,17817,13270,29740,43319
+2025,GR,Arcidosso,53001,Amiata,2956,1770,7284,10648
+2025,GR,Campagnatico,53002,Maremma Toscana Area Sud,1704,2246,4131,11180
+2025,GR,Capalbio,53003,Maremma Toscana Area Sud,32773,9207,107696,32406
+2025,GR,Castel del Piano,53004,Amiata,11781,3200,24348,11684
+2025,GR,Castell'Azzara,53005,Amiata,709,519,2748,3386
+2025,GR,Castiglione della Pescaia,53006,Maremma Toscana Area Nord,140447,75876,687115,490910
+2025,GR,Cinigiano,53007,Maremma Toscana Area Sud,1992,6450,6132,27085
+2025,GR,Civitella Paganico,53008,Maremma Toscana Area Sud,5312,3845,11525,16469
+2025,GR,Follonica,53009,Maremma Toscana Area Nord,79987,25794,391431,151417
+2025,GR,Gavorrano,53010,Maremma Toscana Area Nord,4644,5015,16105,28686
+2025,GR,Grosseto,53011,Maremma Toscana Area Sud,195456,49921,781596,213961
+2025,GR,Isola del Giglio,53012,Maremma Toscana Area Sud,14598,2523,45015,9222
+2025,GR,Magliano in Toscana,53013,Maremma Toscana Area Sud,7975,2735,29832,11767
+2025,GR,Manciano,53014,Maremma Toscana Area Sud,50055,22434,105088,47250
+2025,GR,Massa Marittima,53015,Maremma Toscana Area Nord,21611,17953,60278,102700
+2025,GR,Monte Argentario,53016,Maremma Toscana Area Sud,33123,23294,90244,60444
+2025,GR,Monterotondo Marittimo,53027,Maremma Toscana Area Nord,1375,2059,4078,11896
+2025,GR,Montieri,53017,Maremma Toscana Area Nord,1756,1339,4259,6517
+2025,GR,Orbetello,53018,Maremma Toscana Area Sud,157811,35367,814436,155076
+2025,GR,Pitigliano,53019,Maremma Toscana Area Sud,8082,5267,14236,9669
+2025,GR,Roccalbegna,53020,Amiata,857,1298,1606,4405
+2025,GR,Roccastrada,53021,Maremma Toscana Area Nord,4090,7483,12533,35530
+2025,GR,Santa Fiora,53022,Amiata,3784,2945,10296,6977
+2025,GR,Scansano,53023,Maremma Toscana Area Sud,7602,5014,17686,19979
+2025,GR,Scarlino,53024,Maremma Toscana Area Nord,37503,16118,170938,96980
+2025,GR,Seggiano,53025,Amiata,2752,4582,5440,15257
+2025,GR,Semproniano,53028,Maremma Toscana Area Sud,4403,1941,9565,4598
+2025,GR,Sorano,53026,Maremma Toscana Area Sud,12459,5354,26650,15101
+2025,LI,Bibbona,49001,Costa degli Etruschi,106144,66394,669301,467214
+2025,LI,Campiglia Marittima,49002,Costa degli Etruschi,40617,18394,119074,76488
+2025,LI,Campo nell'Elba,49003,Elba e Isole di Toscana,60577,33496,339131,218639
+2025,LI,Capoliveri,49004,Elba e Isole di Toscana,100358,71077,603222,502894
+2025,LI,Capraia Isola,49005,Livorno,1836,2813,4676,6471
+2025,LI,Castagneto Carducci,49006,Costa degli Etruschi,84587,73605,531789,512896
+2025,LI,Cecina,49007,Costa degli Etruschi,80489,41310,518230,244159
+2025,LI,Collesalvetti,49008,Livorno,10546,5368,26465,12744
+2025,LI,Livorno,49009,Livorno,126167,97219,256441,207743
+2025,LI,Marciana,49010,Elba e Isole di Toscana,30764,16291,152513,85020
+2025,LI,Marciana Marina,49011,Elba e Isole di Toscana,13668,6838,52702,26913
+2025,LI,Piombino,49012,Costa degli Etruschi,132746,34596,824087,183539
+2025,LI,Porto Azzurro,49013,Elba e Isole di Toscana,25803,14486,122457,85045
+2025,LI,Portoferraio,49014,Elba e Isole di Toscana,65920,47859,307793,259689
+2025,LI,Rio,49021,Elba e Isole di Toscana,24995,8214,140861,50504
+2025,LI,Rosignano Marittimo,49017,Costa degli Etruschi,62388,61439,321309,356429
+2025,LI,San Vincenzo,49018,Costa degli Etruschi,123449,76516,594677,592602
+2025,LI,Sassetta,49019,Costa degli Etruschi,9275,3875,15074,15753
+2025,LI,Suvereto,49020,Costa degli Etruschi,10282,5584,34490,33720
+2025,LU,Altopascio,46001,Piana di Lucca,13632,8711,26491,20422
+2025,LU,Bagni di Lucca,46002,Garfagnana e media valle del Serchio,3604,3187,6317,11761
+2025,LU,Barga,46003,Garfagnana e media valle del Serchio,15946,15347,38659,53589
+2025,LU,Borgo a Mozzano,46004,Garfagnana e media valle del Serchio,4356,3563,7947,10637
+2025,LU,Camaiore,46005,Versilia,91892,62801,284330,244191
+2025,LU,Camporgiano,46006,Garfagnana e media valle del Serchio,1276,2700,2318,16689
+2025,LU,Capannori e Villa Basilica,046007 - 046034,Piana di Lucca,20114,20158,44085,79762
+2025,LU,Careggine,46008,Garfagnana e media valle del Serchio,902,166,1331,896
+2025,LU,Castelnuovo di Garfagnana,46009,Garfagnana e media valle del Serchio,7222,2299,16687,7860
+2025,LU,Castiglione di Garfagnana,46010,Garfagnana e media valle del Serchio,5451,1179,13194,5136
+2025,LU,Coreglia Antelminelli,46011,Garfagnana e media valle del Serchio,569,1410,1429,9495
+2025,LU,Fabbriche di Vergemoli,46036,Garfagnana e media valle del Serchio,158,590,453,4275
+2025,LU,Forte dei Marmi,46013,Versilia,50975,57349,134276,216264
+2025,LU,Fosciandora,46014,Garfagnana e media valle del Serchio,66,863,152,5958
+2025,LU,Gallicano,46015,Garfagnana e media valle del Serchio,2137,956,3660,4204
+2025,LU,Lucca,46017,Piana di Lucca,109278,178827,188866,418652
+2025,LU,Massarosa,46018,Versilia,6145,3791,19768,18130
+2025,LU,Minucciano,46019,Garfagnana e media valle del Serchio,1966,897,5696,4220
+2025,LU,Molazzana,46020,Garfagnana e media valle del Serchio,923,1148,1687,7641
+2025,LU,Montecarlo,46021,Piana di Lucca,3706,3024,7323,12968
+2025,LU,Pescaglia,46022,Garfagnana e media valle del Serchio,180,1119,584,7352
+2025,LU,Piazza al Serchio,46023,Garfagnana e media valle del Serchio,228,102,967,551
+2025,LU,Pietrasanta,46024,Versilia,76096,52604,245180,190648
+2025,LU,Pieve Fosciana,46025,Garfagnana e media valle del Serchio,1592,1068,4174,5821
+2025,LU,Porcari,46026,Piana di Lucca,4397,1060,11195,3602
+2025,LU,San Romano in Garfagnana,46027,Garfagnana e media valle del Serchio,1602,209,3871,1051
+2025,LU,Seravezza,46028,Versilia,2770,479,7908,1683
+2025,LU,Sillano Giuncugnano,46037,Garfagnana e media valle del Serchio,2017,610,6977,1379
+2025,LU,Stazzema,46030,Versilia,1902,345,3353,1336
+2025,LU,Vagli Sotto,46031,Garfagnana e media valle del Serchio,474,451,592,2534
+2025,LU,Viareggio,46033,Versilia,131844,92366,512595,346270
+2025,LU,Villa Collemandina,46035,Garfagnana e media valle del Serchio,2341,611,7025,3739
+2025,MS,Aulla,45001,Lunigiana,1868,1178,4397,2442
+2025,MS,Bagnone,45002,Lunigiana,279,805,584,4768
+2025,MS,Carrara,45003,Riviera Apuana,19979,10641,50308,28713
+2025,MS,Casola in Lunigiana,45004,Lunigiana,195,528,502,2884
+2025,MS,Comano,45005,Lunigiana,332,271,886,1021
+2025,MS,Filattiera,45006,Lunigiana,685,1235,1061,3724
+2025,MS,Fivizzano,45007,Lunigiana,1549,1496,3459,7461
+2025,MS,Fosdinovo,45008,Lunigiana,3344,2847,6174,8111
+2025,MS,Licciana Nardi,45009,Lunigiana,2496,1023,5267,3815
+2025,MS,Massa,45010,Riviera Apuana,151758,51302,628777,183636
+2025,MS,Montignoso,45011,Riviera Apuana,10864,5430,44725,25963
+2025,MS,Mulazzo,45012,Lunigiana,2914,2810,6503,7189
+2025,MS,Podenzana,45013,Lunigiana,1212,768,2019,1862
+2025,MS,Pontremoli,45014,Lunigiana,9003,3755,17101,8178
+2025,MS,Tresana,45015,Lunigiana,369,93,1828,258
+2025,MS,Villafranca in Lunigiana,45016,Lunigiana,1089,580,3194,1814
+2025,MS,Zeri,45017,Lunigiana,1269,326,2773,365
+2025,PI,Bientina,50001,Terre di Pisa,6175,748,14417,1955
+2025,PI,Buti,50002,Terre di Pisa,532,2228,1135,8929
+2025,PI,Calci,50003,Terre di Pisa,758,2601,2301,13215
+2025,PI,Calcinaia,50004,Terre di Pisa,1979,400,3335,1610
+2025,PI,Capannoli,50005,Terre di Pisa,242,733,389,3034
+2025,PI,Casale Marittimo,50006,Costa degli Etruschi,1161,7383,4081,71500
+2025,PI,Casciana Terme Lari,50040,Terre di Pisa,5289,6546,14188,25425
+2025,PI,Cascina,50008,Terre di Pisa,13318,10340,29260,17133
+2025,PI,Castelfranco di Sotto,50009,Terre di Pisa,443,1467,1420,9793
+2025,PI,Castellina Marittima,50010,Costa degli Etruschi,4046,2257,10191,9100
+2025,PI,Castelnuovo di Val di Cecina,50011,Terre di Valdelsa e dell'Etruria Volterrana,2261,1901,8068,12264
+2025,PI,Chianni,50012,Terre di Pisa,526,2369,1681,15272
+2025,PI,Crespina Lorenzana,50041,Terre di Pisa,1386,1611,5783,10992
+2025,PI,Fauglia e Orciano Pisano,050014 - 050023,Terre di Pisa,1716,1701,6820,8372
+2025,PI,Guardistallo,50015,Costa degli Etruschi,3747,4466,12608,28289
+2025,PI,Lajatico,50016,Terre di Pisa,2203,4255,5572,19831
+2025,PI,Montecatini Val di Cecina,50019,Terre di Valdelsa e dell'Etruria Volterrana,12656,10292,29176,48978
+2025,PI,Montescudaio,50020,Costa degli Etruschi,5969,14714,27008,121863
+2025,PI,Monteverdi Marittimo,50021,Terre di Valdelsa e dell'Etruria Volterrana,2479,1429,5845,5870
+2025,PI,Montopoli in Val d'Arno,50022,Terre di Pisa,1264,1976,5446,13294
+2025,PI,Palaia,50024,Terre di Pisa,3640,13698,8080,65561
+2025,PI,Peccioli,50025,Terre di Pisa,5109,6476,9077,38408
+2025,PI,Pisa,50026,Terre di Pisa,288771,569795,772351,1039538
+2025,PI,Pomarance,50027,Terre di Valdelsa e dell'Etruria Volterrana,6596,10168,26883,50438
+2025,PI,Ponsacco,50028,Terre di Pisa,5199,2648,11349,8013
+2025,PI,Pontedera,50029,Terre di Pisa,15832,12668,33191,25222
+2025,PI,Riparbella,50030,Costa degli Etruschi,9391,13823,28793,87742
+2025,PI,San Giuliano Terme,50031,Terre di Pisa,25150,31770,149526,123888
+2025,PI,San Miniato,50032,Terre di Pisa,13398,14243,22812,36268
+2025,PI,Santa Croce sull'Arno,50033,Terre di Pisa,158,8,924,80
+2025,PI,Santa Luce,50034,Costa degli Etruschi,5509,3203,18564,19143
+2025,PI,Santa Maria a Monte,50035,Terre di Pisa,2605,828,5085,1612
+2025,PI,Terricciola,50036,Terre di Pisa,1129,5167,2845,28669
+2025,PI,Vecchiano,50037,Terre di Pisa,3176,2650,6451,8191
+2025,PI,Vicopisano,50038,Terre di Pisa,1111,997,1831,3820
+2025,PI,Volterra,50039,Terre di Valdelsa e dell'Etruria Volterrana,32413,51454,59769,166656
+2025,PO,Cantagallo,100001,Area Pratese,363,63,549,373
+2025,PO,Carmignano,100002,Area Pratese,7148,12294,12093,34139
+2025,PO,Montemurlo,100003,Area Pratese,3422,5376,5400,13330
+2025,PO,Poggio a Caiano,100004,Area Pratese,5649,6377,9768,14022
+2025,PO,Prato,100005,Area Pratese,102219,134164,178722,243901
+2025,PO,Vaiano,100006,Area Pratese,1509,801,3915,3900
+2025,PO,Vernio,100007,Area Pratese,1880,281,11668,3142
+2025,PT,Abetone Cutigliano,47023,Pistoia e Montagna Pistoiese,32469,2097,83568,5052
+2025,PT,Agliana,47002,Pistoia e Montagna Pistoiese,1908,466,8017,2224
+2025,PT,Buggiano,47003,Valdinievole,1824,5734,4707,19449
+2025,PT,Chiesina Uzzanese e Ponte Buggianese,047022 - 047016,Valdinievole,26678,1939,41579,4963
+2025,PT,Lamporecchio,47005,Valdinievole,4504,12664,8701,72339
+2025,PT,Larciano,47006,Valdinievole,4148,5003,8522,16023
+2025,PT,Marliana,47007,Pistoia e Montagna Pistoiese,1279,1023,3317,3848
+2025,PT,Massa e Cozzile,47008,Valdinievole,1249,2157,2072,11871
+2025,PT,Monsummano Terme,47009,Valdinievole,8423,10694,16665,32861
+2025,PT,Montale,47010,Pistoia e Montagna Pistoiese,1694,455,3331,1359
+2025,PT,Montecatini Terme,47011,Valdinievole,176259,410334,407606,1085868
+2025,PT,Pescia,47012,Valdinievole,9130,15029,22020,46343
+2025,PT,Pieve a Nievole,47013,Valdinievole,1903,871,3613,4049
+2025,PT,Pistoia,47014,Pistoia e Montagna Pistoiese,43887,31775,79898,92999
+2025,PT,Quarrata,47017,Pistoia e Montagna Pistoiese,2619,1695,9309,5132
+2025,PT,Sambuca Pistoiese,47018,Pistoia e Montagna Pistoiese,369,44,884,210
+2025,PT,San Marcello Piteglio,47024,Pistoia e Montagna Pistoiese,14987,2036,52542,9105
+2025,PT,Serravalle Pistoiese,47020,Pistoia e Montagna Pistoiese,14605,9071,29786,26694
+2025,PT,Uzzano,47021,Valdinievole,382,879,873,3983
+2025,SI,Abbadia San Salvatore,52001,Amiata,23934,2213,63724,4402
+2025,SI,Asciano,52002,Terre di Siena,13749,26723,30456,80158
+2025,SI,Buonconvento,52003,Terre di Siena,5533,8571,17351,32601
+2025,SI,Casole d'Elsa,52004,Terre di Valdelsa e dell'Etruria Volterrana,4917,17011,17131,84809
+2025,SI,Castellina in Chianti,52005,Chianti,11019,38902,22528,137581
+2025,SI,Castelnuovo Berardenga,52006,Chianti,20378,57266,45151,171453
+2025,SI,Castiglione d'Orcia,52007,Val d'Orcia,12469,12543,29591,37343
+2025,SI,Cetona,52008,Val di Chiana Senese,2381,2807,7154,14446
+2025,SI,Chianciano Terme,52009,Val di Chiana Senese,109719,107075,239240,199111
+2025,SI,Chiusdino,52010,Terre di Siena,5772,15871,16364,86275
+2025,SI,Chiusi,52011,Val di Chiana Senese,18231,14670,30083,31569
+2025,SI,Colle di Val d'Elsa,52012,Terre di Valdelsa e dell'Etruria Volterrana,27284,33568,53553,94574
+2025,SI,Gaiole in Chianti,52013,Chianti,11084,29628,21529,95250
+2025,SI,Montalcino,52037,Val d'Orcia,33768,65324,64772,169679
+2025,SI,Montepulciano,52015,Val di Chiana Senese,48409,83662,90172,220668
+2025,SI,Monteriggioni,52016,Terre di Valdelsa e dell'Etruria Volterrana,30333,42883,54761,130365
+2025,SI,Monteroni d'Arbia,52017,Terre di Siena,8090,12302,21739,45592
+2025,SI,Monticiano,52018,Terre di Siena,2083,1586,5148,7399
+2025,SI,Murlo,52019,Terre di Siena,7233,11569,16237,44509
+2025,SI,Piancastagnaio,52020,Amiata,2294,1622,5517,3923
+2025,SI,Pienza,52021,Val d'Orcia,26705,58492,55735,144214
+2025,SI,Poggibonsi,52022,Terre di Valdelsa e dell'Etruria Volterrana,35898,48375,68340,110241
+2025,SI,Radda in Chianti,52023,Chianti,7138,26492,13156,84869
+2025,SI,Radicofani,52024,Val d'Orcia,3559,4585,7513,11720
+2025,SI,Radicondoli,52025,Terre di Valdelsa e dell'Etruria Volterrana,1703,4877,4559,32941
+2025,SI,Rapolano Terme,52026,Terre di Siena,37517,12321,74305,44465
+2025,SI,San Casciano dei Bagni,52027,Val di Chiana Senese,16169,6649,32375,23680
+2025,SI,San Gimignano,52028,Terre di Valdelsa e dell'Etruria Volterrana,54428,147012,99731,402763
+2025,SI,San Quirico d'Orcia,52030,Val d'Orcia,51836,36376,117843,98352
+2025,SI,Sarteano,52031,Val di Chiana Senese,7827,11926,24875,51691
+2025,SI,Siena,52032,Terre di Siena,176480,304575,366563,683265
+2025,SI,Sinalunga,52033,Val di Chiana Senese,10410,7184,21440,25062
+2025,SI,Sovicille,52034,Terre di Siena,14436,22419,35510,93401
+2025,SI,Torrita di Siena,52035,Val di Chiana Senese,3670,9539,8459,35326
+2025,SI,Trequanda,52036,Val di Chiana Senese,7915,17614,19525,49883

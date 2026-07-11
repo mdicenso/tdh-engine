@@ -17,6 +17,7 @@ import csv
 import io
 import json
 import os
+import re
 import time
 import urllib.request
 import urllib.error
@@ -555,6 +556,167 @@ def fetch_lombardia_latest_year(timeout: int = 60) -> int | None:
     try:
         r = _lomb_get({"$select": "max(anno) as b"}, timeout)
         return int(r[0]["b"]) if r and r[0].get("b") else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+# --------------------------------------------------------------------------
+# OPEN DATA REGIONE TOSCANA — CKAN (dati.toscana.it). Fonte COMPLEMENTARE regionale:
+# movimento clienti ANNUALE a livello COMUNALE (~272 comuni) con split italiani/stranieri,
+# 2018-2025. Punto di forza: granularità COMUNE + ambito turistico (unica tra le fonti
+# locali). Un dataset CKAN per anno ("Movimento dei clienti ... Anno YYYY"), enumerati via
+# package_search + risorsa CSV "movimento". Formati eterogenei fra anni (wide 2024-25;
+# long ; oppure TAB 2018-23; provenienza "Italiani/Stranieri" o "ITA/STR") normalizzati a
+# uno schema unico TOSC_FIELDS. Encoding cp1252, separatori ; o \t.
+# --------------------------------------------------------------------------
+TOSC_CKAN = "https://dati.toscana.it/api/3/action/package_search"
+TOSC_QUERY = "movimento clienti offerta ricettiva toscana"
+TOSC_CACHE = "toscana_movimento_comune_anno.csv"
+TOSC_FIELDS = ["anno", "sigla_provincia", "comune", "cod_istat", "ambito",
+               "arrivi_italiani", "arrivi_stranieri",
+               "presenze_italiane", "presenze_straniere"]
+_TOSC_ITA = {"italiani", "italia", "ita", "residenti", "italiane", "italiano"}
+_TOSC_STR = {"stranieri", "estero", "str", "esteri", "straniere", "nonresidenti", "straniero"}
+
+
+def _tosc_norm(s: str) -> str:
+    return re.sub(r"[^a-z]", "", (s or "").lower())
+
+
+def _tosc_canonkey(h: str) -> str:
+    """Riconduce le intestazioni eterogenee dei file annuali a chiavi canoniche."""
+    n = _tosc_norm(h)
+    if n == "anno":
+        return "anno"
+    if n == "comune":
+        return "comune"
+    if "istat" in n:
+        return "cod_istat"
+    if "ambito" in n:
+        return "ambito"
+    if "provincia" in n:
+        return "prov"
+    if "provenienza" in n or "italianostraniero" in n:
+        return "provM"
+    if n == "arriviitaliani":
+        return "arr_ita"
+    if n == "arrivistranieri":
+        return "arr_str"
+    if n == "presenzeitaliane":
+        return "pres_ita"
+    if n == "presenzestraniere":
+        return "pres_str"
+    if n == "arrivi":
+        return "arrivi"
+    if n == "presenze":
+        return "presenze"
+    return n
+
+
+def _tosc_int(s: str) -> int:
+    s = (s or "").strip().replace(" ", "")
+    return int(s) if s.lstrip("-").isdigit() else 0
+
+
+def _tosc_movimento_urls(timeout: int = 60) -> dict:
+    """Enumera i dataset annuali via CKAN → {anno: url_csv_movimento}."""
+    import urllib.parse
+    url = TOSC_CKAN + "?" + urllib.parse.urlencode({"q": TOSC_QUERY, "rows": 50})
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    data = json.loads(urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8"))
+    out: dict[int, str] = {}
+    for pkg in data.get("result", {}).get("results", []):
+        title = pkg.get("title", "")
+        if "movimento" not in title.lower():
+            continue
+        m = re.search(r"(20\d{2})", title)
+        if not m:
+            continue
+        anno = int(m.group(1))
+        for r in pkg.get("resources", []):
+            if (r.get("format") or "").lower() != "csv":
+                continue
+            tag = ((r.get("name") or "") + " " + (r.get("url") or "")).lower()
+            if "movimento" in tag and "consistenza" not in tag:
+                out[anno] = r.get("url", "")
+                break
+    return dict(sorted(out.items()))
+
+
+def _tosc_parse(url: str, timeout: int = 90) -> list:
+    """Scarica e normalizza un singolo file annuale a record per (anno, comune)."""
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    raw = urllib.request.urlopen(req, timeout=timeout).read()
+    txt = raw.decode("cp1252", "replace")
+    lines = txt.splitlines()
+    if not lines:
+        return []
+    delim = max([";", "\t", ","], key=lines[0].count)
+    rows = list(csv.reader(io.StringIO(txt), delimiter=delim))
+    if len(rows) < 2:
+        return []
+    hdr = [_tosc_canonkey(h) for h in rows[0]]
+    recs = [dict(zip(hdr, r)) for r in rows[1:] if any(c.strip() for c in r)]
+    wide = "arr_ita" in hdr
+    agg: dict = {}
+    for r in recs:
+        key = (r.get("anno", ""), r.get("cod_istat", ""), r.get("comune", ""))
+        d = agg.setdefault(key, {
+            "anno": (r.get("anno", "") or "").strip(),
+            "sigla_provincia": (r.get("prov", "") or "").strip(),
+            "comune": (r.get("comune", "") or "").strip(),
+            "cod_istat": (r.get("cod_istat", "") or "").strip(),
+            "ambito": (r.get("ambito", "") or "").strip(),
+            "arrivi_italiani": 0, "arrivi_stranieri": 0,
+            "presenze_italiane": 0, "presenze_straniere": 0})
+        if wide:
+            d["arrivi_italiani"] += _tosc_int(r.get("arr_ita"))
+            d["arrivi_stranieri"] += _tosc_int(r.get("arr_str"))
+            d["presenze_italiane"] += _tosc_int(r.get("pres_ita"))
+            d["presenze_straniere"] += _tosc_int(r.get("pres_str"))
+        else:
+            pv = _tosc_norm(r.get("provM"))
+            a, p = _tosc_int(r.get("arrivi")), _tosc_int(r.get("presenze"))
+            if pv in _TOSC_ITA:
+                d["arrivi_italiani"] += a
+                d["presenze_italiane"] += p
+            elif pv in _TOSC_STR:
+                d["arrivi_stranieri"] += a
+                d["presenze_straniere"] += p
+    return list(agg.values())
+
+
+def fetch_toscana_movimento(cache_dir: str = ".cache", timeout: int = 120,
+                            refresh: bool = False) -> pd.DataFrame:
+    """Movimento clienti ANNUALE per COMUNE toscano (arrivi/presenze italiani+stranieri),
+    2018-2025. Normalizza i formati annuali eterogenei a TOSC_FIELDS. Cache CSV."""
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, TOSC_CACHE)
+    if os.path.exists(cache_path) and not refresh:
+        return pd.read_csv(cache_path)
+    urls = _tosc_movimento_urls(timeout=min(timeout, 60))
+    recs: list = []
+    for _anno, url in urls.items():
+        try:
+            recs.extend(_tosc_parse(url, timeout))
+        except Exception:  # noqa: BLE001
+            continue
+    df = pd.DataFrame(recs, columns=TOSC_FIELDS)
+    numcols = ["anno"] + [c for c in TOSC_FIELDS if c.startswith(("arrivi", "presenze"))]
+    for c in numcols:
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    df = df.dropna(subset=["anno"]).copy()
+    df["anno"] = df["anno"].astype(int)
+    df = df.sort_values(["anno", "sigla_provincia", "comune"]).reset_index(drop=True)
+    df.to_csv(cache_path, index=False)
+    return df
+
+
+def fetch_toscana_latest_year(timeout: int = 60) -> int | None:
+    """Anno più recente disponibile (dalla lista CKAN dei dataset annuali)."""
+    try:
+        urls = _tosc_movimento_urls(timeout)
+        return max(urls) if urls else None
     except Exception:  # noqa: BLE001
         return None
 

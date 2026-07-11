@@ -1069,6 +1069,13 @@ def region_data_catalog(code: str, ov: dict | None = None) -> list[dict]:
             yy = None
         add("Open Data Lombardia (LOCALE)", "Flussi mensili per provincia × mercato estero", "mensile",
             str(yy) if yy else "—", "12 province lombarde", "🟢")
+    elif code == "ITE1" and os.path.exists(_TOSC_PATH):
+        try:
+            yy = int(pd.read_csv(_TOSC_PATH, usecols=["anno"])["anno"].max())
+        except Exception:  # noqa: BLE001
+            yy = None
+        add("Open Data Regione Toscana (LOCALE)", "Movimento per comune (italiani/stranieri)", "annuale",
+            str(yy) if yy else "—", "~272 comuni, 10 province", "🟢")
     return rows
 
 
@@ -1204,6 +1211,160 @@ def chart_lomb_markets(prov: str | None = None, year: int | None = None,
     fig = go.Figure(go.Bar(x=d["presenze"], y=d["nome"], orientation="h", marker_color="#f59e0b",
                            hovertemplate="<b>%{y}</b><br>%{x:,.0f} presenze<extra></extra>"))
     fig.update_xaxes(title="presenze di turisti esteri")
+    return _layout(fig, h=420)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# TOSCANA (Open Data Regione Toscana, CKAN) — fonte COMPLEMENTARE regionale (ITE1).
+#   movimento clienti ANNUALE per COMUNE (~272 comuni) × ambito turistico, split
+#   italiani/stranieri, 2018-2025. Unico nel motore: granularità COMUNALE. [[tdh-engine-project]]
+# ════════════════════════════════════════════════════════════════════════════
+_TOSC_PATH = ".cache/toscana_movimento_comune_anno.csv"
+_TOSC_PROV = {"AR": "Arezzo", "FI": "Firenze", "GR": "Grosseto", "LI": "Livorno",
+              "LU": "Lucca", "MS": "Massa-Carrara", "PI": "Pisa", "PO": "Prato",
+              "PT": "Pistoia", "SI": "Siena"}
+
+
+@st.cache_data(show_spinner=False)
+def tosc_movimento() -> pd.DataFrame:
+    """Movimento clienti Toscana per comune×anno + colonne derivate arrivi_tot/presenze_tot.
+    Vuoto se cache assente."""
+    if not os.path.exists(_TOSC_PATH):
+        return pd.DataFrame()
+    df = pd.read_csv(_TOSC_PATH)
+    df["arrivi_tot"] = df["arrivi_italiani"].fillna(0) + df["arrivi_stranieri"].fillna(0)
+    df["presenze_tot"] = df["presenze_italiane"].fillna(0) + df["presenze_straniere"].fillna(0)
+    return df
+
+
+def tosc_provinces() -> list[str]:
+    """Nomi estesi delle province presenti (per il selettore)."""
+    df = tosc_movimento()
+    if df.empty:
+        return []
+    sig = sorted(df["sigla_provincia"].dropna().unique())
+    return [_TOSC_PROV.get(s, s) for s in sig]
+
+
+def _tosc_scope(prov: str | None) -> pd.DataFrame:
+    """Sottoinsieme per provincia (nome esteso) o tutta la Toscana se None/'Tutta la Toscana'."""
+    df = tosc_movimento()
+    if df.empty:
+        return df
+    if prov and prov != "Tutta la Toscana":
+        sig = {v: k for k, v in _TOSC_PROV.items()}.get(prov, prov)
+        df = df[df["sigla_provincia"] == sig]
+    return df
+
+
+def tosc_yearly_totals(prov: str | None = None) -> pd.DataFrame:
+    """Serie annuale: anno·presenze_italiane·presenze_straniere·arrivi_tot·presenze_tot."""
+    df = _tosc_scope(prov)
+    if df.empty:
+        return df
+    g = df.groupby("anno").agg(presenze_italiane=("presenze_italiane", "sum"),
+                               presenze_straniere=("presenze_straniere", "sum"),
+                               arrivi_tot=("arrivi_tot", "sum"),
+                               presenze_tot=("presenze_tot", "sum")).reset_index()
+    return g.sort_values("anno")
+
+
+def tosc_top_comuni(prov: str | None = None, year: int | None = None,
+                    top: int | None = 12) -> pd.DataFrame:
+    """Comuni per presenze in un anno: comune·presenze·arrivi·quota_estero%·quota% sul totale."""
+    df = _tosc_scope(prov)
+    if df.empty:
+        return df
+    if year is None:
+        year = int(df["anno"].max())
+    d = df[df["anno"] == year].copy()
+    if d.empty:
+        return d
+    d = d.rename(columns={"comune": "nome", "presenze_tot": "presenze", "arrivi_tot": "arrivi"})
+    d["quota_estero"] = (d["presenze_straniere"] / d["presenze"] * 100).where(d["presenze"] > 0, 0.0)
+    d = d.sort_values("presenze", ascending=False)
+    tot = d["presenze"].sum()
+    d["quota"] = (d["presenze"] / tot * 100) if tot else 0.0
+    cols = ["nome", "presenze", "arrivi", "quota_estero", "quota"]
+    return (d[cols].head(top) if top else d[cols]).reset_index(drop=True)
+
+
+def tosc_ambiti(prov: str | None = None, year: int | None = None,
+                top: int | None = 12) -> pd.DataFrame:
+    """Presenze per AMBITO turistico in un anno: ambito·presenze (ordinate)."""
+    df = _tosc_scope(prov)
+    if df.empty:
+        return df
+    if year is None:
+        year = int(df["anno"].max())
+    d = df[(df["anno"] == year) & (df["ambito"].astype(str).str.strip() != "")]
+    if d.empty:
+        return d
+    g = d.groupby(d["ambito"].astype(str).str.strip()).agg(
+        presenze=("presenze_tot", "sum")).reset_index()
+    g = g.rename(columns={"ambito": "nome"}).sort_values("presenze", ascending=False)
+    return (g.head(top) if top else g).reset_index(drop=True)
+
+
+def tosc_kpi(prov: str | None = None) -> dict:
+    """KPI header: anno·presenze·arrivi·quota estero·top comune·n. comuni."""
+    df = _tosc_scope(prov)
+    out = {"anno": None, "presenze": None, "arrivi": None, "quota_estero": None,
+           "top_comune": None, "n_comuni": None}
+    if df.empty:
+        return out
+    y = int(df["anno"].max()); out["anno"] = y
+    dy = df[df["anno"] == y]
+    out["presenze"] = float(dy["presenze_tot"].sum())
+    out["arrivi"] = float(dy["arrivi_tot"].sum())
+    est = float(dy["presenze_straniere"].sum())
+    out["quota_estero"] = (est / out["presenze"] * 100) if out["presenze"] else None
+    out["n_comuni"] = int(dy["comune"].nunique())
+    tc = tosc_top_comuni(prov, year=y, top=1)
+    if tc is not None and not tc.empty:
+        out["top_comune"] = f"{tc['nome'].iloc[0]} ({tc['quota'].iloc[0]:.0f}%)"
+    return out
+
+
+def chart_tosc_yearly(prov: str | None = None) -> go.Figure | None:
+    """Presenze annuali italiani vs stranieri (barre impilate)."""
+    g = tosc_yearly_totals(prov)
+    if g is None or g.empty:
+        return None
+    fig = go.Figure()
+    fig.add_bar(x=g["anno"], y=g["presenze_italiane"], name="italiani", marker_color="#0e7490",
+                hovertemplate="<b>%{x}</b><br>%{y:,.0f} presenze italiani<extra></extra>")
+    fig.add_bar(x=g["anno"], y=g["presenze_straniere"], name="stranieri", marker_color="#f59e0b",
+                hovertemplate="<b>%{x}</b><br>%{y:,.0f} presenze stranieri<extra></extra>")
+    fig.update_layout(barmode="stack", legend=dict(orientation="h", y=1.12, x=0))
+    fig.update_yaxes(title="presenze")
+    fig.update_xaxes(dtick=1, title=None)
+    return _layout(fig, h=340)
+
+
+def chart_tosc_top_comuni(prov: str | None = None, year: int | None = None,
+                          top: int = 12) -> go.Figure | None:
+    d = tosc_top_comuni(prov, year=year, top=top)
+    if d is None or d.empty:
+        return None
+    d = d.sort_values("presenze")
+    fig = go.Figure(go.Bar(x=d["presenze"], y=d["nome"], orientation="h", marker_color="#0e7490",
+                           customdata=d["quota_estero"],
+                           hovertemplate="<b>%{y}</b><br>%{x:,.0f} presenze<br>"
+                                         "estero %{customdata:.0f}%<extra></extra>"))
+    fig.update_xaxes(title="presenze totali")
+    return _layout(fig, h=420)
+
+
+def chart_tosc_ambiti(prov: str | None = None, year: int | None = None,
+                      top: int = 12) -> go.Figure | None:
+    d = tosc_ambiti(prov, year=year, top=top)
+    if d is None or d.empty:
+        return None
+    d = d.sort_values("presenze")
+    fig = go.Figure(go.Bar(x=d["presenze"], y=d["nome"], orientation="h", marker_color="#16a34a",
+                           hovertemplate="<b>%{y}</b><br>%{x:,.0f} presenze<extra></extra>"))
+    fig.update_xaxes(title="presenze per ambito turistico")
     return _layout(fig, h=420)
 
 
@@ -2015,6 +2176,13 @@ def builtin_sources() -> list[dict]:
                          "(fonte COMPLEMENTARE, 12 province, 2019-2024)",
                          "Regione Lombardia · Open Data (Socrata)", "https://www.dati.lombardia.it/",
                          "mensile", A, _csv_rows(lomb), _fmt_mtime(lomb)))
+    tosc = ".cache/toscana_movimento_comune_anno.csv"
+    if os.path.exists(tosc):
+        rows.append(_row("Toscana · movimento per comune (Open Data)",
+                         "Arrivi/presenze annuali per singolo comune toscano, split italiani/stranieri "
+                         "(fonte COMPLEMENTARE, ~272 comuni, 10 province, 2018-2025)",
+                         "Regione Toscana · Open Data (CKAN)", "https://dati.toscana.it/",
+                         "annuale", A, _csv_rows(tosc), _fmt_mtime(tosc)))
     trends = sorted(glob.glob(".cache/trends_*.csv"))
     if trends:
         _geos = [mk.code for mk in DEFAULT_MARKETS]
@@ -2242,6 +2410,7 @@ def coverage_matrix() -> list[dict]:
         ("Capacità ricettiva (posti letto)", "✅", "✅", "🟡", "ISTAT DCSC_TUR_1", "regionale ok; provinciale solo alcune"),
         ("Flussi MENSILI per categoria ricettiva", "❌", "❌", "🟡", "ASTAT (Bolzano)", "🟡 solo Alto Adige: arrivi/presenze mensili + esercizi/posti letto per stelle/categoria (fonte provinciale complementare)"),
         ("Mercato ESTERO mensile sub-nazionale", "❌", "🟡", "🟡", "Open Data Lombardia", "🟡 solo Lombardia (12 province): presenze/arrivi mensili per paese estero di origine; ISTAT lo dà solo annuale (_9)"),
+        ("Movimento a livello COMUNALE", "❌", "🟡", "🟡", "Open Data Toscana", "🟡 solo Toscana (~272 comuni): arrivi/presenze annuali per comune × ambito, split italiani/stranieri; sotto il livello provinciale ISTAT"),
         ("Anagrafica strutture ricettive", "🟡", "❌", "❌", "registri regionali", "🔴 BUCO: registri non federati come open data"),
         ("Spesa turistica per paese", "✅", "🟡", "🟡", "BdI + stima da _9", "regionale/provinciale STIMATA (presenze _9 × spesa/notte BdI); dato diretto solo TOTALE regionale (BdI TS2)"),
         ("Accessibilità aerea (voli/pax)", "✅", "✅", "—", "Eurostat avia_par", "regionale via mappa regione→aeroporto"),
@@ -3403,6 +3572,14 @@ def series_coverage() -> list[dict]:
     r = rng(".cache/lombardia_flussi_provincia_mese.csv")
     if r:
         cov.append({"serie": "Lombardia flussi×mercato (Open Data)", "start": r[0], "end": r[1], "freq": "mensile"})
+    if os.path.exists(".cache/toscana_movimento_comune_anno.csv"):
+        try:
+            aa = pd.read_csv(".cache/toscana_movimento_comune_anno.csv", usecols=["anno"])["anno"]
+            cov.append({"serie": "Toscana movimento×comune (Open Data)",
+                        "start": pd.Timestamp(f"{int(aa.min())}-01-01"),
+                        "end": pd.Timestamp(f"{int(aa.max())}-12-31"), "freq": "annuale"})
+        except Exception:  # noqa: BLE001
+            pass
     return cov
 
 
