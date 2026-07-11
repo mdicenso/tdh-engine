@@ -61,108 +61,86 @@ def reco_cat(reco: str) -> str:
 # STILE / UI (direzione A — moderno/pulito; CSS puro, a prova di proxy)
 # ════════════════════════════════════════════════════════════════════════════
 FONT_STACK = "-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-CSS = f"""<style>
-  html, body, [class*="css"] {{ font-family: {FONT_STACK}; }}
-  .block-container {{ padding-top: 2.2rem; max-width: 1320px; }}
+# ── Design system "Istituzionale" (Swiss/enterprise): petrolio + neutri freddi, filetti,
+#    sidebar CHIARA, card a filetto (niente barra colorata), sobrio. Token in :root. ──
+CSS = """<style>
+  :root{
+    --bg:#f5f7f7; --panel:#ffffff; --panel2:#fbfcfc;
+    --ink:#10262a; --mut:#5c7176; --faint:#8aa0a4;
+    --line:#e4ebec; --line2:#eef3f3;
+    --accent:#0e6b70; --accent-ink:#0a4f53; --accent-soft:rgba(14,107,112,.10);
+  }
+  html, body, [class*="css"] { font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
+  .block-container { padding-top: 2rem; max-width: 1320px; }
 
-  /* Tipografia gerarchica */
-  h1 {{ color: #0f172a; font-weight: 800; font-size: 1.6rem; letter-spacing: -0.02em; }}
-  h2 {{ color: #0f172a; font-weight: 700; font-size: 1.15rem; letter-spacing: -0.01em;
-        border-left: 3px solid #0e7490; padding-left: 10px; margin-top: 1.4rem; }}
-  h3 {{ color: #334155; font-weight: 600; font-size: 1rem; }}
+  /* Tipografia */
+  h1 { color: var(--ink); font-weight: 700; font-size: 1.55rem; letter-spacing: -0.02em; }
+  h2 { color: var(--ink); font-weight: 650; font-size: 1.12rem; letter-spacing: -0.01em;
+       border-left: 3px solid var(--accent); padding-left: 10px; margin-top: 1.4rem; }
+  h3 { color: #2c3f44; font-weight: 600; font-size: 1rem; }
 
-  /* Sfondo */
-  .stApp {{ background-color: #f1f5f9; }}
+  .stApp { background-color: var(--bg); }
 
-  /* Sidebar scura */
-  [data-testid="stSidebar"] {{ background-color: #1e293b; border-right: 1px solid #0f172a; }}
+  /* ---- Sidebar CHIARA ---- */
+  [data-testid="stSidebar"] { background-color: var(--panel); border-right: 1px solid var(--line); }
   [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3,
   [data-testid="stSidebar"] p, [data-testid="stSidebar"] label,
-  [data-testid="stSidebar"] [data-testid="stCaptionContainer"],
-  [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {{ color: #f1f5f9 !important; }}
-  [data-testid="stSidebarNav"] a, [data-testid="stSidebarNav"] a span,
-  [data-testid="stSidebarNav"] a p {{ color: #cbd5e1 !important; opacity: 1 !important; }}
-  [data-testid="stSidebarNav"] span[data-testid="stIconMaterial"] {{ color: #cbd5e1 !important; }}
-  [data-testid="stSidebarNav"] a:hover {{ background: rgba(14,116,144,.18); border-radius: 8px; }}
-  [data-testid="stSidebarNav"] a:hover span,
-  [data-testid="stSidebarNav"] a:hover p {{ color: #5eead4 !important; }}
-  [data-testid="stSidebarNav"] a[aria-current="page"] {{
-    background: rgba(14,116,144,.22); border-radius: 8px;
-    border-left: 3px solid #0e7490; }}
+  [data-testid="stSidebar"] [data-testid="stMarkdownContainer"] { color: var(--ink) !important; }
+  [data-testid="stSidebar"] [data-testid="stCaptionContainer"] { color: var(--mut) !important; }
+  [data-testid="stSidebarNav"] a span, [data-testid="stSidebarNav"] a p { color: var(--mut) !important; opacity: 1 !important; }
+  [data-testid="stSidebarNav"] span[data-testid="stIconMaterial"] { color: var(--mut) !important; }
+  [data-testid="stSidebarNav"] a:hover { background: var(--line2); border-radius: 8px; }
+  [data-testid="stSidebarNav"] a:hover span, [data-testid="stSidebarNav"] a:hover p { color: var(--ink) !important; }
+  [data-testid="stSidebarNav"] a[aria-current="page"] {
+    background: var(--accent-soft); border-radius: 8px; border-left: 3px solid var(--accent); }
   [data-testid="stSidebarNav"] a[aria-current="page"] span,
-  [data-testid="stSidebarNav"] a[aria-current="page"] p {{ color: #5eead4 !important; font-weight: 700; }}
-  /* Pulsante "View X more" / "View less" della navigazione (era scuro/illeggibile) */
+  [data-testid="stSidebarNav"] a[aria-current="page"] p { color: var(--accent-ink) !important; font-weight: 700; }
   [data-testid="stSidebarNavViewButton"],
   [data-testid="stSidebarNavViewButton"] span,
-  [data-testid="stSidebarNavViewButton"] p {{ color: #cbd5e1 !important; opacity: 1 !important; }}
-  [data-testid="stSidebarNavViewButton"]:hover,
+  [data-testid="stSidebarNavViewButton"] p { color: var(--mut) !important; opacity: 1 !important; }
   [data-testid="stSidebarNavViewButton"]:hover span,
-  [data-testid="stSidebarNavViewButton"]:hover p {{ color: #5eead4 !important; }}
-  [data-testid="stSidebar"] .stButton > button {{
-    background: #334155; border: 1px solid #475569; color: #e2e8f0;
-    border-radius: 8px; font-weight: 500; }}
-  [data-testid="stSidebar"] .stButton > button:hover {{ border-color: #0e7490; color: #5eead4; }}
+  [data-testid="stSidebarNavViewButton"]:hover p { color: var(--accent-ink) !important; }
+  [data-testid="stSidebar"] .stButton > button {
+    background: var(--panel2); border: 1px solid var(--line); color: var(--ink);
+    border-radius: 9px; font-weight: 500; }
+  [data-testid="stSidebar"] .stButton > button:hover { border-color: var(--accent); color: var(--accent-ink); }
 
-  /* Metric card con ombra e accent top */
-  [data-testid="stMetric"] {{
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-top: 3px solid #0e7490;
-    border-radius: 12px;
-    padding: 16px 18px;
-    box-shadow: 0 2px 8px rgba(15,23,42,.07);
-    transition: box-shadow .15s;
-  }}
-  [data-testid="stMetric"]:hover {{ box-shadow: 0 4px 16px rgba(15,23,42,.12); }}
-  [data-testid="stMetricLabel"] {{ color: #64748b; font-weight: 600; font-size: .8rem;
-    text-transform: uppercase; letter-spacing: .04em; }}
-  [data-testid="stMetricValue"] {{ color: #0f172a; font-weight: 800; }}
+  /* ---- Metric card: filetto, niente barra colorata in cima ---- */
+  [data-testid="stMetric"] {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 16px 18px; box-shadow: none; }
+  [data-testid="stMetricLabel"] { color: var(--mut); font-weight: 600; font-size: .78rem;
+    text-transform: uppercase; letter-spacing: .04em; }
+  [data-testid="stMetricValue"] { color: var(--ink); font-weight: 700;
+    font-variant-numeric: tabular-nums; }
 
-  /* Grafici: contenitore con ombra e bordi arrotondati */
-  [data-testid="stPlotlyChart"] > div {{ border-radius: 14px;
-    box-shadow: 0 2px 8px rgba(15,23,42,.06); overflow: hidden; }}
+  /* ---- Grafici: contenitore a filetto ---- */
+  [data-testid="stPlotlyChart"] > div { border: 1px solid var(--line); border-radius: 14px;
+    overflow: hidden; box-shadow: none; }
 
-  /* Tabelle */
-  [data-testid="stDataFrame"] {{ border-radius: 10px; overflow: hidden;
-    box-shadow: 0 1px 4px rgba(15,23,42,.05); }}
+  /* ---- Tabelle ---- */
+  [data-testid="stDataFrame"] { border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
 
-  /* Bottoni */
-  .stButton > button {{
-    border-radius: 10px; border: 1px solid #e2e8f0;
-    font-weight: 500; transition: all .15s; }}
-  .stButton > button:hover {{ border-color: #0e7490; color: #0e7490;
-    box-shadow: 0 2px 8px rgba(14,116,144,.15); }}
-  .stButton > button[kind="primary"] {{
-    background: linear-gradient(135deg, #0e7490, #0891b2);
-    border: none; color: white; }}
-  .stButton > button[kind="primary"]:hover {{
-    background: linear-gradient(135deg, #0c6578, #0782a0);
-    box-shadow: 0 4px 12px rgba(14,116,144,.3); }}
+  /* ---- Bottoni ---- */
+  .stButton > button { border-radius: 9px; border: 1px solid var(--line); color: var(--ink);
+    font-weight: 500; transition: all .15s; }
+  .stButton > button:hover { border-color: var(--accent); color: var(--accent-ink); }
+  .stButton > button[kind="primary"] { background: var(--accent); border: 1px solid var(--accent); color: #fff; }
+  .stButton > button[kind="primary"]:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
 
-  /* Expander */
-  [data-testid="stExpander"] {{ border-radius: 12px; border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 3px rgba(15,23,42,.04); }}
+  /* ---- Expander / Alert / Select / Slider ---- */
+  [data-testid="stExpander"] { border-radius: 12px; border: 1px solid var(--line); box-shadow: none; }
+  [data-testid="stAlert"] { border-radius: 10px; border-left-width: 4px; }
+  [data-testid="stSelectbox"] > div > div { border-radius: 8px; border-color: var(--line); }
+  [data-testid="stSlider"] [data-testid="stThumbValue"] { color: var(--accent-ink); font-weight: 700; }
 
-  /* Alert box */
-  [data-testid="stAlert"] {{ border-radius: 10px; border-left-width: 4px; }}
-
-  /* Selectbox e slider */
-  [data-testid="stSelectbox"] > div > div {{ border-radius: 8px; border-color: #e2e8f0; }}
-  [data-testid="stSlider"] [data-testid="stThumbValue"] {{ color: #0e7490; font-weight: 700; }}
-
-  /* Scrollbar: più chiara e un po' più larga (era scura/quasi invisibile) */
-  * {{ scrollbar-width: auto; scrollbar-color: #94a3b8 transparent; }}  /* Firefox */
-  ::-webkit-scrollbar {{ width: 16px; height: 16px; }}
-  ::-webkit-scrollbar-track {{ background: transparent; }}
-  ::-webkit-scrollbar-thumb {{
-    background: #94a3b8; border-radius: 8px;
-    border: 3px solid transparent; background-clip: padding-box; }}
-  ::-webkit-scrollbar-thumb:hover {{ background: #64748b; background-clip: padding-box; }}
-  /* Nella sidebar scura serve un pollice ancora più chiaro per staccare dal fondo */
-  [data-testid="stSidebar"] {{ scrollbar-color: #cbd5e1 transparent; }}
-  [data-testid="stSidebar"] ::-webkit-scrollbar-thumb {{
-    background: #cbd5e1; border: 3px solid transparent; background-clip: padding-box; }}
-  [data-testid="stSidebar"] ::-webkit-scrollbar-thumb:hover {{ background: #e2e8f0; background-clip: padding-box; }}
+  /* ---- Scrollbar ---- */
+  * { scrollbar-width: auto; scrollbar-color: #b7c4c6 transparent; }
+  ::-webkit-scrollbar { width: 14px; height: 14px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #b7c4c6; border-radius: 8px;
+    border: 3px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover { background: #93a9ad; background-clip: padding-box; }
 </style>"""
 
 
@@ -200,18 +178,18 @@ def check_access() -> bool:
 
 
 def hero(subtitle: str = "", mode_label: str = ""):
-    chip = (f"<span style='background:rgba(255,255,255,.18);padding:3px 12px;border-radius:999px;"
+    chip = (f"<span style='margin-left:auto;background:rgba(14,107,112,.10);color:#0a4f53;"
+            f"border:1px solid rgba(14,107,112,.28);padding:4px 13px;border-radius:999px;"
             f"font-size:.8rem;font-weight:600'>{mode_label}</span>") if mode_label else ""
     st.markdown(f"""
-    <div style="background:linear-gradient(120deg,#0e7490 0%,#0891b2 55%,#06b6d4 100%);
-                border-radius:12px;padding:12px 20px;margin:.1rem 0 .8rem;color:#fff;
-                box-shadow:0 3px 12px rgba(8,145,178,.22);display:flex;align-items:center;
-                justify-content:space-between;flex-wrap:wrap;gap:8px;overflow:visible">
+    <div style="margin:.1rem 0 1rem;padding-bottom:.7rem;border-bottom:1px solid #e4ebec;
+                display:flex;align-items:center;gap:10px;flex-wrap:wrap">
       <div>
-        <div style="font-size:.64rem;letter-spacing:.08em;opacity:.82;font-weight:600;line-height:1.4">
-             STRUMENTO AD USO INTERNO · SCALA NAZIONALE</div>
-        <div style="font-size:1.2rem;font-weight:800;letter-spacing:.01em;margin-top:1px">⛰️ Turism Data Hub</div>
-        <div style="opacity:.92;font-size:.82rem;margin-top:1px">{subtitle}</div>
+        <div style="font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+                    color:#8aa0a4;font-weight:600">Strumento ad uso interno · scala nazionale</div>
+        <div style="font-size:1.5rem;font-weight:700;letter-spacing:-.02em;margin-top:4px;
+                    color:#10262a">Turism Data Hub</div>
+        <div style="color:#5c7176;font-size:.86rem;margin-top:3px">{subtitle}</div>
       </div>{chip}
     </div>""", unsafe_allow_html=True)
 
@@ -231,27 +209,25 @@ def section_header(title: str, subtitle: str = "", icon: str = ""):
 
 def page_header(title: str, subtitle: str = "", group: str = "", emoji: str = "",
                 region_code: str | None = None):
-    """Header di pagina 'dashboard esecutiva': banner teal con breadcrumb, titolo grande e
-    (opzionale) badge regione. Drop-in al posto di st.header()+st.caption()."""
+    """Header di pagina PIATTO (design Istituzionale): breadcrumb in maiuscoletto, titolo
+    grande su fondo pagina, badge regione a pill petrolio, filetto di chiusura. `emoji` è
+    accettato per compatibilità ma NON renderizzato (look pulito, senza icone-emoji)."""
     crumb = (f"{group} &nbsp;›&nbsp; {title}" if group else title)
     badge = ""
     if region_code is not None:
         nome = RG.region(region_code)["nome"]
-        badge = ("<span style='margin-left:auto;background:rgba(255,255,255,.15);"
-                 "border:1px solid rgba(255,255,255,.32);border-radius:999px;padding:6px 15px;"
-                 f"font-size:.85rem;font-weight:600;white-space:nowrap'>📍 {nome}</span>")
-    sub = (f"<div style='font-size:.82rem;opacity:.92;margin-top:2px;max-width:920px'>{subtitle}</div>"
+        badge = ("<span style='margin-left:auto;background:rgba(14,107,112,.10);color:#0a4f53;"
+                 "border:1px solid rgba(14,107,112,.28);border-radius:999px;padding:5px 14px;"
+                 f"font-size:.82rem;font-weight:600;white-space:nowrap'>{nome}</span>")
+    sub = (f"<div style='font-size:.86rem;color:#5c7176;margin-top:5px;max-width:920px'>{subtitle}</div>"
            if subtitle else "")
-    emo = (f"<span style='font-size:1.25rem;line-height:1'>{emoji}</span>" if emoji else "")
     st.markdown(f"""
-    <div style="background:linear-gradient(120deg,#0e7490 0%,#155e75 60%,#0f3d4a 100%);
-                border-radius:12px;padding:10px 16px;margin:.1rem 0 .8rem;color:#f8fafc;
-                box-shadow:0 3px 12px rgba(14,116,144,.22)">
-      <div style="font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;
-                  opacity:.8;font-weight:600">{crumb}</div>
-      <div style="display:flex;align-items:center;gap:9px;margin-top:2px">
-        {emo}
-        <div style="font-size:1.2rem;font-weight:800;letter-spacing:-.02em;line-height:1.15">{title}</div>
+    <div style="margin:.1rem 0 1rem;padding-bottom:.7rem;border-bottom:1px solid #e4ebec">
+      <div style="font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
+                  color:#8aa0a4;font-weight:600">{crumb}</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+        <div style="font-size:1.5rem;font-weight:700;letter-spacing:-.02em;line-height:1.15;
+                    color:#10262a">{title}</div>
         {badge}
       </div>
       {sub}
@@ -269,15 +245,15 @@ def kpi_row(items: list[dict]):
             arrow = {"up": "▲", "down": "▼", "flat": "→"}.get(d, "")
             dh = (f"<div style='font-size:.8rem;font-weight:700;color:{color};margin-top:6px'>"
                   f"{arrow} {it['delta']}</div>")
-        hint = (f"<div style='font-size:.72rem;color:#94a3b8;margin-top:4px'>{it['hint']}</div>"
+        hint = (f"<div style='font-size:.72rem;color:#8aa0a4;margin-top:4px'>{it['hint']}</div>"
                 if it.get("hint") else "")
         col.markdown(f"""
-        <div style="background:#fff;border:1px solid #e2e8f0;border-top:3px solid #0e7490;
-                    border-radius:14px;padding:16px 18px;box-shadow:0 2px 10px rgba(15,23,42,.06);height:100%">
-          <div style="font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;
+        <div style="background:#fff;border:1px solid #e4ebec;
+                    border-radius:14px;padding:16px 18px;height:100%">
+          <div style="font-size:.72rem;font-weight:600;color:#5c7176;text-transform:uppercase;
                       letter-spacing:.05em">{it['label']}</div>
-          <div style="font-size:1.95rem;font-weight:800;color:#0f172a;line-height:1.1;margin-top:6px">
-            {it['value']}</div>
+          <div style="font-size:1.9rem;font-weight:700;color:#10262a;line-height:1.1;margin-top:7px;
+                      font-variant-numeric:tabular-nums">{it['value']}</div>
           {dh}{hint}
         </div>""", unsafe_allow_html=True)
 
@@ -324,7 +300,7 @@ def aggrid_table(df, height: int = 320, reco_col: str | None = None, key: str | 
 # Logo "inventato" del Turism Data Hub: sole + montagne + lago con riflesso.
 LOGO_SVG = """<svg width="54" height="54" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="44" cy="20" r="9" fill="#fbbf24"/>
-  <path d="M4 44 L22 16 L34 34 L44 22 L60 44 Z" fill="#0e7490"/>
+  <path d="M4 44 L22 16 L34 34 L44 22 L60 44 Z" fill="#0e6b70"/>
   <path d="M4 44 L22 16 L30 28 L20 44 Z" fill="#0c5566"/>
   <rect x="4" y="44" width="56" height="2.6" rx="1" fill="#7dd3fc"/>
   <path d="M11 49 H53 M17 53 H47" stroke="#bae6fd" stroke-width="1.6" stroke-linecap="round" opacity="0.75"/>
@@ -553,7 +529,7 @@ def chart_region_spend(code: str, yr_range=None) -> go.Figure | None:
         return None
     if yr_range:
         g = g[(g["anno"] >= yr_range[0]) & (g["anno"] <= yr_range[1])]
-    fig = go.Figure(go.Bar(x=g["anno"], y=g["spesa"], marker_color="#0e7490",
+    fig = go.Figure(go.Bar(x=g["anno"], y=g["spesa"], marker_color="#0e6b70",
                            hovertemplate="<b>%{x}</b><br>%{y:,.0f} M€<extra></extra>"))
     fig.update_yaxes(title="spesa turisti stranieri (M€)")
     return _layout(fig, h=340)
@@ -784,7 +760,7 @@ def chart_estero_spesa_stimata(code: str, year: int | None = None) -> go.Figure 
     if d is None or d.empty:
         return None
     d = d.sort_values("spesa_m")
-    fig = go.Figure(go.Bar(x=d["spesa_m"], y=d["nome"], orientation="h", marker_color="#0e7490",
+    fig = go.Figure(go.Bar(x=d["spesa_m"], y=d["nome"], orientation="h", marker_color="#0e6b70",
                            hovertemplate="<b>%{y}</b><br>%{x:,.1f} M€ stimati<extra></extra>"))
     fig.update_xaxes(title="spesa stimata turisti stranieri (M€/anno)")
     return _layout(fig, h=380)
@@ -832,7 +808,7 @@ def chart_estero_markets(code: str, datatype: str = "NI", year: int | None = Non
         return None
     d = d.sort_values("valore")
     unit = "presenze" if datatype == "NI" else "arrivi"
-    fig = go.Figure(go.Bar(x=d["valore"], y=d["nome"], orientation="h", marker_color="#0e7490",
+    fig = go.Figure(go.Bar(x=d["valore"], y=d["nome"], orientation="h", marker_color="#0e6b70",
                            hovertemplate="<b>%{y}</b><br>%{x:,.0f} " + unit + "<extra></extra>"))
     fig.update_xaxes(title=f"{unit} di turisti esteri")
     return _layout(fig, h=420)
@@ -925,7 +901,7 @@ def chart_astat_flussi(indicator: str = "presenze", start_year: int = 2015) -> g
         return None
     label = "Presenze" if indicator == "presenze" else "Arrivi"
     fig = go.Figure(go.Scatter(x=f["date"], y=f[indicator], mode="lines",
-                               line=dict(color="#0e7490", width=2),
+                               line=dict(color="#0e6b70", width=2),
                                fill="tozeroy", fillcolor="rgba(14,116,144,0.08)",
                                hovertemplate="%{x|%m/%Y}<br>%{y:,.0f} " + label.lower() + "<extra></extra>"))
     fig.update_yaxes(title=f"{label} · Alto Adige")
@@ -946,7 +922,7 @@ def chart_astat_stagionalita(indicator: str = "presenze", years: int = 3) -> go.
     prof = f.groupby("mese")[indicator].mean().reindex(range(1, 13))
     mesi = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"]
     label = "presenze" if indicator == "presenze" else "arrivi"
-    fig = go.Figure(go.Bar(x=mesi, y=prof.values, marker_color="#0e7490",
+    fig = go.Figure(go.Bar(x=mesi, y=prof.values, marker_color="#0e6b70",
                            hovertemplate="%{x}<br>%{y:,.0f} " + label + " (media)<extra></extra>"))
     fig.update_yaxes(title=f"{label.capitalize()} · media mensile")
     fig.update_xaxes(title=None)
@@ -1209,7 +1185,7 @@ def chart_lomb_flussi_mensili(prov: str | None = None) -> go.Figure | None:
     if g is None or g.empty:
         return None
     fig = go.Figure(go.Scatter(x=g["date"], y=g["presenze"], mode="lines",
-                               line=dict(color="#0e7490", width=2),
+                               line=dict(color="#0e6b70", width=2),
                                fill="tozeroy", fillcolor="rgba(14,116,144,0.08)",
                                hovertemplate="%{x|%m/%Y}<br>%{y:,.0f} presenze<extra></extra>"))
     fig.update_yaxes(title="presenze (mese)")
@@ -1347,7 +1323,7 @@ def chart_tosc_yearly(prov: str | None = None) -> go.Figure | None:
     if g is None or g.empty:
         return None
     fig = go.Figure()
-    fig.add_bar(x=g["anno"], y=g["presenze_italiane"], name="italiani", marker_color="#0e7490",
+    fig.add_bar(x=g["anno"], y=g["presenze_italiane"], name="italiani", marker_color="#0e6b70",
                 hovertemplate="<b>%{x}</b><br>%{y:,.0f} presenze italiani<extra></extra>")
     fig.add_bar(x=g["anno"], y=g["presenze_straniere"], name="stranieri", marker_color="#f59e0b",
                 hovertemplate="<b>%{x}</b><br>%{y:,.0f} presenze stranieri<extra></extra>")
@@ -1363,7 +1339,7 @@ def chart_tosc_top_comuni(prov: str | None = None, year: int | None = None,
     if d is None or d.empty:
         return None
     d = d.sort_values("presenze")
-    fig = go.Figure(go.Bar(x=d["presenze"], y=d["nome"], orientation="h", marker_color="#0e7490",
+    fig = go.Figure(go.Bar(x=d["presenze"], y=d["nome"], orientation="h", marker_color="#0e6b70",
                            customdata=d["quota_estero"],
                            hovertemplate="<b>%{y}</b><br>%{x:,.0f} presenze<br>"
                                          "estero %{customdata:.0f}%<extra></extra>"))
@@ -1500,7 +1476,7 @@ def chart_sard_flussi_mensili(prov: str | None = None) -> go.Figure | None:
     if g is None or g.empty:
         return None
     fig = go.Figure(go.Scatter(x=g["date"], y=g["presenze"], mode="lines",
-                               line=dict(color="#0e7490", width=2),
+                               line=dict(color="#0e6b70", width=2),
                                fill="tozeroy", fillcolor="rgba(14,116,144,0.08)",
                                hovertemplate="%{x|%m/%Y}<br>%{y:,.0f} presenze<extra></extra>"))
     fig.update_yaxes(title="presenze (mese)")
@@ -1593,7 +1569,7 @@ def chart_turnot_purpose(code: str) -> go.Figure | None:
         return None
     idx = p.index.astype(int)
     fig = go.Figure()
-    for scopo, color in [("BUS", "#0e7490"), ("HOLS", "#f59e0b"), ("HOLL", "#16a34a")]:
+    for scopo, color in [("BUS", "#0e6b70"), ("HOLS", "#f59e0b"), ("HOLL", "#16a34a")]:
         if scopo in p.columns:
             fig.add_bar(x=idx, y=p[scopo], name=_TURNOT_LABEL[scopo], marker_color=color,
                         hovertemplate="<b>%{x}</b><br>" + _TURNOT_LABEL[scopo]
@@ -1665,7 +1641,7 @@ def chart_str_adr_territori(sel_slug: str | None = None) -> go.Figure | None:
     if df.empty:
         return None
     d = df.dropna(subset=["adr_mediano"]).sort_values("adr_mediano")
-    colors = ["#f59e0b" if s == sel_slug else "#0e7490" for s in d["slug"]]
+    colors = ["#f59e0b" if s == sel_slug else "#0e6b70" for s in d["slug"]]
     fig = go.Figure(go.Bar(x=d["adr_mediano"], y=d["territorio"], orientation="h", marker_color=colors,
                            customdata=d["n_annunci"],
                            hovertemplate="<b>%{y}</b><br>ADR mediano € %{x:,.0f}<br>"
@@ -1679,7 +1655,7 @@ def chart_str_zone(slug: str, top: int = 12) -> go.Figure | None:
     if d is None or d.empty:
         return None
     d = d.sort_values("n_annunci")
-    fig = go.Figure(go.Bar(x=d["n_annunci"], y=d["zona"], orientation="h", marker_color="#0e7490",
+    fig = go.Figure(go.Bar(x=d["n_annunci"], y=d["zona"], orientation="h", marker_color="#0e6b70",
                            customdata=d["adr_mediano"],
                            hovertemplate="<b>%{y}</b><br>%{x:,.0f} annunci<br>"
                                          "ADR mediano € %{customdata:,.0f}<extra></extra>"))
@@ -1720,7 +1696,7 @@ def chart_str_struttura() -> go.Figure | None:
         return None
     d = df.sort_values("pct_licenza")
     fig = go.Figure()
-    for col, color, lbl in [("pct_intero", "#0e7490", "Intero alloggio"),
+    for col, color, lbl in [("pct_intero", "#0e6b70", "Intero alloggio"),
                             ("pct_multihost", "#f59e0b", "Operatori professionali"),
                             ("pct_licenza", "#16a34a", "Con licenza/CIR")]:
         if col in d.columns:
@@ -1740,7 +1716,7 @@ def chart_str_reviews(slug: str) -> go.Figure | None:
     if d.empty:
         return None
     fig = go.Figure(go.Scatter(x=d["date"], y=d["n_recensioni"], mode="lines",
-                               line=dict(color="#0e7490", width=1.8),
+                               line=dict(color="#0e6b70", width=1.8),
                                fill="tozeroy", fillcolor="rgba(14,116,144,0.08)",
                                hovertemplate="%{x|%m/%Y}<br>%{y:,.0f} recensioni<extra></extra>"))
     fig.update_yaxes(title="recensioni / mese")
@@ -1797,7 +1773,7 @@ def chart_str_nat_ranking(metric: str = "revenue", top: int = 15) -> go.Figure |
         return None
     d = df.sort_values(metric, ascending=False).head(top).sort_values(metric)
     lbl, tmpl = _STR_NAT_METRICS.get(metric, (metric, "%{x}"))
-    fig = go.Figure(go.Bar(x=d[metric], y=d["market"], orientation="h", marker_color="#0e7490",
+    fig = go.Figure(go.Bar(x=d[metric], y=d["market"], orientation="h", marker_color="#0e6b70",
                            hovertemplate="<b>%{y}</b><br>" + lbl + ": " + tmpl + "<extra></extra>"))
     fig.update_xaxes(title=lbl)
     return _layout(fig, h=460)
@@ -1824,7 +1800,7 @@ def chart_str_nat_seasonality(market: str) -> go.Figure | None:
         return None
     mesi = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"]
     fig = go.Figure()
-    fig.add_bar(x=mesi, y=d["occ_pct"], name="Occupazione %", marker_color="#0e7490",
+    fig.add_bar(x=mesi, y=d["occ_pct"], name="Occupazione %", marker_color="#0e6b70",
                 hovertemplate="%{x}<br>occ. %{y:.0f}%<extra></extra>")
     fig.add_scatter(x=mesi, y=d["adr"], name="ADR €", yaxis="y2", mode="lines+markers",
                     line=dict(color="#f59e0b", width=2),
@@ -1955,7 +1931,7 @@ def chart_origin_spesa_italia(rows: list[dict]) -> go.Figure:
     """Grafico 1 (area Mercati d'origine): spesa in Italia per paese (M€), barre orizzontali."""
     s = sorted(rows, key=lambda r: r["spesa_it_M"])
     fig = go.Figure(go.Bar(x=[r["spesa_it_M"] for r in s], y=[r["paese"] for r in s],
-                           orientation="h", marker_color="#0e7490",
+                           orientation="h", marker_color="#0e6b70",
                            hovertemplate="<b>%{y}</b><br>%{x:,.0f} M€<extra></extra>"))
     fig.update_xaxes(title="spesa dei turisti in Italia (M€)")
     return _layout(fig, h=380)
@@ -1996,7 +1972,7 @@ def chart_bdi_country(metric: str = "notti") -> go.Figure | None:
 def chart_value_bar(summary: list[dict]) -> go.Figure:
     s = sorted([x for x in summary if x.get("valore")], key=lambda x: x["valore"])
     fig = go.Figure(go.Bar(x=[x["valore"] for x in s], y=[x["market"] for x in s], orientation="h",
-                           marker_color="#0e7490",
+                           marker_color="#0e6b70",
                            hovertemplate="<b>%{y}</b><br>%{x:,.0f} €/viaggiatore<extra></extra>"))
     fig.update_layout(xaxis_title="spesa €/viaggiatore")
     return _layout(fig, h=300)
@@ -2008,7 +1984,7 @@ def chart_region_weight_bar(summary: list[dict]) -> go.Figure | None:
     if not s:
         return None
     fig = go.Figure(go.Bar(x=[x["peso"] for x in s], y=[x["market"] for x in s], orientation="h",
-                           marker_color="#0e7490",
+                           marker_color="#0e6b70",
                            hovertemplate="<b>%{y}</b><br>%{x:,.1f} M€ (stima regionale)<extra></extra>"))
     fig.update_layout(xaxis_title="valore economico stimato nella regione (M€/anno)")
     return _layout(fig, h=300)
@@ -2102,7 +2078,7 @@ def chart_flights_monthly():
     fig.add_trace(go.Scatter(x=df["date"], y=df["pax"], name="passeggeri/mese",
                              line=dict(color="#cbd5e1", width=1)))
     fig.add_trace(go.Scatter(x=df["date"], y=df["roll12"], name="media 12 mesi",
-                             line=dict(color="#0e7490", width=3)))
+                             line=dict(color="#0e6b70", width=3)))
     fig.update_yaxes(title="passeggeri Pescara")
     return _layout(fig, h=280)
 
@@ -2172,7 +2148,7 @@ def online_interest(summary: list[dict], code: str | None = None) -> list[dict]:
 
 
 def chart_wiki(yr_range=None, code: str | None = None) -> go.Figure:
-    colors = {"de": "#0e7490", "en": "#f59e0b", "nl": "#16a34a"}
+    colors = {"de": "#0e6b70", "en": "#f59e0b", "nl": "#16a34a"}
     fig = go.Figure()
     for lang in ["de", "en", "nl"]:
         df = wiki_series(lang, code)
@@ -2227,24 +2203,24 @@ def _layout(fig: go.Figure, h: int = 420, title: str | None = None) -> go.Figure
     fig.update_layout(
         height=h,
         margin=dict(l=10, r=10, t=44 if title else 16, b=10),
-        paper_bgcolor="rgba(255,255,255,0.0)",   # trasparente: si integra con sfondo #f1f5f9
-        plot_bgcolor="rgba(255,255,255,0.95)",    # quasi bianco nell'area grafico
+        paper_bgcolor="rgba(255,255,255,0.0)",   # trasparente: si integra col contenitore
+        plot_bgcolor="#ffffff",                   # area grafico bianca
         title=(title or ""),
-        font=dict(family=FONT_STACK, size=13, color="#334155"),
-        colorway=["#0e7490", "#f59e0b", "#16a34a", "#7c3aed", "#dc2626", "#0891b2"],
+        font=dict(family=FONT_STACK, size=13, color="#5c7176"),
+        colorway=["#0e6b70", "#e08a1e", "#16a34a", "#7c3aed", "#b91c1c", "#5c7176"],
         legend=dict(orientation="h", y=-0.18, font=dict(size=12),
                     bgcolor="rgba(255,255,255,0)", bordercolor="rgba(0,0,0,0)"),
-        hoverlabel=dict(bgcolor="white", bordercolor="#e5e7eb",
+        hoverlabel=dict(bgcolor="white", bordercolor="#e4ebec",
                         font_size=12, font_family=FONT_STACK))
-    fig.update_xaxes(showgrid=False, color="#64748b", linecolor="#e2e8f0")
-    fig.update_yaxes(gridcolor="#f1f5f9", color="#64748b", zeroline=False)
+    fig.update_xaxes(showgrid=False, color="#5c7176", linecolor="#e4ebec")
+    fig.update_yaxes(gridcolor="#eef3f3", color="#5c7176", zeroline=False)
     # Barre ORIZZONTALI: le linee guida utili sono VERTICALI (lette sull'asse x
     # degli importi), non orizzontali. Inverto la griglia così che ogni barra
     # corrisponda visivamente al suo valore sull'ascissa.
     is_hbar = any(getattr(tr, "type", None) == "bar" and getattr(tr, "orientation", None) == "h"
                   for tr in fig.data)
     if is_hbar:
-        fig.update_xaxes(showgrid=True, gridcolor="#e2e8f0")
+        fig.update_xaxes(showgrid=True, gridcolor="#eef3f3")
         fig.update_yaxes(showgrid=False)
     return fig
 
@@ -3196,14 +3172,14 @@ def chart_province_seasonality(panel) -> go.Figure:
 def chart_structure_donut(s: dict) -> go.Figure:
     fig = go.Figure(go.Pie(labels=["Alberghiero", "Extra-alberghiero"],
                            values=[s["alberghiero"], s["extra"]], hole=0.55,
-                           marker=dict(colors=["#0e7490", "#f59e0b"])))
+                           marker=dict(colors=["#0e6b70", "#f59e0b"])))
     return _layout(fig, h=320)
 
 
 def chart_structure_trend(panel) -> go.Figure:
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=panel["date"], y=panel["alberghiero"], name="Alberghiero",
-                             line=dict(color="#0e7490", width=2)))
+                             line=dict(color="#0e6b70", width=2)))
     fig.add_trace(go.Scatter(x=panel["date"], y=panel["extra"], name="Extra-alberghiero",
                              line=dict(color="#f59e0b", width=2)))
     fig.update_yaxes(title="presenze")
@@ -3238,7 +3214,7 @@ def compute_occupancy(code: str | None = None) -> dict:
 
 
 def chart_occupancy(panel) -> go.Figure:
-    fig = go.Figure(go.Scatter(x=panel["date"], y=panel["occ"], line=dict(color="#0e7490", width=2),
+    fig = go.Figure(go.Scatter(x=panel["date"], y=panel["occ"], line=dict(color="#0e6b70", width=2),
                                name="occupazione", fill="tozeroy", fillcolor="rgba(14,116,144,.12)"))
     fig.update_yaxes(title="occupazione lorda", ticksuffix="%")
     return _layout(fig, h=360)
@@ -3269,7 +3245,7 @@ def chart_region_presences(df) -> go.Figure:
     fig = go.Figure()
     if "totale" in df:
         fig.add_trace(go.Scatter(x=df["date"], y=df["totale"], name="totale",
-                                 mode="lines", line=dict(color="#0e7490", width=2)))
+                                 mode="lines", line=dict(color="#0e6b70", width=2)))
     fig.add_trace(go.Scatter(x=df["date"], y=df["stranieri"], name="stranieri",
                              mode="lines", line=dict(color="#f59e0b", width=2)))
     fig.update_yaxes(title="presenze (mese)")
@@ -3352,8 +3328,8 @@ def chart_region_indexed(df: pd.DataFrame, keys: list[str], labels: dict | None 
     confronta i TREND relativi a prescindere dall'unità (es. turisti vs spesa/turista).
     `labels` mappa chiave→etichetta (default: variabili Regione)."""
     labels = labels or REGION_VAR_LABEL
-    palette = ["#0e7490", "#f59e0b", "#7c3aed", "#059669", "#dc2626",
-               "#2563eb", "#db2777", "#65a30d", "#0891b2", "#ca8a04"]
+    palette = ["#0e6b70", "#f59e0b", "#7c3aed", "#059669", "#dc2626",
+               "#2563eb", "#db2777", "#65a30d", "#0e6b70", "#ca8a04"]
     fig = go.Figure()
     for i, k in enumerate(keys):
         if k not in df:
@@ -3520,7 +3496,7 @@ def chart_projection(proj: dict, label: str, unit: str = "") -> go.Figure:
     fig.add_trace(go.Scatter(x=hx, y=proj["fit_vals"], name="trend", mode="lines",
                              line=dict(color="#94a3b8", width=1, dash="dot")))
     fig.add_trace(go.Scatter(x=hx, y=hy, name="storico", mode="lines+markers",
-                             line=dict(color="#0e7490", width=2)))
+                             line=dict(color="#0e6b70", width=2)))
     fig.add_trace(go.Scatter(x=[hx[-1]] + fx, y=[hy[-1]] + fm, name="proiezione",
                              mode="lines+markers", line=dict(color="#f59e0b", width=2, dash="dash")))
     fig.update_yaxes(title=label + (f" ({unit})" if unit and unit != "n" else ""))
@@ -3808,7 +3784,7 @@ def chart_projection_monthly(proj: dict, label: str, unit: str = "") -> go.Figur
                              fillcolor="rgba(245,158,11,.15)", line=dict(width=0),
                              name="intervallo 80%", hoverinfo="skip"))
     fig.add_trace(go.Scatter(x=h["date"], y=h["value"], name="storico", mode="lines",
-                             line=dict(color="#0e7490", width=2)))
+                             line=dict(color="#0e6b70", width=2)))
     mx = [h["date"].iloc[-1]] + list(f["date"])   # aggancia all'ultimo punto storico
     my = [h["value"].iloc[-1]] + list(f["mean"])
     fig.add_trace(go.Scatter(x=mx, y=my, name="proiezione stagionale", mode="lines",
@@ -3928,7 +3904,7 @@ def chart_regions_ranking(highlight: str | None = None, year: int | None = None)
         return _layout(go.Figure(), h=300)
     rk = sorted(rk, key=lambda r: r["spesa_M"])
     hi_bdi = RG.region(highlight)["bdi"] if highlight else None
-    colors = ["#f59e0b" if RG.REGIONS[r["code"]]["bdi"] == hi_bdi else "#0e7490" for r in rk]
+    colors = ["#f59e0b" if RG.REGIONS[r["code"]]["bdi"] == hi_bdi else "#0e6b70" for r in rk]
     fig = go.Figure(go.Bar(x=[r["spesa_M"] for r in rk], y=[r["regione"] for r in rk],
                            orientation="h", marker_color=colors,
                            hovertemplate="<b>%{y}</b><br>%{x:,.0f} M€<extra></extra>"))
@@ -3939,7 +3915,7 @@ def chart_regions_ranking(highlight: str | None = None, year: int | None = None)
 def chart_occupancy_season(panel) -> go.Figure:
     d = panel.copy(); d["m"] = d["date"].dt.month
     prof = d.groupby("m")["occ"].mean().reindex(range(1, 13))
-    fig = go.Figure(go.Bar(x=MONTHS_IT, y=prof.values, marker_color="#0e7490"))
+    fig = go.Figure(go.Bar(x=MONTHS_IT, y=prof.values, marker_color="#0e6b70"))
     fig.update_yaxes(title="occupazione media", ticksuffix="%")
     return _layout(fig, h=300)
 
@@ -3990,12 +3966,12 @@ def chart_demo_channels(ch: dict) -> go.Figure:
 
 def chart_demo_funnel(f: dict) -> go.Figure:
     fig = go.Figure(go.Funnel(y=list(f), x=list(f.values()), textinfo="value+percent initial",
-                              marker={"color": ["#0e7490", "#0891b2", "#38bdf8", "#f59e0b"]}))
+                              marker={"color": ["#0e6b70", "#0e6b70", "#38bdf8", "#f59e0b"]}))
     return _layout(fig, h=320)
 
 
 def chart_demo_weekly(w: dict) -> go.Figure:
-    fig = go.Figure(go.Bar(x=list(w), y=list(w.values()), marker_color="#0e7490"))
+    fig = go.Figure(go.Bar(x=list(w), y=list(w.values()), marker_color="#0e6b70"))
     fig.update_yaxes(title="presenze previste")
     return _layout(fig, h=290)
 
@@ -4095,7 +4071,7 @@ def chart_coverage(cov: list[dict]) -> go.Figure:
     import plotly.express as px
     df = pd.DataFrame(cov)
     fig = px.timeline(df, x_start="start", x_end="end", y="serie", color="freq",
-                      color_discrete_sequence=["#0e7490", "#f59e0b", "#16a34a"])
+                      color_discrete_sequence=["#0e6b70", "#f59e0b", "#16a34a"])
     fig.update_yaxes(autorange="reversed", title=None)
     # Linee verticali di riferimento: maggiori per ANNO (solide), minori per SEMESTRE (punteggiate)
     fig.update_xaxes(
@@ -4122,7 +4098,7 @@ def chart_abruzzo_spend(ext: dict, yr_range=None) -> go.Figure:
     if yr_range:
         keep = [i for i, y in enumerate(anni) if yr_range[0] <= y <= yr_range[1]]
         anni, sp = [anni[i] for i in keep], [sp[i] for i in keep]
-    fig = go.Figure(go.Bar(x=anni, y=sp, marker_color="#0e7490",
+    fig = go.Figure(go.Bar(x=anni, y=sp, marker_color="#0e6b70",
                            hovertemplate="%{x}: %{y:.0f} M€<extra></extra>"))
     fig.update_yaxes(title="spesa straniera (M€)")
     return _layout(fig, h=320)
@@ -4131,12 +4107,12 @@ def chart_abruzzo_spend(ext: dict, yr_range=None) -> go.Figure:
 def chart_bdi_motivo(ext: dict) -> go.Figure:
     m = ext["motivo_2024"]
     return _layout(go.Figure(go.Pie(labels=list(m), values=list(m.values()), hole=0.55,
-                   marker=dict(colors=["#0e7490", "#38bdf8", "#f59e0b"]))), h=320)
+                   marker=dict(colors=["#0e6b70", "#38bdf8", "#f59e0b"]))), h=320)
 
 
 def chart_bdi_struttura(ext: dict) -> go.Figure:
     items = sorted(ext["struttura_2024"].items(), key=lambda x: x[1])
     fig = go.Figure(go.Bar(x=[v for _, v in items], y=[k for k, _ in items], orientation="h",
-                           marker_color="#0e7490", hovertemplate="<b>%{y}</b><br>%{x:,.0f} M€<extra></extra>"))
+                           marker_color="#0e6b70", hovertemplate="<b>%{y}</b><br>%{x:,.0f} M€<extra></extra>"))
     fig.update_xaxes(title="spesa nazionale 2024 (M€)")
     return _layout(fig, h=300)

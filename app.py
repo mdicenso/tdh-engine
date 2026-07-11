@@ -1088,7 +1088,7 @@ def page_operatori():
     with f:
         st.subheader("Cosa cercano i turisti")
         chips = " ".join(
-            f"<span style='background:#e0f2fe;color:#0e7490;padding:5px 12px;border-radius:999px;"
+            f"<span style='background:#e0f2fe;color:#0e6b70;padding:5px 12px;border-radius:999px;"
             f"font-size:.85rem;margin:3px;display:inline-block'>{q}</span>" for q in d["queries"])
         st.markdown(chips, unsafe_allow_html=True)
     st.caption("Dati simulati · Indra Italia · prototipo. In produzione: Registro ricettivo · OTA/booking · GA4 portale.")
@@ -1389,7 +1389,7 @@ def page_online():
 def page_home():
     uri = L.home_hero_datauri()
     bg = (f"linear-gradient(120deg, rgba(15,23,42,.62), rgba(124,45,18,.28) 55%, rgba(8,145,178,.52)), url('{uri}')"
-          if uri else "linear-gradient(120deg,#0f172a,#7c2d12 55%,#0e7490)")
+          if uri else "linear-gradient(120deg,#0f172a,#7c2d12 55%,#0e6b70)")
     st.markdown(f"""
     <div style="position:relative;border-radius:18px;overflow:hidden;height:430px;
                 background-image:{bg};background-size:cover;background-position:center;

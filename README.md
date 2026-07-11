@@ -5,6 +5,17 @@ Fetta verticale (MVP) del motore-prodotto: una sola decisione, end-to-end.
 → **output decisionale difendibile** (raccomandazione + evidenza + effetto con
 intervallo + confidenza + meccanismo + rischio).
 
+## Design system — «Istituzionale» (Swiss/enterprise)
+Look applicato a tutta l'app (11-07-2026), pensato per un **prodotto privato/da vendere**: accento
+**petrolio `#0e6b70`**, neutri freddi con bias teal, **sidebar chiara**, **header piatti** (niente
+banner-gradiente né emoji nel titolo), **card KPI a filetto** (senza barra colorata in cima), tipografia
+sobria con label in maiuscoletto e numeri tabulari, grafici con griglia tenue. Definito in
+`.streamlit/config.toml` (`[theme]`) + `tdhlib.inject_css()` (token in `:root`) + i componenti
+`page_header`/`hero`/`kpi_row`/`_layout`. Tre direzioni erano state prototipate in `@_scorciatoie/`
+(`design_1_mezzanotte`, `design_2_istituzionale` ← scelto, `design_3_mediterraneo`). NB: il tema è
+**chiaro**; una modalità scura è un possibile sviluppo (in Streamlit richiede lavoro extra oltre al
+`config.toml`).
+
 ## Cosa fa — e cosa NON fa
 - **Fa**: ordina i mercati per *momentum del segnale leading × valore economico ×
   fattibilità*, con incertezza calibrata, in un formato spiegabile in sala.

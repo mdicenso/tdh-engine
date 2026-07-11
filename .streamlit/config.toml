@@ -1,9 +1,9 @@
-# Tema e opzioni del cruscotto TDH Engine (palette Abruzzo: mare adriatico + montagna)
+# Tema e opzioni del cruscotto TDH Engine — design "Istituzionale" (Swiss/enterprise)
 [theme]
-primaryColor = "#0e7490"          # teal/adriatico
-backgroundColor = "#f1f5f9"       # main (destra): grigio chiaro, non più bianco
-secondaryBackgroundColor = "#ffffff"  # card/widget bianchi → risaltano sul main
-textColor = "#0f172a"
+primaryColor = "#0e6b70"          # petrolio istituzionale
+backgroundColor = "#f5f7f7"       # neutro freddo con bias teal
+secondaryBackgroundColor = "#ffffff"  # card/widget bianchi
+textColor = "#10262a"             # inchiostro (blu-petrolio scuro)
 font = "sans serif"
 
 [server]
