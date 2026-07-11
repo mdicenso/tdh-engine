@@ -85,6 +85,8 @@ SOURCES = [
      "paths": [f"{CACHE}/lombardia_flussi_provincia_mese.csv"], "live": "lombardia"},
     {"key": "toscana", "label": "Toscana · movimento per comune (Open Data)", "cadence": "annuale",
      "paths": [f"{CACHE}/toscana_movimento_comune_anno.csv"], "live": "toscana"},
+    {"key": "sardegna", "label": "Sardegna · movimento mensile comune × mercato (Osservatorio)", "cadence": "manuale",
+     "paths": [f"{CACHE}/sardegna_flussi_comune_mese.csv"], "live": "sardegna"},
     {"key": "wikipedia", "label": "Wikipedia pageviews", "cadence": "mensile",
      "paths": sorted(glob.glob(f"{CACHE}/wiki_*.csv")) or [f"{CACHE}/wiki_de.csv"], "live": "wikipedia"},
     {"key": "bdi", "label": "Spesa turisti (Banca d'Italia)", "cadence": "trimestrale",
@@ -164,6 +166,9 @@ def _fresh_last_period(source: dict) -> pd.Timestamp | None:
         return pd.Timestamp(f"{int(y)}-12-31") if y else None
     if kind == "toscana":  # probe leggero: anno più recente dei dataset CKAN
         y = RS.fetch_toscana_latest_year()
+        return pd.Timestamp(f"{int(y)}-12-31") if y else None
+    if kind == "sardegna":  # export manuale: ultimo anno dai CSV locali
+        y = RS.fetch_sardegna_latest_year()
         return pd.Timestamp(f"{int(y)}-12-31") if y else None
     if kind == "ecb":
         df = RS.fetch_fx_monthly("USD")
@@ -297,6 +302,12 @@ def apply_update(key: str) -> dict:
                 return {"ok": True, "msg": f"già aggiornato (anno {cache_year}); nessun anno nuovo"}
             df = RS.fetch_toscana_movimento(refresh=True)
             return {"ok": True, "msg": f"Toscana aggiornata · fino al {int(pd.to_numeric(df['anno']).max())}"}
+        if kind == "sardegna":
+            # export MANUALE: ricostruisce le cache dai CSV in dati_manuali/sardegna/
+            df_cm, _ = RS.fetch_sardegna_manual(refresh=True)
+            if df_cm is None or df_cm.empty:
+                return {"ok": False, "msg": "nessun CSV movimento in dati_manuali/sardegna/"}
+            return {"ok": True, "msg": f"Sardegna ricostruita dai file locali · fino al {int(df_cm['anno'].max())}"}
         if kind == "ecb":
             return {"ok": True, "msg": "ECB è sempre live: nessuna cache da aggiornare"}
         return {"ok": False, "msg": "refresh non ancora disponibile per questa fonte (Fase 2)"}
@@ -378,7 +389,7 @@ if __name__ == "__main__":
         # (rate-limited). Quelle restano aggiornabili a mano da «Gestione dati».
         fast = "--fast" in sys.argv
         skip = {"trends", "wikipedia", "istat_glob", "istat_presenze",
-                "istat_capacita", "istat_estero"} if fast else None
+                "istat_capacita", "istat_estero", "sardegna"} if fast else None
         print("Riscarico le fonti refreshabili nella cache…"
               + (" (modalità fast: escludo Trends/Wikipedia)" if fast else ""))
         ok = 0

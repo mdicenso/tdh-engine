@@ -1555,6 +1555,50 @@ def _render_toscana_local_block():
                "movimento per comune × ambito, split italiani/stranieri (escluse locazioni brevi).")
 
 
+def _render_sardegna_local_block():
+    """Dettaglio locale per la Sardegna (Osservatorio, export manuale): movimento MENSILE per
+    comune × mercato estero. La fonte più ricca del motore. Numerazione: Grafico 4-6, Tabella 2."""
+    provs = ["Tutta la Sardegna"] + L.sard_provinces()
+    prov = st.selectbox("Zona/Provincia", provs, key="sard_prov")
+    scope = None if prov == "Tutta la Sardegna" else prov
+    k = L.sard_kpi(scope)
+    if not k.get("anno"):
+        st.warning("Cache Osservatorio Sardegna non disponibile. Servono i CSV in "
+                   "`dati_manuali/sardegna/` e la ricostruzione (fonte «Sardegna»).")
+        return
+    L.kpi_row([
+        {"label": f"Presenze {k['anno']}", "value": _it_num(k["presenze"])},
+        {"label": f"Arrivi {k['anno']}", "value": _it_num(k["arrivi"])},
+        {"label": "Quota estero", "value": f"{k['quota_estero']:.0f}%" if k["quota_estero"] is not None else "—",
+         "hint": "su presenze totali"},
+        {"label": "Comune n.1", "value": k.get("top_comune") or "—", "hint": "quota su presenze"},
+    ])
+    st.markdown(f"**Grafico 4 — Presenze mensili ({prov})**")
+    fig = L.chart_sard_flussi_mensili(scope)
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+    st.markdown(f"**Grafico 5 — Top mercati esteri ({prov}, {k['anno']})**")
+    fig = L.chart_sard_markets(scope, year=k["anno"], top=12)
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+    st.markdown(f"**Grafico 6 — Comuni per presenze ({prov}, {k['anno']})**")
+    fig = L.chart_sard_top_comuni(scope, year=k["anno"], top=12)
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+    st.markdown("**Tabella 2 — Mercati esteri per presenze**")
+    mk = L.sard_markets_table(scope, year=k["anno"], top=15)
+    if mk is not None and not mk.empty:
+        show = mk.rename(columns={"nome": "Mercato estero", "presenze": "Presenze",
+                                  "arrivi": "Arrivi", "quota": "Quota %"}).copy()
+        show["Presenze"] = show["Presenze"].map(_it_num)
+        show["Arrivi"] = show["Arrivi"].map(_it_num)
+        show["Quota %"] = show["Quota %"].map(lambda v: f"{v:.1f}%")
+        st.dataframe(show, hide_index=True, use_container_width=True)
+    st.caption("Fonte: Osservatorio del Turismo Sardegna (SIRED, CC-BY) · mensile 2021-2025 · "
+               "movimento per comune × macro-tipologia × mercato di provenienza; export manuale. "
+               "Zone = raggruppamento provinciale dell'anno più recente.")
+
+
 def page_base_dati_regionale():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     info = L.RG.region(code)
@@ -1564,7 +1608,7 @@ def page_base_dati_regionale():
                            "dettaglio locale dove esiste una fonte territoriale ricca.")
     st.caption("Segue il **selettore di regione** in alto a sinistra. Il catalogo dice cosa abbiamo e "
                "con che granularità; la sintesi mostra la realtà ISTAT; il dettaglio locale aggiunge le "
-               "fonti territoriali (oggi: ASTAT/Bolzano, Open Data Lombardia, Open Data Toscana).")
+               "fonti territoriali (oggi: ASTAT/Bolzano, Lombardia, Toscana, Osservatorio Sardegna).")
 
     # Snapshot ISTAT (chiamate live): se ISTAT è giù, catalogo e dati offline restano comunque
     ov = None
@@ -1635,10 +1679,14 @@ def page_base_dati_regionale():
                    "per ambito turistico, con split italiani/stranieri: un dettaglio sotto il livello "
                    "provinciale che le basi ISTAT non danno.")
         _render_toscana_local_block()
+    elif code == "ITG2":
+        st.caption("**Osservatorio del Turismo Sardegna** — la base dati più ricca del motore: movimento "
+                   "**mensile** per **comune** e **mercato estero** di provenienza (SIRED, CC-BY, export manuale).")
+        _render_sardegna_local_block()
     else:
         st.info("Per questa regione non è ancora agganciata una fonte locale ricca (mensile + dettaglio). "
-                "Oggi disponibili: **Bolzano** (ASTAT), **Lombardia** e **Toscana** (Open Data regionali). "
-                "Prossimo candidato con feed pulito: **Sardegna**.")
+                "Oggi disponibili: **Bolzano** (ASTAT), **Lombardia**, **Toscana** e **Sardegna** "
+                "(Open Data regionali).")
 
 
 # ──────────────────── NAVIGAZIONE A DUE PILASTRI (st.navigation) + DISPATCH ────────────────────

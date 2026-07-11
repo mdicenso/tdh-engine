@@ -264,9 +264,31 @@ escluse le locazioni brevi). Struttura CKAN a **un dataset per anno** (URL a UUI
 `chart_tosc_ambiti`. Nel blocco locale della pagina Base Dati Regionale c'è un **selettore provincia** (o
 tutta la Toscana). Registrata in Gestione dati (`builtin_sources`, `series_coverage`) e in matrice (riga
 *Movimento a livello COMUNALE*, 🟡 solo Toscana). **Auto-refresh**: fonte `toscana` in `update_check.py`,
-cadenza annuale, **skip intelligente** (riscarica solo se CKAN pubblica un anno più recente). Prossimo
-candidato con feed pulito: **Sardegna** (osservatorio, CSV CC0); **Trentino/ISPAT** scartato (solo HTML
-da scrapare, nessun export).
+cadenza annuale, **skip intelligente** (riscarica solo se CKAN pubblica un anno più recente).
+
+**Fonte Osservatorio Sardegna (COMPLEMENTARE, regione `ITG2`) — export MANUALE**: è la base dati **più
+ricca del motore** — movimento **MENSILE × comune × mercato di provenienza (paese) × macro-tipologia**,
+**2021-2025** (fonte SIRED, licenza CC-BY). Combina i punti di forza di Lombardia (mercato estero mensile)
+e Toscana (dettaglio comunale). ⚠️ **Nessun auto-fetch**: i portali Sardegna non sono agganciabili
+(vecchio DKAN `dati.regione.sardegna.it` dismesso; `opendata.regione.sardegna.it` anti-bot; download
+dell'Osservatorio via JavaScript). Perciò i CSV annuali "movimenti comunali per mese e macro-tipologia" si
+**scaricano a mano** da [osservatorio.sardegnaturismo.it/it/open-data](https://osservatorio.sardegnaturismo.it/it/open-data)
+e si depositano in **`dati_manuali/sardegna/`** (cartella gitignorata, non va nel repo). Il reader
+`fetch_sardegna_manual` (in `real_sources`) tiene **solo i file "movimento comunale"** (discrimina per
+intestazione: comune+mese+provenienza+arrivi+presenze → esclude i file provinciali, che
+duplicherebbero, e i file di capacità/consistenza), unifica le **grafie del comune** fra anni
+(MAIUSCOLO/Titolo → 331 comuni canonici) e la **provincia incoerente** fra anni (riforme amministrative)
+fissandola dall'anno più recente, poi proietta il grezzo (~110k righe/anno) in **due cache compatte**:
+`.cache/sardegna_flussi_comune_mese.csv` (totale + estero) e `.cache/sardegna_flussi_mercato_mese.csv`.
+`mese="non disponibile"` (privacy) → mese 0 (fuori dai trend, dentro i totali). Helper in `tdhlib`:
+`sard_comune_mese`, `sard_mercato_mese`, `sard_provinces`, `sard_monthly_totals`, `sard_top_comuni`,
+`sard_markets_table`, `sard_kpi`, `chart_sard_flussi_mensili`, `chart_sard_markets`,
+`chart_sard_top_comuni`. Blocco locale con **selettore zona** (Grafico 4-6 + Tabella 2). Registrata in
+Gestione dati e in matrice (righe *Mercato ESTERO mensile sub-nazionale* e *Movimento a livello COMUNALE*).
+**Refresh**: fonte `sardegna` in `update_check.py` (cadenza **manuale**, esclusa dallo scheduler `--fast`);
+per aggiornare: scarica i nuovi CSV nella cartella e ricostruisci con
+`update_check.py`→`apply_update("sardegna")` (o `fetch_sardegna_manual(refresh=True)`), poi commit.
+Vedi memoria *sardegna-fonti-turismo-accesso*. **Trentino/ISPAT** resta scartato (solo HTML, nessun export).
 
 ### Aggiornamento automatico delle fonti (scheduler)
 

@@ -722,6 +722,198 @@ def fetch_toscana_latest_year(timeout: int = 60) -> int | None:
 
 
 # --------------------------------------------------------------------------
+# REGIONE SARDEGNA — Osservatorio del Turismo (osservatorio.sardegnaturismo.it),
+# fonte SIRED. Sorgente MANUALE: i portali Sardegna non espongono un feed
+# auto-scaricabile affidabile (vecchio DKAN dismesso; opendata anti-bot; download
+# CSV via JavaScript). I CSV annuali "movimenti comunali per mese e macro-tipologia"
+# (CC-BY 4.0) si scaricano a mano dal portale e si depositano in dati_manuali/sardegna/.
+# Dato RICCHISSIMO: mensile × comune × macro-tipologia × mercato di provenienza (regioni
+# IT + paesi esteri + aggregati), 2013-2025. Il reader proietta il grezzo (~110k righe/anno,
+# colonne: anno,provincia,comune,mese,macro-tipologia,provenienza,arrivi,presenze) in due
+# cache COMPATTE: comune×mese (con totale + estero) e mercato×mese. "non disponibile" nel
+# mese = soppressione privacy → mese 0 (escluso dai trend mensili, incluso nei totali).
+# Vedi memoria sardegna-fonti-turismo-accesso.
+# --------------------------------------------------------------------------
+SARD_INTAKE = "dati_manuali/sardegna"
+SARD_CACHE_CM = "sardegna_flussi_comune_mese.csv"
+SARD_CACHE_MM = "sardegna_flussi_mercato_mese.csv"
+# provenienze che NON sono mercato estero (regioni italiane + non specificato)
+_SARD_ITA = {"abruzzo", "basilicata", "bolzano", "calabria", "campania", "emilia romagna",
+             "friuli-venezia giulia", "lazio", "liguria", "lombardia", "marche", "molise",
+             "piemonte", "puglia", "sardegna", "sicilia", "toscana", "trento", "umbria",
+             "valle d aosta", "veneto"}
+_SARD_UNSPEC = {"non specificato"}
+
+
+def _sard_norm(s: str) -> str:
+    import unicodedata
+    return unicodedata.normalize("NFKD", (s or "")).replace("\xa0", " ").strip().lower().replace("'", " ")
+
+
+def _sard_prov(p: str) -> str:
+    """Nome provincia breve: toglie i prefissi 'Provincia di/del/della/dell'' e
+    'Città metropolitana [di]' (case-insensitive). Vuoto resta vuoto."""
+    p = (p or "").replace("\xa0", " ").strip()
+    low = p.lower()
+    for pre in ("città metropolitana di ", "città metropolitana ", "provincia del ",
+                "provincia della ", "provincia dell'", "provincia dell’ ",
+                "provincia dell’", "provincia di "):
+        if low.startswith(pre):
+            return p[len(pre):].strip()
+    return p
+
+
+def _sard_is_est(prov: str) -> bool:
+    """True se la provenienza è un PAESE ESTERO (non regione italiana né 'non specificato')."""
+    n = _sard_norm(prov)
+    return n not in _SARD_ITA and n not in _SARD_UNSPEC
+
+
+def _sard_month(m: str) -> int:
+    m = (m or "").strip()
+    return int(m) if m.isdigit() else 0  # "non disponibile" -> 0
+
+
+def _sard_ckey(c: str) -> str:
+    """Chiave canonica del comune per unire le varianti di grafia fra anni
+    (MAIUSCOLO vs Titolo, apostrofi ’/', spazi). Es. 'NARBOLIA' e 'Narbolia' -> 'narbolia'."""
+    c = (c or "").replace("\xa0", " ").replace("’", "'").strip()
+    return " ".join(c.split()).casefold()
+
+
+def _sard_canon(h: str) -> str:
+    n = _sard_norm(h)
+    if n in ("anno", "provincia", "comune", "mese", "provenienza", "arrivi", "presenze"):
+        return n
+    if "macro" in n:
+        return "macro"
+    return n
+
+
+def fetch_sardegna_manual(intake_dir: str = SARD_INTAKE, cache_dir: str = ".cache",
+                          refresh: bool = False):
+    """Costruisce/legge le due cache compatte della Sardegna dai CSV annuali scaricati a
+    mano (Osservatorio). Ritorna (df_comune_mese, df_mercato_mese). Con refresh=False e
+    cache presenti le rilegge; altrimenti riaggrega da tutti i *.csv in intake_dir."""
+    os.makedirs(cache_dir, exist_ok=True)
+    cm_path = os.path.join(cache_dir, SARD_CACHE_CM)
+    mm_path = os.path.join(cache_dir, SARD_CACHE_MM)
+    if os.path.exists(cm_path) and os.path.exists(mm_path) and not refresh:
+        return pd.read_csv(cm_path), pd.read_csv(mm_path)
+    import glob as _glob
+    all_files = sorted(set(_glob.glob(os.path.join(intake_dir, "*.csv"))
+                           + _glob.glob(os.path.join(intake_dir, "*.CSV"))))
+    # tiene SOLO i file "movimento comunale": la cartella può contenere anche file
+    # provinciali (stesso dato aggregato → doppio conteggio) e di capacità/consistenza
+    # (schema diverso). Discrimina per intestazione: servono comune+mese+provenienza+arrivi+presenze.
+    _REQ = {"comune", "mese", "provenienza", "arrivi", "presenze"}
+
+    def _txt(fp):
+        raw = open(fp, "rb").read()
+        try:
+            return raw.decode("utf-8")
+        except UnicodeDecodeError:
+            return raw.decode("cp1252", "replace")
+
+    files = []
+    for fp in all_files:
+        try:
+            first = _txt(fp).splitlines()[0]
+        except (IndexError, OSError):
+            continue
+        cols = {_sard_canon(c) for c in next(csv.reader(io.StringIO(first)))}
+        if _REQ.issubset(cols):
+            files.append(fp)
+
+    def _read(fp):
+        rd = csv.reader(io.StringIO(_txt(fp)))
+        hdr = None
+        for row in rd:
+            if hdr is None:
+                hdr = [_sard_canon(x) for x in row]
+                continue
+            if any(c.strip() for c in row):
+                yield dict(zip(hdr, row))
+
+    # PASSO 1 — per ogni comune (chiave canonica) determina: il nome da MOSTRARE
+    # (grafia mista, non tutta maiuscola) e la PROVINCIA dell'anno più recente (l'etichetta
+    # provincia è incoerente fra anni per le riforme amministrative → si fissa dal più recente).
+    disp: dict = {}   # ckey -> nome display
+    best: dict = {}   # ckey -> (anno, provincia)
+    for fp in files:
+        for r in _read(fp):
+            com = (r.get("comune") or "").replace("\xa0", " ").strip()
+            if not com:
+                continue
+            k = _sard_ckey(com)
+            cur = disp.get(k)
+            if cur is None or (cur.isupper() and not com.isupper()):
+                disp[k] = com if not com.isupper() else com.title()
+            prov = _sard_prov(r.get("provincia"))
+            try:
+                anno = int(str(r.get("anno", "")).strip())
+            except ValueError:
+                continue
+            if prov and (k not in best or anno > best[k][0]):
+                best[k] = (anno, prov)
+    commap = {k: pv for k, (a, pv) in best.items()}
+
+    # PASSO 2 — aggregazione, con comune display unificato e provincia canonica.
+    cm: dict = {}  # (anno,provincia,comune,mese) -> [arr_tot,pre_tot,arr_est,pre_est]
+    mm: dict = {}  # (anno,provincia,mese,provenienza,estero) -> [arrivi,presenze]
+    for fp in files:
+        for r in _read(fp):
+            try:
+                arr = int(str(r.get("arrivi", "")).strip() or 0)
+                pre = int(str(r.get("presenze", "")).strip() or 0)
+                anno = int(str(r.get("anno", "")).strip())
+            except ValueError:
+                continue
+            com_raw = (r.get("comune") or "").replace("\xa0", " ").strip()
+            if not com_raw:
+                continue
+            k = _sard_ckey(com_raw)
+            com = disp.get(k, com_raw)
+            prov = commap.get(k) or _sard_prov(r.get("provincia")) or "(n.d.)"
+            mese = _sard_month(r.get("mese"))
+            provn = (r.get("provenienza") or "").replace("\xa0", " ").strip()
+            est = _sard_is_est(provn)
+            a = cm.setdefault((anno, prov, com, mese), [0, 0, 0, 0])
+            a[0] += arr
+            a[1] += pre
+            if est:
+                a[2] += arr
+                a[3] += pre
+            b = mm.setdefault((anno, prov, mese, provn, 1 if est else 0), [0, 0])
+            b[0] += arr
+            b[1] += pre
+    df_cm = pd.DataFrame(
+        [(k[0], k[1], k[2], k[3], v[0], v[1], v[2], v[3]) for k, v in cm.items()],
+        columns=["anno", "provincia", "comune", "mese", "arrivi", "presenze",
+                 "arrivi_est", "presenze_est"])
+    df_mm = pd.DataFrame(
+        [(k[0], k[1], k[2], k[3], k[4], v[0], v[1]) for k, v in mm.items()],
+        columns=["anno", "provincia", "mese", "provenienza", "estero", "arrivi", "presenze"])
+    if not df_cm.empty:
+        df_cm = df_cm.sort_values(["anno", "provincia", "comune", "mese"]).reset_index(drop=True)
+    if not df_mm.empty:
+        df_mm = df_mm.sort_values(["anno", "provincia", "mese", "presenze"],
+                                  ascending=[True, True, True, False]).reset_index(drop=True)
+    df_cm.to_csv(cm_path, index=False)
+    df_mm.to_csv(mm_path, index=False)
+    return df_cm, df_mm
+
+
+def fetch_sardegna_latest_year(intake_dir: str = SARD_INTAKE) -> int | None:
+    """Anno più recente presente tra i CSV scaricati a mano (dal contenuto, non dal nome file)."""
+    try:
+        df_cm, _ = fetch_sardegna_manual(intake_dir=intake_dir, refresh=True)
+        return int(df_cm["anno"].max()) if not df_cm.empty else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+# --------------------------------------------------------------------------
 # WIKIPEDIA — pageviews mensili per articolo (secondo segnale anticipatore, per lingua).
 # Wikimedia REST: filtro agent='user' (esclude bot) e titolo articolo per lingua
 # (la regione in tedesco/olandese è 'Abruzzen'). UA obbligatorio.

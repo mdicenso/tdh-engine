@@ -27,5 +27,9 @@ Admin/
 # scorciatoie locali (lanciatori .cmd con percorsi del PC, solo locali)
 @_scorciatoie/
 
+# CSV grezzi scaricati a mano (Sardegna/Osservatorio, ~10MB/anno): solo locali.
+# Nel repo va SOLO la cache proiettata .cache/sardegna_flussi_*.csv (compatta).
+dati_manuali/
+
 # NB: la cartella .cache/ NON è ignorata: contiene i dati (ISTAT/BdI/Eurostat/
 # Wikipedia/Trends/GeoJSON) che fanno girare l'app in cloud senza rifare le fetch.

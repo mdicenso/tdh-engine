@@ -1076,6 +1076,13 @@ def region_data_catalog(code: str, ov: dict | None = None) -> list[dict]:
             yy = None
         add("Open Data Regione Toscana (LOCALE)", "Movimento per comune (italiani/stranieri)", "annuale",
             str(yy) if yy else "—", "~272 comuni, 10 province", "🟢")
+    elif code == "ITG2" and os.path.exists(_SARD_CM_PATH):
+        try:
+            yy = int(pd.read_csv(_SARD_CM_PATH, usecols=["anno"])["anno"].max())
+        except Exception:  # noqa: BLE001
+            yy = None
+        add("Osservatorio Sardegna (LOCALE)", "Movimento mensile per comune × mercato estero", "mensile",
+            str(yy) if yy else "—", "~330 comuni; export manuale", "🟢")
     return rows
 
 
@@ -1366,6 +1373,157 @@ def chart_tosc_ambiti(prov: str | None = None, year: int | None = None,
                            hovertemplate="<b>%{y}</b><br>%{x:,.0f} presenze<extra></extra>"))
     fig.update_xaxes(title="presenze per ambito turistico")
     return _layout(fig, h=420)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# SARDEGNA (Osservatorio del Turismo, export manuale CC-BY) — fonte COMPLEMENTARE (ITG2).
+#   movimento MENSILE × comune × mercato di provenienza (paese) × macro-tipologia, 2021-2025.
+#   La più ricca del motore: mensile (come Lombardia) + comunale (come Toscana) + mercato estero.
+#   Cache proiettate: comune×mese (totale+estero) e mercato×mese. [[sardegna-fonti-turismo-accesso]]
+# ════════════════════════════════════════════════════════════════════════════
+_SARD_CM_PATH = ".cache/sardegna_flussi_comune_mese.csv"
+_SARD_MM_PATH = ".cache/sardegna_flussi_mercato_mese.csv"
+
+
+@st.cache_data(show_spinner=False)
+def sard_comune_mese() -> pd.DataFrame:
+    """Cache comune×mese Sardegna + colonna date (mese 0 = 'non disponibile' -> NaT)."""
+    if not os.path.exists(_SARD_CM_PATH):
+        return pd.DataFrame()
+    df = pd.read_csv(_SARD_CM_PATH)
+    m = pd.to_numeric(df["mese"], errors="coerce")
+    df["date"] = pd.to_datetime(dict(year=df["anno"], month=m.where((m >= 1) & (m <= 12), 1), day=1),
+                                errors="coerce")
+    df.loc[~m.between(1, 12), "date"] = pd.NaT
+    return df
+
+
+@st.cache_data(show_spinner=False)
+def sard_mercato_mese() -> pd.DataFrame:
+    if not os.path.exists(_SARD_MM_PATH):
+        return pd.DataFrame()
+    return pd.read_csv(_SARD_MM_PATH)
+
+
+def sard_provinces() -> list[str]:
+    df = sard_comune_mese()
+    return sorted(df["provincia"].dropna().unique()) if not df.empty else []
+
+
+def _sard_scope(df: pd.DataFrame, prov: str | None) -> pd.DataFrame:
+    if df.empty:
+        return df
+    if prov and prov != "Tutta la Sardegna":
+        df = df[df["provincia"] == prov]
+    return df
+
+
+def sard_monthly_totals(prov: str | None = None) -> pd.DataFrame:
+    """Totale mensile (date·arrivi·presenze·presenze_est) per zona/regione."""
+    df = _sard_scope(sard_comune_mese(), prov)
+    if df.empty:
+        return df
+    d = df.dropna(subset=["date"])
+    g = d.groupby("date").agg(arrivi=("arrivi", "sum"), presenze=("presenze", "sum"),
+                              presenze_est=("presenze_est", "sum")).reset_index()
+    return g.sort_values("date")
+
+
+def sard_top_comuni(prov: str | None = None, year: int | None = None,
+                    top: int | None = 12) -> pd.DataFrame:
+    df = _sard_scope(sard_comune_mese(), prov)
+    if df.empty:
+        return df
+    if year is None:
+        year = int(df["anno"].max())
+    d = df[df["anno"] == year].groupby("comune").agg(
+        presenze=("presenze", "sum"), arrivi=("arrivi", "sum"),
+        presenze_est=("presenze_est", "sum")).reset_index()
+    if d.empty:
+        return d
+    d["quota_estero"] = (d["presenze_est"] / d["presenze"] * 100).where(d["presenze"] > 0, 0.0)
+    d = d.sort_values("presenze", ascending=False).rename(columns={"comune": "nome"})
+    tot = d["presenze"].sum()
+    d["quota"] = (d["presenze"] / tot * 100) if tot else 0.0
+    cols = ["nome", "presenze", "arrivi", "quota_estero", "quota"]
+    return (d[cols].head(top) if top else d[cols]).reset_index(drop=True)
+
+
+def sard_markets_table(prov: str | None = None, year: int | None = None,
+                       top: int | None = 12) -> pd.DataFrame:
+    """Mercati ESTERI (provenienza) per presenze, con quota% sul totale estero."""
+    df = _sard_scope(sard_mercato_mese(), prov)
+    if df.empty:
+        return df
+    if year is None:
+        year = int(df["anno"].max())
+    d = df[(df["anno"] == year) & (df["estero"] == 1)]
+    if d.empty:
+        return d
+    g = d.groupby("provenienza").agg(presenze=("presenze", "sum"),
+                                     arrivi=("arrivi", "sum")).reset_index()
+    g = g.rename(columns={"provenienza": "nome"}).sort_values("presenze", ascending=False)
+    tot = g["presenze"].sum()
+    g["quota"] = (g["presenze"] / tot * 100) if tot else 0.0
+    return (g.head(top) if top else g).reset_index(drop=True)
+
+
+def sard_kpi(prov: str | None = None) -> dict:
+    df = _sard_scope(sard_comune_mese(), prov)
+    out = {"anno": None, "presenze": None, "arrivi": None, "quota_estero": None,
+           "top_comune": None, "n_comuni": None}
+    if df.empty:
+        return out
+    y = int(df["anno"].max()); out["anno"] = y
+    dy = df[df["anno"] == y]
+    out["presenze"] = float(dy["presenze"].sum())
+    out["arrivi"] = float(dy["arrivi"].sum())
+    est = float(dy["presenze_est"].sum())
+    out["quota_estero"] = (est / out["presenze"] * 100) if out["presenze"] else None
+    out["n_comuni"] = int(dy["comune"].nunique())
+    tc = sard_top_comuni(prov, year=y, top=1)
+    if tc is not None and not tc.empty:
+        out["top_comune"] = f"{tc['nome'].iloc[0]} ({tc['quota'].iloc[0]:.0f}%)"
+    return out
+
+
+def chart_sard_flussi_mensili(prov: str | None = None) -> go.Figure | None:
+    g = sard_monthly_totals(prov)
+    if g is None or g.empty:
+        return None
+    fig = go.Figure(go.Scatter(x=g["date"], y=g["presenze"], mode="lines",
+                               line=dict(color="#0e7490", width=2),
+                               fill="tozeroy", fillcolor="rgba(14,116,144,0.08)",
+                               hovertemplate="%{x|%m/%Y}<br>%{y:,.0f} presenze<extra></extra>"))
+    fig.update_yaxes(title="presenze (mese)")
+    fig.update_xaxes(title=None)
+    return _layout(fig, h=340)
+
+
+def chart_sard_markets(prov: str | None = None, year: int | None = None,
+                       top: int = 12) -> go.Figure | None:
+    d = sard_markets_table(prov, year=year, top=top)
+    if d is None or d.empty:
+        return None
+    d = d.sort_values("presenze")
+    fig = go.Figure(go.Bar(x=d["presenze"], y=d["nome"], orientation="h", marker_color="#f59e0b",
+                           hovertemplate="<b>%{y}</b><br>%{x:,.0f} presenze<extra></extra>"))
+    fig.update_xaxes(title="presenze di turisti esteri")
+    return _layout(fig, h=440)
+
+
+def chart_sard_top_comuni(prov: str | None = None, year: int | None = None,
+                          top: int = 12) -> go.Figure | None:
+    d = sard_top_comuni(prov, year=year, top=top)
+    if d is None or d.empty:
+        return None
+    d = d.sort_values("presenze")
+    fig = go.Figure(go.Bar(x=d["presenze"], y=d["nome"], orientation="h", marker_color="#16a34a",
+                           customdata=d["quota_estero"],
+                           hovertemplate="<b>%{y}</b><br>%{x:,.0f} presenze<br>"
+                                         "estero %{customdata:.0f}%<extra></extra>"))
+    fig.update_xaxes(title="presenze totali")
+    return _layout(fig, h=440)
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -2183,6 +2341,14 @@ def builtin_sources() -> list[dict]:
                          "(fonte COMPLEMENTARE, ~272 comuni, 10 province, 2018-2025)",
                          "Regione Toscana · Open Data (CKAN)", "https://dati.toscana.it/",
                          "annuale", A, _csv_rows(tosc), _fmt_mtime(tosc)))
+    sard = ".cache/sardegna_flussi_comune_mese.csv"
+    if os.path.exists(sard):
+        rows.append(_row("Sardegna · movimento mensile per comune × mercato (Osservatorio)",
+                         "Arrivi/presenze MENSILI per comune sardo, mercato estero di origine e "
+                         "macro-tipologia (fonte COMPLEMENTARE, ~330 comuni, 2021-2025; export manuale CC-BY)",
+                         "Osservatorio Turismo Sardegna (SIRED)", "https://osservatorio.sardegnaturismo.it/it/open-data",
+                         "mensile", A, (_csv_rows(sard) or 0) + (_csv_rows(".cache/sardegna_flussi_mercato_mese.csv") or 0),
+                         _fmt_mtime(sard)))
     trends = sorted(glob.glob(".cache/trends_*.csv"))
     if trends:
         _geos = [mk.code for mk in DEFAULT_MARKETS]
@@ -2409,8 +2575,8 @@ def coverage_matrix() -> list[dict]:
         ("Presenze per PAESE di origine", "✅", "✅", "✅", "ISTAT DCSC_TUR_9", "✅ risolto: annuale dal 2008 per regione E provincia (cube _9); il mensile per-paese resta solo nazionale"),
         ("Capacità ricettiva (posti letto)", "✅", "✅", "🟡", "ISTAT DCSC_TUR_1", "regionale ok; provinciale solo alcune"),
         ("Flussi MENSILI per categoria ricettiva", "❌", "❌", "🟡", "ASTAT (Bolzano)", "🟡 solo Alto Adige: arrivi/presenze mensili + esercizi/posti letto per stelle/categoria (fonte provinciale complementare)"),
-        ("Mercato ESTERO mensile sub-nazionale", "❌", "🟡", "🟡", "Open Data Lombardia", "🟡 solo Lombardia (12 province): presenze/arrivi mensili per paese estero di origine; ISTAT lo dà solo annuale (_9)"),
-        ("Movimento a livello COMUNALE", "❌", "🟡", "🟡", "Open Data Toscana", "🟡 solo Toscana (~272 comuni): arrivi/presenze annuali per comune × ambito, split italiani/stranieri; sotto il livello provinciale ISTAT"),
+        ("Mercato ESTERO mensile sub-nazionale", "❌", "🟡", "🟡", "Lombardia + Sardegna", "🟡 Lombardia (12 province) e Sardegna (per comune!): presenze/arrivi mensili per paese estero di origine; ISTAT lo dà solo annuale (_9)"),
+        ("Movimento a livello COMUNALE", "❌", "🟡", "🟡", "Toscana + Sardegna", "🟡 Toscana (~272 comuni, annuale, ita/str) e Sardegna (~330 comuni, MENSILE × mercato estero): sotto il livello provinciale ISTAT"),
         ("Anagrafica strutture ricettive", "🟡", "❌", "❌", "registri regionali", "🔴 BUCO: registri non federati come open data"),
         ("Spesa turistica per paese", "✅", "🟡", "🟡", "BdI + stima da _9", "regionale/provinciale STIMATA (presenze _9 × spesa/notte BdI); dato diretto solo TOTALE regionale (BdI TS2)"),
         ("Accessibilità aerea (voli/pax)", "✅", "✅", "—", "Eurostat avia_par", "regionale via mappa regione→aeroporto"),
@@ -3578,6 +3744,14 @@ def series_coverage() -> list[dict]:
             cov.append({"serie": "Toscana movimento×comune (Open Data)",
                         "start": pd.Timestamp(f"{int(aa.min())}-01-01"),
                         "end": pd.Timestamp(f"{int(aa.max())}-12-31"), "freq": "annuale"})
+        except Exception:  # noqa: BLE001
+            pass
+    if os.path.exists(_SARD_CM_PATH):
+        try:
+            aa = pd.read_csv(_SARD_CM_PATH, usecols=["anno"])["anno"]
+            cov.append({"serie": "Sardegna movimento×comune×mercato (Osservatorio)",
+                        "start": pd.Timestamp(f"{int(aa.min())}-01-01"),
+                        "end": pd.Timestamp(f"{int(aa.max())}-12-31"), "freq": "mensile"})
         except Exception:  # noqa: BLE001
             pass
     return cov
