@@ -1057,6 +1057,14 @@ def region_data_catalog(code: str, ov: dict | None = None) -> list[dict]:
         add("Eurostat · avia_par", "Passeggeri voli diretti per mercato", "annuale",
             "—", "nessun aeroporto mappato", "🔴")
 
+    # 6b) ISTAT Viaggi&Vacanze — domanda dei residenti per scopo (annuale, OFFLINE)
+    tp = turnot_purpose()
+    if not tp.empty:
+        s = tp[tp["area"] == area]
+        if not s.empty:
+            add("ISTAT · Viaggi e Vacanze", "Notti residenti per scopo del viaggio", "annuale",
+                str(int(s["anno"].max())), "domanda · tutte le regioni", "🟢")
+
     # 7) Fonte LOCALE complementare (solo dove esiste)
     if code == "ITD1" and os.path.exists(".cache/astat_bolzano_flussi_mensili.csv"):
         r = _last_date_of(".cache/astat_bolzano_flussi_mensili.csv")
@@ -1524,6 +1532,78 @@ def chart_sard_top_comuni(prov: str | None = None, year: int | None = None,
                                          "estero %{customdata:.0f}%<extra></extra>"))
     fig.update_xaxes(title="presenze totali")
     return _layout(fig, h=440)
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# DOMANDA RESIDENTI — scopo del viaggio (ISTAT Viaggi&Vacanze, TURNOT_CAPI_1).
+#   notti dei RESIDENTI per regione di destinazione × scopo (lavoro / vacanza lunga /
+#   breve), annuale, TUTTE le regioni. Universo diverso dal movimento negli esercizi:
+#   è la DOMANDA (perché e quanto viaggiano gli italiani). Region-aware via istat_area.
+# ════════════════════════════════════════════════════════════════════════════
+_TURNOT_PATH = ".cache/istat_turnot_scopo_regione.csv"
+_TURNOT_LABEL = {"BUS": "Lavoro", "HOLL": "Vacanza lunga (4+ notti)", "HOLS": "Vacanza breve (1-3 notti)"}
+
+
+@st.cache_data(show_spinner=False)
+def turnot_purpose() -> pd.DataFrame:
+    if not os.path.exists(_TURNOT_PATH):
+        return pd.DataFrame()
+    return pd.read_csv(_TURNOT_PATH)
+
+
+def turnot_pivot(code: str) -> pd.DataFrame:
+    """Pivot anno×scopo (notti) per la regione (o IT). Ricava BUS mancante = TRIP − HOL."""
+    df = turnot_purpose()
+    if df.empty:
+        return df
+    d = df[df["area"] == RG.istat_area(code)]
+    if d.empty:
+        return d
+    p = d.pivot_table(index="anno", columns="scopo", values="notti", aggfunc="sum")
+    if "TRIP" in p and "HOL" in p:
+        if "BUS" not in p:
+            p["BUS"] = pd.NA
+        p["BUS"] = p["BUS"].fillna(p["TRIP"] - p["HOL"])
+    return p
+
+
+def turnot_kpi(code: str) -> dict:
+    """KPI ultimo anno: notti totali residenti, quota vacanza lunga, quota lavoro."""
+    out = {"anno": None, "notti": None, "quota_lavoro": None, "quota_vac_lunga": None}
+    p = turnot_pivot(code)
+    if p is None or p.empty or "TRIP" not in p.columns:
+        return out
+    y = int(p.index.max()); r = p.loc[y]
+    tot = r.get("TRIP")
+    if pd.isna(tot) or not tot:
+        return out
+    out["anno"] = y
+    out["notti"] = float(tot)
+    if "BUS" in p.columns and pd.notna(r.get("BUS")):
+        out["quota_lavoro"] = float(r["BUS"]) / tot * 100
+    if "HOLL" in p.columns and pd.notna(r.get("HOLL")):
+        out["quota_vac_lunga"] = float(r["HOLL"]) / tot * 100
+    return out
+
+
+def chart_turnot_purpose(code: str) -> go.Figure | None:
+    """Barre impilate per anno: notti dei residenti per scopo (Lavoro/Vacanza breve/lunga)."""
+    p = turnot_pivot(code)
+    if p is None or p.empty:
+        return None
+    idx = p.index.astype(int)
+    fig = go.Figure()
+    for scopo, color in [("BUS", "#0e7490"), ("HOLS", "#f59e0b"), ("HOLL", "#16a34a")]:
+        if scopo in p.columns:
+            fig.add_bar(x=idx, y=p[scopo], name=_TURNOT_LABEL[scopo], marker_color=color,
+                        hovertemplate="<b>%{x}</b><br>" + _TURNOT_LABEL[scopo]
+                                      + ": %{y:,.0f} notti<extra></extra>")
+    if not fig.data:
+        return None
+    fig.update_layout(barmode="stack", legend=dict(orientation="h", y=1.12, x=0))
+    fig.update_yaxes(title="notti dei residenti")
+    fig.update_xaxes(dtick=1, title=None)
+    return _layout(fig, h=340)
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -2349,6 +2429,13 @@ def builtin_sources() -> list[dict]:
                          "Osservatorio Turismo Sardegna (SIRED)", "https://osservatorio.sardegnaturismo.it/it/open-data",
                          "mensile", A, (_csv_rows(sard) or 0) + (_csv_rows(".cache/sardegna_flussi_mercato_mese.csv") or 0),
                          _fmt_mtime(sard)))
+    turnot = ".cache/istat_turnot_scopo_regione.csv"
+    if os.path.exists(turnot):
+        rows.append(_row("Domanda residenti per scopo (ISTAT Viaggi e Vacanze)",
+                         "Notti dei residenti per regione di DESTINAZIONE e scopo del viaggio "
+                         "(lavoro / vacanza lunga / breve), annuale dal 2014 — tutte le regioni",
+                         "ISTAT · Viaggi e Vacanze (DCCV_TURNOT)", "https://esploradati.istat.it/",
+                         "annuale", A, _csv_rows(turnot), _fmt_mtime(turnot)))
     trends = sorted(glob.glob(".cache/trends_*.csv"))
     if trends:
         _geos = [mk.code for mk in DEFAULT_MARKETS]
@@ -2590,6 +2677,7 @@ def coverage_matrix() -> list[dict]:
         ("Festività mercati esteri", "✅", "—", "—", "Nager.Date (candidato)", "per paese estero (timing campagne)"),
         ("Eventi / POI turistici", "🟡", "🟡", "🟡", "open data regionali", "🟡 alcune regioni pubblicano, molte no (Abruzzo scarso)"),
         ("Viaggi residenti per regione d'origine", "✅", "❌", "❌", "ISTAT Viaggi&Vacanze", "🔴 open data solo nazionale/macro-area; il dettaglio regionale è solo MICRODATI (richiesta istituzionale ISTAT)"),
+        ("Domanda residenti per SCOPO (destinazione)", "✅", "✅", "❌", "ISTAT Viaggi&Vacanze", "✅ a livello REGIONALE: notti dei residenti per regione di DESTINAZIONE × scopo (lavoro/vacanza lunga/breve), annuale dal 2014 (TURNOT_CAPI_1)"),
         ("Confini amministrativi (geojson)", "✅", "✅", "✅", "openpolis / RNDT", "completo: usato per la mappa d'Italia"),
     ]
     return [dict(zip(COVERAGE_COLS, r)) for r in M]
@@ -3752,6 +3840,14 @@ def series_coverage() -> list[dict]:
             cov.append({"serie": "Sardegna movimento×comune×mercato (Osservatorio)",
                         "start": pd.Timestamp(f"{int(aa.min())}-01-01"),
                         "end": pd.Timestamp(f"{int(aa.max())}-12-31"), "freq": "mensile"})
+        except Exception:  # noqa: BLE001
+            pass
+    if os.path.exists(_TURNOT_PATH):
+        try:
+            aa = pd.read_csv(_TURNOT_PATH, usecols=["anno"])["anno"]
+            cov.append({"serie": "Domanda residenti per scopo (ISTAT V&V)",
+                        "start": pd.Timestamp(f"{int(aa.min())}-01-01"),
+                        "end": pd.Timestamp(f"{int(aa.max())}-12-31"), "freq": "annuale"})
         except Exception:  # noqa: BLE001
             pass
     return cov

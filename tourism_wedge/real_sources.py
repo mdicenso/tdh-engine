@@ -914,6 +914,82 @@ def fetch_sardegna_latest_year(intake_dir: str = SARD_INTAKE) -> int | None:
 
 
 # --------------------------------------------------------------------------
+# ISTAT Viaggi&Vacanze (indagine CAPI) — dataflow 68_357_DF_DCCV_TURNOT_CAPI_1.
+# Lato DOMANDA (universo diverso dal movimento negli esercizi): NOTTI dei RESIDENTI
+# per REGIONE di destinazione × SCOPO del viaggio (lavoro / vacanza lunga / breve),
+# annuale 2014→. È MULTI-REGIONE (tutte le regioni, codifica NUTS storica come regions.py).
+# Feed SDMX vivo (SDMX-CSV), quindi auto-aggiornabile. Valori pubblicati in MIGLIAIA di
+# notti → moltiplicati ×1000 (notti assolute). Gerarchia scopi: TRIP=BUS+HOL, HOL=HOLL+HOLS.
+# --------------------------------------------------------------------------
+TURNOT_DATAFLOW = "68_357_DF_DCCV_TURNOT_CAPI_1"
+TURNOT_CACHE = "istat_turnot_scopo_regione.csv"
+# destinazioni = codici regione (si esclude l'aggregato ITDA Trentino-A.A., ridondante con ITD1/ITD2)
+_TURNOT_DEST = ("IT+ITC1+ITC2+ITC3+ITC4+ITD1+ITD2+ITD3+ITD4+ITD5+ITE1+ITE2+ITE3+ITE4"
+                "+ITF1+ITF2+ITF3+ITF4+ITF5+ITF6+ITG1+ITG2")
+_TURNOT_TRIP = "BUS+HOL+HOLL+HOLS+TRIP"
+
+
+def fetch_turnot_purpose(start: str = "2014", end: str | None = None,
+                         cache_dir: str = ".cache", timeout: int = 120,
+                         refresh: bool = False) -> pd.DataFrame:
+    """Notti dei residenti per regione di destinazione × scopo (ISTAT V&V, TURNOT_CAPI_1).
+    Colonne: anno, area (codice regione o IT), scopo (BUS/HOL/HOLL/HOLS/TRIP), notti (assolute).
+    Feed SDMX-CSV con fallback host. Cache CSV."""
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_path = os.path.join(cache_dir, TURNOT_CACHE)
+    if os.path.exists(cache_path) and not refresh:
+        return pd.read_csv(cache_path)
+    end = end or str(pd.Timestamp.today().year)
+    key = f"A.IT.NI_IT_ABS_1.{_TURNOT_DEST}.{_TURNOT_TRIP}..../ALL/"
+    qs = f"?startPeriod={start}&endPeriod={end}&dimensionAtObservation=TIME_PERIOD"
+    last_err = None
+    for host in ISTAT_HOSTS:
+        url = f"{host}/data/IT1,{TURNOT_DATAFLOW},1.0/{key}{qs}"
+        try:
+            req = urllib.request.Request(url, headers={
+                "User-Agent": "Mozilla/5.0",
+                "Accept": "application/vnd.sdmx.data+csv;version=1.0.0"})
+            raw = urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "replace")
+            recs = []
+            for r in csv.DictReader(io.StringIO(raw)):
+                try:
+                    val = float(r.get("OBS_VALUE", "") or "nan")
+                except ValueError:
+                    continue
+                if val != val:  # NaN
+                    continue
+                mult = str(r.get("UNIT_MULT", "") or "").strip()
+                factor = 1000 if mult in ("", "3") else 10 ** int(mult)  # migliaia di norma
+                recs.append({"anno": int(r["TIME_PERIOD"]), "area": r["MAIN_DESTINATION"],
+                             "scopo": r["TYPE_TRIP"], "notti": int(round(val * factor))})
+            df = pd.DataFrame(recs, columns=["anno", "area", "scopo", "notti"])
+            df = df.sort_values(["anno", "area", "scopo"]).reset_index(drop=True)
+            df.to_csv(cache_path, index=False)
+            return df
+        except Exception as e:  # noqa: BLE001
+            last_err = e
+            continue
+    raise RuntimeError(f"ISTAT TURNOT non raggiungibile ({type(last_err).__name__}: {last_err})")
+
+
+def fetch_turnot_latest_year(timeout: int = 60) -> int | None:
+    """Anno più recente disponibile per TURNOT_CAPI_1 (probe leggero: solo IT, tutti gli scopi)."""
+    end = str(pd.Timestamp.today().year)
+    key = f"A.IT.NI_IT_ABS_1.IT.TRIP..../ALL/?startPeriod=2014&endPeriod={end}&dimensionAtObservation=TIME_PERIOD"
+    for host in ISTAT_HOSTS:
+        try:
+            req = urllib.request.Request(f"{host}/data/IT1,{TURNOT_DATAFLOW},1.0/{key}",
+                                         headers={"User-Agent": "Mozilla/5.0",
+                                                  "Accept": "application/vnd.sdmx.data+csv;version=1.0.0"})
+            raw = urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "replace")
+            yrs = [int(r["TIME_PERIOD"]) for r in csv.DictReader(io.StringIO(raw)) if r.get("TIME_PERIOD", "").isdigit()]
+            return max(yrs) if yrs else None
+        except Exception:  # noqa: BLE001
+            continue
+    return None
+
+
+# --------------------------------------------------------------------------
 # WIKIPEDIA — pageviews mensili per articolo (secondo segnale anticipatore, per lingua).
 # Wikimedia REST: filtro agent='user' (esclude bot) e titolo articolo per lingua
 # (la regione in tedesco/olandese è 'Abruzzen'). UA obbligatorio.

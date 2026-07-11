@@ -1426,7 +1426,7 @@ def _it_num(v) -> str:
 
 def _render_astat_local_block():
     """Dettaglio locale ricco per la Provincia di Bolzano (fonte ASTAT). Numerazione grafici
-    prosegue quella della pagina (Grafico 4-6, Tabella 2)."""
+    prosegue quella della pagina (Grafico 5-7, Tabella 2)."""
     k = L.astat_kpi()
     if k.get("anno"):
         yoy = k.get("yoy")
@@ -1447,18 +1447,18 @@ def _render_astat_local_block():
     ind_lbl = c1.radio("Indicatore", ["Presenze", "Arrivi"], horizontal=True, key="astat_ind")
     ind = "presenze" if ind_lbl == "Presenze" else "arrivi"
     anno_da = c2.slider("Dall'anno", 2000, 2025, 2015, key="astat_da")
-    st.markdown(f"**Grafico 4 — {ind_lbl} mensili (dal {anno_da})**")
+    st.markdown(f"**Grafico 5 — {ind_lbl} mensili (dal {anno_da})**")
     fig = L.chart_astat_flussi(ind, start_year=anno_da)
     if fig:
         st.plotly_chart(fig, use_container_width=True)
-    st.markdown("**Grafico 5 — Profilo stagionale (media mensile, ultimi 3 anni)**")
+    st.markdown("**Grafico 6 — Profilo stagionale (media mensile, ultimi 3 anni)**")
     fig = L.chart_astat_stagionalita(ind, years=3)
     if fig:
         st.plotly_chart(fig, use_container_width=True)
     st.caption("Stagionalità bimodale (picco estivo + picco neve invernale): benchmark di destinazione matura.")
     cap = L.astat_capacita()
     anno_cap = int(cap["anno"].max()) if not cap.empty else None
-    st.markdown(f"**Grafico 6 — Posti letto per categoria ricettiva{f' · {anno_cap}' if anno_cap else ''}**")
+    st.markdown(f"**Grafico 7 — Posti letto per categoria ricettiva{f' · {anno_cap}' if anno_cap else ''}**")
     fig = L.chart_astat_capacita()
     if fig:
         st.plotly_chart(fig, use_container_width=True)
@@ -1476,7 +1476,7 @@ def _render_astat_local_block():
 
 def _render_lombardia_local_block():
     """Dettaglio locale per la Lombardia (Open Data Lombardia): flussi mensili per provincia +
-    mercato estero mensile sub-nazionale. Numerazione: Grafico 4-5, Tabella 2."""
+    mercato estero mensile sub-nazionale. Numerazione: Grafico 5-6, Tabella 2."""
     provs = ["Tutta la Lombardia"] + L.lomb_provinces()
     prov = st.selectbox("Provincia", provs, key="lomb_prov")
     scope = None if prov == "Tutta la Lombardia" else prov
@@ -1491,11 +1491,11 @@ def _render_lombardia_local_block():
          "hint": "su presenze totali"},
         {"label": "Top mercato estero", "value": k.get("top_estero") or "—"},
     ])
-    st.markdown(f"**Grafico 4 — Presenze mensili ({prov})**")
+    st.markdown(f"**Grafico 5 — Presenze mensili ({prov})**")
     fig = L.chart_lomb_flussi_mensili(scope)
     if fig:
         st.plotly_chart(fig, use_container_width=True)
-    st.markdown(f"**Grafico 5 — Top mercati esteri ({prov}, {k['anno']})**")
+    st.markdown(f"**Grafico 6 — Top mercati esteri ({prov}, {k['anno']})**")
     fig = L.chart_lomb_markets(scope, year=k["anno"], top=12)
     if fig:
         st.plotly_chart(fig, use_container_width=True)
@@ -1514,7 +1514,7 @@ def _render_lombardia_local_block():
 
 def _render_toscana_local_block():
     """Dettaglio locale per la Toscana (Open Data Regione Toscana): movimento ANNUALE per
-    COMUNE × ambito, split italiani/stranieri. Numerazione: Grafico 4-6, Tabella 2."""
+    COMUNE × ambito, split italiani/stranieri. Numerazione: Grafico 5-7, Tabella 2."""
     provs = ["Tutta la Toscana"] + L.tosc_provinces()
     prov = st.selectbox("Provincia", provs, key="tosc_prov")
     scope = None if prov == "Tutta la Toscana" else prov
@@ -1529,15 +1529,15 @@ def _render_toscana_local_block():
          "hint": "su presenze totali"},
         {"label": "Comune n.1", "value": k.get("top_comune") or "—", "hint": "quota su presenze"},
     ])
-    st.markdown(f"**Grafico 4 — Presenze annuali per origine ({prov})**")
+    st.markdown(f"**Grafico 5 — Presenze annuali per origine ({prov})**")
     fig = L.chart_tosc_yearly(scope)
     if fig:
         st.plotly_chart(fig, use_container_width=True)
-    st.markdown(f"**Grafico 5 — Comuni per presenze ({prov}, {k['anno']})**")
+    st.markdown(f"**Grafico 6 — Comuni per presenze ({prov}, {k['anno']})**")
     fig = L.chart_tosc_top_comuni(scope, year=k["anno"], top=12)
     if fig:
         st.plotly_chart(fig, use_container_width=True)
-    st.markdown(f"**Grafico 6 — Presenze per ambito turistico ({prov}, {k['anno']})**")
+    st.markdown(f"**Grafico 7 — Presenze per ambito turistico ({prov}, {k['anno']})**")
     fig = L.chart_tosc_ambiti(scope, year=k["anno"], top=12)
     if fig:
         st.plotly_chart(fig, use_container_width=True)
@@ -1557,7 +1557,7 @@ def _render_toscana_local_block():
 
 def _render_sardegna_local_block():
     """Dettaglio locale per la Sardegna (Osservatorio, export manuale): movimento MENSILE per
-    comune × mercato estero. La fonte più ricca del motore. Numerazione: Grafico 4-6, Tabella 2."""
+    comune × mercato estero. La fonte più ricca del motore. Numerazione: Grafico 5-7, Tabella 2."""
     provs = ["Tutta la Sardegna"] + L.sard_provinces()
     prov = st.selectbox("Zona/Provincia", provs, key="sard_prov")
     scope = None if prov == "Tutta la Sardegna" else prov
@@ -1573,15 +1573,15 @@ def _render_sardegna_local_block():
          "hint": "su presenze totali"},
         {"label": "Comune n.1", "value": k.get("top_comune") or "—", "hint": "quota su presenze"},
     ])
-    st.markdown(f"**Grafico 4 — Presenze mensili ({prov})**")
+    st.markdown(f"**Grafico 5 — Presenze mensili ({prov})**")
     fig = L.chart_sard_flussi_mensili(scope)
     if fig:
         st.plotly_chart(fig, use_container_width=True)
-    st.markdown(f"**Grafico 5 — Top mercati esteri ({prov}, {k['anno']})**")
+    st.markdown(f"**Grafico 6 — Top mercati esteri ({prov}, {k['anno']})**")
     fig = L.chart_sard_markets(scope, year=k["anno"], top=12)
     if fig:
         st.plotly_chart(fig, use_container_width=True)
-    st.markdown(f"**Grafico 6 — Comuni per presenze ({prov}, {k['anno']})**")
+    st.markdown(f"**Grafico 7 — Comuni per presenze ({prov}, {k['anno']})**")
     fig = L.chart_sard_top_comuni(scope, year=k["anno"], top=12)
     if fig:
         st.plotly_chart(fig, use_container_width=True)
@@ -1662,6 +1662,28 @@ def page_base_dati_regionale():
     if lfig:
         st.markdown("**Grafico 3 — Posti letto per anno (ISTAT capacità)**")
         st.plotly_chart(lfig, use_container_width=True)
+
+    # ── DOMANDA DEI RESIDENTI (scopo del viaggio) — ISTAT Viaggi e Vacanze, tutte le regioni ──
+    tk = L.turnot_kpi(code)
+    if tk.get("anno"):
+        st.markdown("**🧳 Domanda dei residenti — perché si viaggia** (ISTAT Viaggi e Vacanze, "
+                    "notti dei residenti per regione di destinazione)")
+        L.kpi_row([
+            {"label": f"Notti residenti ({tk['anno']})", "value": _it_num(tk["notti"])},
+            {"label": "Quota vacanza lunga",
+             "value": f"{tk['quota_vac_lunga']:.0f}%" if tk["quota_vac_lunga"] is not None else "—",
+             "hint": "4+ notti"},
+            {"label": "Quota lavoro",
+             "value": f"{tk['quota_lavoro']:.0f}%" if tk["quota_lavoro"] is not None else "—",
+             "hint": "vs vacanza"},
+        ])
+        st.markdown("**Grafico 4 — Notti dei residenti per scopo del viaggio (per anno)**")
+        tfig = L.chart_turnot_purpose(code)
+        if tfig:
+            st.plotly_chart(tfig, use_container_width=True)
+        st.caption("Fonte: ISTAT · Viaggi e Vacanze (DCCV_TURNOT) · indagine campionaria (valori stimati) · "
+                   "notti dei RESIDENTI in Italia per regione di destinazione e scopo. Universo diverso "
+                   "dal movimento negli esercizi (lato domanda).")
 
     # ── DETTAGLIO LOCALE ──────────────────────────────────────────
     st.divider()

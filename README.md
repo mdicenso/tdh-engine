@@ -290,6 +290,25 @@ per aggiornare: scarica i nuovi CSV nella cartella e ricostruisci con
 `update_check.py`→`apply_update("sardegna")` (o `fetch_sardegna_manual(refresh=True)`), poi commit.
 Vedi memoria *sardegna-fonti-turismo-accesso*. **Trentino/ISPAT** resta scartato (solo HTML, nessun export).
 
+**Fonte ISTAT Viaggi e Vacanze — DOMANDA dei residenti per scopo (tutte le regioni)**: dataflow SDMX
+`68_357_DF_DCCV_TURNOT_CAPI_1` (`esploradati.istat.it`, SDMX-CSV). È un **universo diverso** da tutte le
+altre fonti (che misurano il *movimento negli esercizi*): qui sono le **notti dei RESIDENTI** per **regione
+di DESTINAZIONE × scopo del viaggio** (lavoro / vacanza lunga 4+ notti / vacanza breve), annuale **dal 2014**,
+**multi-regione** (codifica NUTS storica come `regions.py`). Risponde a *"perché* si va in una regione", che
+il motore non aveva. Selezione dei 6 flussi SDMX proposti: gli altri 5 (`DCSC_TUR_3/4/5/13`) sono risultati
+**lo stesso cubo `DCSC_TUR` che già leggiamo via `_7`** (DSD e dati identici) → ridondanti o solo fette
+nazionali; TURNOT è l'unico genuinamente nuovo e regionale. Reader in `real_sources`:
+`fetch_turnot_purpose` (→ `.cache/istat_turnot_scopo_regione.csv`, valori pubblicati in migliaia →
+×1000 notti assolute; gerarchia `TRIP=BUS+HOL`, `HOL=HOLL+HOLS`), `fetch_turnot_latest_year`. Helper in
+`tdhlib`: `turnot_purpose`, `turnot_pivot` (ricava `BUS` mancante = `TRIP−HOL`), `turnot_kpi`,
+`chart_turnot_purpose`. In **Base Dati Regionale** è il **Grafico 4** della sintesi (KPI notti residenti /
+quota vacanza lunga / quota lavoro + barre impilate per anno), region-aware per tutte le regioni; i blocchi
+locali sono così passati a **Grafico 5-7**. Registrata in Gestione dati (`builtin_sources`,
+`series_coverage`) e in matrice (riga *Domanda residenti per SCOPO (destinazione)*, ✅ regionale). Nota: è
+un'**indagine campionaria** (valori stimati), da non sommare al movimento negli esercizi. **Auto-refresh**:
+fonte `turnot` in `update_check.py` (annuale, skip intelligente; esclusa dallo scheduler `--fast` come le
+altre fonti ISTAT — si aggiorna con un `--apply` completo o a mano).
+
 ### Aggiornamento automatico delle fonti (scheduler)
 
 `update_check.py` ha un entry-point CLI: senza argomenti fa **solo il controllo** (probe leggero, elenca
