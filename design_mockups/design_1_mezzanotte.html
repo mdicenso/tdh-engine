@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TDH · Design 1 — Mezzanotte (console analytics)</title>
+<style>
+/* ============ DESIGN 1 · "MEZZANOTTE" — console dati premium, tema scuro deliberato ============ */
+:root{
+  --bg:#0b1220;            /* ink navy, non nero puro */
+  --panel:#111b2e;
+  --panel-2:#16233b;
+  --line:rgba(148,178,222,.14);
+  --ink:#eaf1fb;           /* testo */
+  --mut:#8ea3c4;           /* muted, hue verso l'accento */
+  --accent:#22d3ee;        /* cyan brand elevato */
+  --accent-2:#3b82f6;
+  --good:#34d399; --warn:#fbbf24; --crit:#fb7185;
+  --r:14px;
+  --sans:ui-sans-serif,"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --mono:ui-monospace,"Cascadia Code","SF Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:
+   radial-gradient(1100px 500px at 88% -8%,rgba(59,130,246,.18),transparent 60%),
+   radial-gradient(900px 500px at -5% 10%,rgba(34,211,238,.12),transparent 55%),
+   var(--bg);
+  color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.app{display:grid;grid-template-columns:76px 1fr;min-height:100vh}
+/* ---- rail icone ---- */
+.rail{background:linear-gradient(180deg,rgba(255,255,255,.03),transparent);border-right:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 0}
+.logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;margin-bottom:14px;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#04121b;box-shadow:0 6px 18px rgba(34,211,238,.35)}
+.rail a{width:46px;height:42px;border-radius:11px;display:grid;place-items:center;color:var(--mut);
+  position:relative;transition:.15s}
+.rail a svg{width:21px;height:21px}
+.rail a:hover{color:var(--ink);background:var(--panel-2)}
+.rail a.on{color:var(--accent);background:rgba(34,211,238,.12)}
+.rail a.on::before{content:"";position:absolute;left:-0;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--accent)}
+.rail .sp{flex:1}
+/* ---- topbar ---- */
+.main{display:flex;flex-direction:column;min-width:0}
+.top{display:flex;align-items:center;gap:16px;padding:16px 26px;border-bottom:1px solid var(--line);
+  position:sticky;top:0;background:rgba(11,18,32,.82);backdrop-filter:blur(10px);z-index:5}
+.brand b{font-weight:700;letter-spacing:.2px}
+.brand span{display:block;font-size:11px;color:var(--mut);letter-spacing:.18em;text-transform:uppercase}
+.grow{flex:1}
+.pillsel,.search,.btn{background:var(--panel);border:1px solid var(--line);color:var(--ink);
+  border-radius:10px;padding:9px 13px;font:inherit;display:flex;align-items:center;gap:9px}
+.search{color:var(--mut);min-width:220px}
+.pillsel{cursor:pointer}.pillsel b{color:var(--accent)}
+.btn{cursor:pointer;color:var(--mut)} .btn:hover{color:var(--ink);border-color:var(--accent)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 4px rgba(52,211,153,.15)}
+/* ---- contenuto ---- */
+.wrap{padding:24px 26px 40px;max-width:1240px}
+.crumb{color:var(--mut);font-size:12px;letter-spacing:.04em;margin-bottom:4px}
+h1{font-size:24px;margin:0 0 2px;font-weight:750;letter-spacing:-.01em;text-wrap:balance}
+.lead{color:var(--mut);margin:0 0 20px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.kpi{background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--line);
+  border-radius:var(--r);padding:16px 16px 14px;position:relative;overflow:hidden}
+.kpi .lab{color:var(--mut);font-size:12px;letter-spacing:.03em;display:flex;align-items:center;gap:7px}
+.kpi .val{font-family:var(--mono);font-size:27px;font-weight:600;margin-top:9px;font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:12px;margin-top:5px;display:flex;align-items:center;gap:6px}
+.up{color:var(--good)} .dn{color:var(--crit)}
+.kpi .spark{position:absolute;right:12px;bottom:10px;opacity:.6}
+.grid2{display:grid;grid-template-columns:1.55fr 1fr;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+.card h3{margin:0 0 2px;font-size:14.5px;font-weight:650}
+.card .cap{color:var(--mut);font-size:12px;margin:0 0 14px}
+.legend{display:flex;gap:16px;color:var(--mut);font-size:12px;margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+/* barre orizzontali */
+.bars{display:flex;flex-direction:column;gap:11px;margin-top:6px}
+.bar{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:12px;font-size:13px}
+.bar .tk{height:10px;border-radius:6px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.bar .n{font-family:var(--mono);color:var(--mut);font-variant-numeric:tabular-nums}
+/* tabella ranking */
+table{width:100%;border-collapse:collapse;margin-top:6px;font-size:13px}
+th{text-align:left;color:var(--mut);font-weight:500;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:11px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.pill{font-size:11.5px;padding:3px 10px;border-radius:999px;font-weight:600;border:1px solid transparent}
+.pill.a{color:var(--good);background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3)}
+.pill.m{color:var(--warn);background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.3)}
+.mt{margin-top:14px}
+@media (max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+a:focus-visible,.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- RAIL -->
+  <nav class="rail" aria-label="Navigazione">
+    <div class="logo" title="Turism Data Hub">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-14 4 9 3-5 5 10"/></svg>
+    </div>
+    <a class="on" title="Sintesi" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg></a>
+    <a title="Italia / mappa" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 3l6 2 6-2v16l-6 2-6-2-6 2V5z"/><path d="M9 3v16M15 5v16"/></svg></a>
+    <a title="Mercati esteri" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></a>
+    <a title="Analisi" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 19V5M4 19h16"/><path d="M8 16l3-4 3 2 4-6"/></svg></a>
+    <a title="Affitti brevi" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 10l8-6 8 6"/><path d="M6 9v11h12V9"/><rect x="10" y="13" width="4" height="7"/></svg></a>
+    <a title="Azioni" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></a>
+    <div class="sp"></div>
+    <a title="Assistente" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l.9-5A8 8 0 1 1 21 12z"/></svg></a>
+    <a title="Gestione dati" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><ellipse cx="12" cy="5.5" rx="7" ry="2.8"/><path d="M5 5.5v13c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8v-13"/><path d="M5 12c0 1.6 3.1 2.8 7 2.8s7-1.2 7-2.8"/></svg></a>
+  </nav>
+
+  <div class="main">
+    <!-- TOPBAR -->
+    <header class="top">
+      <div class="brand"><b>Turism Data Hub</b><span>Portale nazionale del turismo</span></div>
+      <div class="grow"></div>
+      <div class="search"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>Cerca regione, mercato…</div>
+      <button class="pillsel"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.3-7-11a7 7 0 0 1 14 0c0 4.7-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>Regione&nbsp;·&nbsp;<b>Toscana</b> ▾</button>
+      <button class="btn" title="Stato dati"><span class="dot"></span>dati aggiornati</button>
+    </header>
+
+    <div class="wrap">
+      <div class="crumb">Panoramica › Regione</div>
+      <h1>Toscana — quadro turistico</h1>
+      <p class="lead">Presenze, capacità e mercati esteri della regione selezionata. Dati ISTAT · Banca d'Italia · Eurostat.</p>
+
+      <!-- KPI -->
+      <section class="kpis">
+        <div class="kpi"><div class="lab"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="var(--accent)" stroke-width="1.8"><path d="M3 17l5-5 4 3 8-8"/></svg>Presenze straniere</div><div class="val">2.418.905</div><div class="sub up">▲ 6,2% <span style="color:var(--mut)">vs mese prec.</span></div></div>
+        <div class="kpi"><div class="lab">Posti letto</div><div class="val">540.312</div><div class="sub" style="color:var(--mut)">capacità 2024</div></div>
+        <div class="kpi"><div class="lab">Spesa straniera</div><div class="val">6.842 M€</div><div class="sub"><span class="pill a">#3 su 21</span></div></div>
+        <div class="kpi"><div class="lab">Mercati esteri</div><div class="val">61</div><div class="sub" style="color:var(--mut)">paesi tracciati</div></div>
+      </section>
+
+      <div class="grid2">
+        <!-- AREA CHART -->
+        <div class="card">
+          <h3>Presenze mensili · totale e straniere</h3>
+          <p class="cap">Serie ISTAT · ultimi 12 mesi</p>
+          <svg viewBox="0 0 640 220" width="100%" height="210" preserveAspectRatio="none" role="img" aria-label="grafico presenze mensili">
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22d3ee" stop-opacity=".45"/><stop offset="1" stop-color="#22d3ee" stop-opacity="0"/></linearGradient>
+            </defs>
+            <g stroke="rgba(148,178,222,.12)"><line x1="0" y1="40" x2="640" y2="40"/><line x1="0" y1="100" x2="640" y2="100"/><line x1="0" y1="160" x2="640" y2="160"/></g>
+            <path d="M0,175 60,168 120,150 180,120 240,92 300,60 360,38 420,52 480,86 540,120 600,150 640,160 L640,220 0,220 Z" fill="url(#g1)"/>
+            <path d="M0,175 60,168 120,150 180,120 240,92 300,60 360,38 420,52 480,86 540,120 600,150 640,160" fill="none" stroke="#22d3ee" stroke-width="2.5"/>
+            <path d="M0,196 60,193 120,188 180,176 240,160 300,138 360,120 420,130 480,152 540,172 600,186 640,190" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="1 6" stroke-linecap="round"/>
+            <circle cx="360" cy="38" r="5" fill="#22d3ee" stroke="#0b1220" stroke-width="2.5"/>
+          </svg>
+          <div class="legend"><span><i style="background:#22d3ee"></i>Straniere</span><span><i style="background:#3b82f6"></i>Totale</span><span style="margin-left:auto;color:var(--accent)">picco · Agosto</span></div>
+        </div>
+        <!-- BARS -->
+        <div class="card">
+          <h3>Top mercati esteri</h3>
+          <p class="cap">Presenze per paese · 2024</p>
+          <div class="bars">
+            <div class="bar"><span>Germania</span><span class="tk" style="width:92%"></span><span class="n">2,7M</span></div>
+            <div class="bar"><span>Francia</span><span class="tk" style="width:58%"></span><span class="n">1,3M</span></div>
+            <div class="bar"><span>Svizzera</span><span class="tk" style="width:40%"></span><span class="n">907k</span></div>
+            <div class="bar"><span>Regno Unito</span><span class="tk" style="width:31%"></span><span class="n">714k</span></div>
+            <div class="bar"><span>Paesi Bassi</span><span class="tk" style="width:24%"></span><span class="n">548k</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="card mt">
+        <h3>Ranking mercati · dove investire</h3>
+        <p class="cap">Momentum del segnale × valore economico × fattibilità</p>
+        <table>
+          <thead><tr><th>Mercato</th><th>Momentum</th><th>Valore €/turista</th><th>Voli diretti</th><th>Raccomandazione</th></tr></thead>
+          <tbody>
+            <tr><td>Germania</td><td class="up">▲ +14%</td><td>694 €</td><td>3 rotte</td><td><span class="pill a">Aumentare</span></td></tr>
+            <tr><td>Paesi Bassi</td><td class="up">▲ +9%</td><td>512 €</td><td>1 rotta</td><td><span class="pill a">Aumentare</span></td></tr>
+            <tr><td>Regno Unito</td><td style="color:var(--mut)">▲ +3%</td><td>729 €</td><td>2 rotte</td><td><span class="pill m">Mantenere</span></td></tr>
+            <tr><td>Stati Uniti</td><td class="dn">▼ −2%</td><td>1.566 €</td><td>0 dirette</td><td><span class="pill m">Mantenere</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

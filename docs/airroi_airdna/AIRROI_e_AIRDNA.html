@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AirROI &amp; AirDNA — analisi fonti STR per TDH</title>
+<style>
+  :root{--teal:#0e7490;--amber:#f59e0b;--green:#16a34a;--red:#dc2626;--ink:#0f172a;--mut:#475569;--line:#e2e8f0;--bg:#f8fafc}
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);
+       max-width:1080px;margin:0 auto;padding:28px 22px 64px;line-height:1.55;background:#fff}
+  h1{font-size:1.7rem;margin:0 0 .2em;color:var(--teal)}
+  h2{font-size:1.25rem;margin:1.8em 0 .5em;padding-bottom:.25em;border-bottom:2px solid var(--line)}
+  h3{font-size:1.05rem;margin:1.2em 0 .3em}
+  .sub{color:var(--mut);margin:0 0 1.2em}
+  table{border-collapse:collapse;width:100%;margin:.6em 0 1.2em;font-size:.9rem}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--bg);font-weight:600}
+  tbody tr:nth-child(even){background:#fbfdfe}
+  code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:.85em}
+  .tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.78rem;font-weight:600}
+  .g{background:#dcfce7;color:#166534}.y{background:#fef9c3;color:#854d0e}.r{background:#fee2e2;color:#991b1b}
+  .box{border:1px solid var(--line);border-left:4px solid var(--teal);background:var(--bg);
+       padding:12px 16px;border-radius:8px;margin:1em 0}
+  .warn{border-left-color:var(--amber)}
+  .cost{font-weight:700;color:var(--teal);white-space:nowrap}
+  .small{font-size:.82rem;color:var(--mut)}
+  a{color:var(--teal)}
+  ul{margin:.3em 0 .8em}
+</style>
+</head>
+<body>
+
+<h1>AirROI &amp; AirDNA — fonti dati affitti brevi (STR)</h1>
+<p class="sub">Analisi per il TDH Engine · aggiornata all'11/07/2026 · <span class="small">i prezzi cambiano spesso: verificare sempre le pagine ufficiali prima di acquistare.</span></p>
+
+<div class="box">
+<b>Contesto.</b> Il TDH diventerà un <b>prodotto privato da vendere</b> (non un'app pubblica). Questo sblocca le fonti a pagamento: servono dati sugli <b>affitti brevi a copertura nazionale</b> (tutte le regioni, la regione è una variabile) con metriche <b>reali</b> (occupazione, prezzo, ricavi), che <b>Inside Airbnb</b> (gratis, ma solo 7 città + 3 regioni e occupazione stimata) non copre.
+</div>
+
+<h2>1 · Riepilogo decisionale</h2>
+<table>
+<thead><tr><th>Criterio</th><th>Inside Airbnb</th><th>AirROI</th><th>AirDNA</th></tr></thead>
+<tbody>
+<tr><td>Copertura Italia</td><td>7 città + 3 regioni (no Abruzzo)</td><td><b>~100 mercati</b> (città/comune), tutte le regioni</td><td>Ampia (anche mercati piccoli) + storico</td></tr>
+<tr><td>Metriche</td><td>annunci, prezzo annuncio, occupazione <i>proxy</i></td><td><b>reali</b>: occ., ADR, RevPAR, ricavi, ALOS, stagionalità</td><td><b>reali</b> + benchmarking + forecast</td></tr>
+<tr><td>Accesso</td><td>CSV liberi</td><td>API pay-as-you-go + web</td><td>abbonamento SaaS + API enterprise</td></tr>
+<tr><td>Costo</td><td><span class="tag g">gratis</span></td><td><span class="tag g">~$5-10 / snapshot Italia</span></td><td><span class="tag y">$125-600/mese o enterprise</span></td></tr>
+<tr><td>Licenza</td><td><span class="tag g">CC BY 4.0 (aperta)</span></td><td><span class="tag r">proprietaria, no redistribuzione, cache 30gg</span></td><td><span class="tag r">proprietaria/chiusa</span></td></tr>
+<tr><td>Adatta a</td><td>base pubblica gratuita</td><td><b>miglior costo/beneficio per copertura nazionale</b></td><td>solo con budget / esigenze enterprise</td></tr>
+</tbody>
+</table>
+
+<h2>2 · Vincolo di licenza (decisivo)</h2>
+<p>Entrambe sono <b>proprietarie</b>. Dai Termini di Servizio di <b>AirROI</b> (verificati):</p>
+<ul>
+<li>vietato «<i>distribute, publish, display … the Data, in whole or substantial part</i>» e «<i>republish … for external use or circulation without prior express written permission</i>»;</li>
+<li>cache/conservazione dati API <b>max 30 giorni</b> + cancellazione a fine accesso;</li>
+<li>licenza <b>Commercial</b> = uso <b>interno</b> (analisi, ricerca di mercato).</li>
+</ul>
+<div class="box warn">
+<b>Conseguenze per il TDH:</b>
+<ul style="margin-bottom:0">
+<li>❌ i dati reali <b>non si committano</b> nel repo né si lasciano su un sito pubblico;</li>
+<li>✅ utilizzabili nel <b>deploy privato</b> (chiamata a runtime con chiave, cache ≤30gg, uso interno);</li>
+<li>⚠️ per <b>vendere</b> a clienti terzi un portale che mostra questi dati serve una <b>licenza di redistribuzione / OEM</b> da negoziare col fornitore (la licenza base non basta).</li>
+</ul>
+</div>
+
+<h2>3 · Schema dati (metriche di mercato)</h2>
+<p>Entrambe espongono lo stesso tipo di metriche a livello di <b>mercato</b> (paese › regione › città/comune):</p>
+<table>
+<thead><tr><th>Campo</th><th>Significato</th></tr></thead>
+<tbody>
+<tr><td><code>occupancy</code></td><td>tasso di occupazione (es. 0,45 = 45%)</td></tr>
+<tr><td><code>adr</code> / <code>avg_rate</code></td><td>prezzo medio a notte (Average Daily Rate)</td></tr>
+<tr><td><code>revpar</code></td><td>ricavo per notte disponibile (= occ × ADR)</td></tr>
+<tr><td><code>revenue</code></td><td>ricavo annuo per annuncio</td></tr>
+<tr><td><code>active_listings</code></td><td>numero di annunci attivi</td></tr>
+<tr><td><code>avg_length_of_stay</code></td><td>permanenza media (notti)</td></tr>
+<tr><td><code>booking_lead_time</code></td><td>anticipo medio di prenotazione</td></tr>
+<tr><td><code>future_pacing</code></td><td>occupazione futura già prenotata (andamento prospettico)</td></tr>
+<tr><td>+ breakdown mensile</td><td>stagionalità (occupazione/ADR per mese)</td></tr>
+</tbody>
+</table>
+
+<h2>4 · Costo per coprire TUTTA ITALIA</h2>
+<p><b>AirROI</b> si paga <b>per mercato</b> (aggregato), non per annuncio. Con ~100 mercati italiani a livello città/comune e le chiamate <code>markets/metrics/*</code> a $0,05-0,10:</p>
+<ul>
+<li>snapshot nazionale una tantum: <span class="cost">~$5-10</span> (100 mercati × $0,05-0,10);</li>
+<li>aggiornamento trimestrale: <span class="cost">~$20-40/anno</span> (dimezzabile col piano «Preferred Partner»);</li>
+<li>deposito minimo iniziale: <b>$10</b>.</li>
+</ul>
+<p><b>AirDNA</b> per la copertura nazionale via API è <b>enterprise/su preventivo</b> (ordini di grandezza superiori); gli abbonamenti SaaS (Research/Host) sono pensati per singoli host/gestori, non per estrarre dati nazionali via API.</p>
+<p class="box"><b>Verdetto costo/beneficio: AirROI vince nettamente</b> per la copertura nazionale a metriche reali. AirDNA conviene solo se servono profondità storica/benchmarking enterprise e c'è budget.</p>
+
+<h2>5 · Lista dei feed / prodotti acquistabili</h2>
+
+<h3>AirROI — API pay-as-you-go <span class="small">(prezzo per chiamata, tier Standard; «Preferred Partner» −50%)</span></h3>
+<table>
+<thead><tr><th>Endpoint / prodotto</th><th>Descrizione</th><th>Costo</th></tr></thead>
+<tbody>
+<tr><td>Market Search / Lookup</td><td>trova il mercato per nome o coordinate (per ottenerne l'ID)</td><td class="cost">$0,01</td></tr>
+<tr><td>Market Summary</td><td>scheda sintetica del mercato (metriche chiave aggregate)</td><td class="cost">$0,05-0,10</td></tr>
+<tr><td>Market Occupancy</td><td>tasso di occupazione del mercato (con storico mensile)</td><td class="cost">$0,05-0,10</td></tr>
+<tr><td>Market ADR</td><td>prezzo medio a notte del mercato</td><td class="cost">$0,05-0,10</td></tr>
+<tr><td>Market RevPAR</td><td>ricavo per notte disponibile</td><td class="cost">$0,05-0,10</td></tr>
+<tr><td>Market Revenue</td><td>ricavi del mercato (annuo per annuncio)</td><td class="cost">$0,05-0,10</td></tr>
+<tr><td>Market Active Listings</td><td>numero di annunci attivi nel mercato</td><td class="cost">$0,05-0,10</td></tr>
+<tr><td>Market Length of Stay</td><td>permanenza media</td><td class="cost">$0,05-0,10</td></tr>
+<tr><td>Market Booking Lead Time</td><td>anticipo medio di prenotazione</td><td class="cost">$0,05-0,10</td></tr>
+<tr><td>Market Min Nights</td><td>soglia minima notti prevalente</td><td class="cost">$0,05-0,10</td></tr>
+<tr><td>Market Future Pacing</td><td>occupazione futura già prenotata (prospettica)</td><td class="cost">$0,10-0,20</td></tr>
+<tr><td>Listing — dettaglio singolo</td><td>dati di un singolo annuncio</td><td class="cost">$0,05-0,10</td></tr>
+<tr><td>Listing — metriche/tariffe</td><td>performance e calendario tariffe di un annuncio</td><td class="cost">$0,05-0,10</td></tr>
+<tr><td>Listing — ricerca (raggio/poligono)</td><td>elenco annunci in un'area</td><td class="cost">$0,25-0,50</td></tr>
+<tr><td>Listing — batch</td><td>estrazione massiva di annunci</td><td class="cost">$0,50-1,00</td></tr>
+<tr><td>Calculator / Estimate</td><td>stima ricavi di una proprietà (tipo Rentalizer)</td><td class="cost">$0,10-0,20</td></tr>
+<tr><td>Bulk Dataset Download</td><td>dataset completo su richiesta (per mercato/paese)</td><td class="cost">su preventivo</td></tr>
+<tr><td>Strumenti web / Data Portal</td><td>consultazione online delle schede-mercato</td><td class="cost">gratis</td></tr>
+</tbody>
+</table>
+<p class="small">Per il TDH servono gli endpoint <b>Market</b> (occupancy/ADR/RevPAR/revenue/active-listings…): ~100 mercati italiani → ~$5-10 a snapshot. URL: <a href="https://www.airroi.com/api">airroi.com/api</a> · <a href="https://www.airroi.com/api/documentation">documentazione</a> · <a href="https://www.airroi.com/api/pricing">prezzi</a> · <a href="https://www.airroi.com/airbnb-data/italy">mercati Italia</a></p>
+
+<h3>AirDNA — piani (SaaS) e API</h3>
+<table>
+<thead><tr><th>Piano / prodotto</th><th>Cosa include</th><th>API</th><th>Costo</th></tr></thead>
+<tbody>
+<tr><td>Free</td><td>Rentalizer limitato (calcolatore ricavi) + market insights limitati</td><td>No</td><td class="cost">$0</td></tr>
+<tr><td>Research</td><td>calcolatore ricavi, dati storici, domanda futura, performance, top markets</td><td>No</td><td class="cost">$125/mese · $400/anno</td></tr>
+<tr><td>Host</td><td>tutto Research + benchmarking, calendario tariffe competitor, PMS Uplisting (3 annunci)</td><td>No</td><td class="cost">$150/mese · $600/anno</td></tr>
+<tr><td>Property Manager</td><td>lead, benchmarking, forecast professionali, espansione mercati</td><td>parziale</td><td class="cost">su richiesta</td></tr>
+<tr><td>AirDNA Adapt</td><td>raccomandazioni di prezzo dinamiche</td><td>—</td><td class="cost">n/d</td></tr>
+<tr><td>Enterprise / Market Data API</td><td><b>dati integrati via API a scala</b> (ciò che servirebbe al TDH): mercati, metriche, storico</td><td>Sì</td><td class="cost">su preventivo (~$250-500/mese o a volume)</td></tr>
+</tbody>
+</table>
+<p class="small">Modello precedente «per dimensione mercato» ancora citato da alcune fonti: Città ~$12, Stato ~$179, Paese ~$299, Global ~$599 al mese. URL: <a href="https://www.airdna.co/pricing">airdna.co/pricing</a> · <a href="https://www.airdna.co/data/api">API/Enterprise</a></p>
+
+<h2>6 · Raccomandazione &amp; prossimi passi</h2>
+<ol>
+<li><b>Base gratuita</b>: tenere <b>Inside Airbnb</b> (già integrata) come fondo pubblico/gratuito.</li>
+<li><b>Copertura nazionale reale</b>: <b>AirROI</b> è la scelta di miglior rapporto costo/beneficio (~$5-10 per un ritratto di tutta Italia con occupazione/ricavi reali).</li>
+<li><b>AirDNA</b>: valutare solo se servono storico profondo/benchmarking enterprise e c'è budget dedicato.</li>
+<li><b>Prima di attivare l'API reale</b>: (a) registrazione + chiave API; (b) reader che sostituisce i dati d'esempio (cache ≤30gg, chiave nei <i>secrets</i>, dato non committato, solo deploy privato); (c) <b>chiarire con AirROI/AirDNA la licenza di redistribuzione/OEM</b> se il portale sarà venduto a terzi.</li>
+</ol>
+<p class="small">Il front-end è già stato prototipato nel TDH nella pagina «STR Italia (anteprima)» con dati sintetici sullo stesso schema, pronto a ricevere i dati reali.</p>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+﻿Fornitore;Prodotto / Feed;Tipo;Descrizione;Costo;API;URL
+AirROI;Market Search / Lookup;Mercato (API);Trova il mercato per nome o coordinate (ottiene l'ID);$0,01 a chiamata;Si;https://www.airroi.com/api
+AirROI;Market Summary;Mercato (API);Scheda sintetica del mercato con metriche chiave aggregate;$0,05-0,10 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Market Occupancy;Mercato (API);Tasso di occupazione del mercato (con storico mensile);$0,05-0,10 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Market ADR;Mercato (API);Prezzo medio a notte (Average Daily Rate) del mercato;$0,05-0,10 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Market RevPAR;Mercato (API);Ricavo per notte disponibile (occ x ADR);$0,05-0,10 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Market Revenue;Mercato (API);Ricavo del mercato (annuo per annuncio);$0,05-0,10 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Market Active Listings;Mercato (API);Numero di annunci attivi nel mercato;$0,05-0,10 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Market Length of Stay;Mercato (API);Permanenza media (notti);$0,05-0,10 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Market Booking Lead Time;Mercato (API);Anticipo medio di prenotazione;$0,05-0,10 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Market Min Nights;Mercato (API);Soglia minima notti prevalente;$0,05-0,10 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Market Future Pacing;Mercato (API);Occupazione futura gia prenotata (prospettica);$0,10-0,20 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Listing - dettaglio singolo;Annuncio (API);Dati di un singolo annuncio;$0,05-0,10 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Listing - metriche/tariffe;Annuncio (API);Performance e calendario tariffe di un annuncio;$0,05-0,10 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Listing - ricerca (raggio/poligono);Annuncio (API);Elenco annunci in un'area geografica;$0,25-0,50 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Listing - batch;Annuncio (API);Estrazione massiva di annunci;$0,50-1,00 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Calculator / Estimate;Strumento (API);Stima ricavi di una proprieta (tipo Rentalizer);$0,10-0,20 a chiamata;Si;https://www.airroi.com/api/documentation
+AirROI;Bulk Dataset Download;Dataset;Dataset completo su richiesta (per mercato/paese);Su preventivo;No;https://www.airroi.com/data-portal/
+AirROI;Data Portal / strumenti web;Web;Consultazione online delle schede-mercato;Gratis;No;https://www.airroi.com/data-portal/
+AirROI;COPERTURA ITALIA (stima);Pacchetto d'uso;~100 mercati italiani via endpoint Market metrics;~$5-10 per snapshot nazionale (trim. ~$20-40/anno);Si;https://www.airroi.com/airbnb-data/italy
+AirDNA;Free;Piano SaaS;Rentalizer limitato + market insights limitati;$0;No;https://www.airdna.co/pricing
+AirDNA;Research;Piano SaaS;Calcolatore ricavi, dati storici, domanda futura, performance, top markets;$125/mese o $400/anno;No;https://www.airdna.co/pricing
+AirDNA;Host;Piano SaaS;Research + benchmarking, calendario tariffe competitor, PMS Uplisting (3 annunci);$150/mese o $600/anno;No;https://www.airdna.co/pricing
+AirDNA;Property Manager;Piano SaaS;Lead, benchmarking, forecast professionali, espansione mercati;Su richiesta;Parziale;https://www.airdna.co/pricing
+AirDNA;AirDNA Adapt;Strumento;Raccomandazioni di prezzo dinamiche;n/d;No;https://www.airdna.co/pricing
+AirDNA;Enterprise / Market Data API;API/Enterprise;Dati integrati via API a scala (mercati, metriche, storico) - cio che servirebbe al TDH;Su preventivo (~$250-500/mese o a volume);Si;https://www.airdna.co/data/api
+AirDNA;Modello per dimensione mercato (storico);Piano SaaS (legacy);Prezzo per ambito geografico (citato da alcune fonti);Citta ~$12, Stato ~$179, Paese ~$299, Global ~$599 al mese;No;https://www.airdna.co/pricing
