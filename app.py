@@ -26,6 +26,11 @@ import update_check as U
 st.set_page_config(page_title="Turism Data Hub", page_icon="⛰️", layout="wide",
                    initial_sidebar_state="expanded")
 L.inject_css()
+# Logo in testa (sopra il menu della sidebar) + icona quando la sidebar è chiusa.
+try:
+    st.logo("assets/tdh_logo.svg", size="large", icon_image="assets/tdh_icon.svg")
+except Exception:  # noqa: BLE001 (versioni Streamlit senza st.logo)
+    pass
 
 # Regione attiva: sempre presente in session_state (default «Italia» = vista d'insieme).
 st.session_state.setdefault("region_code", L.RG.NATIONAL)
@@ -43,9 +48,9 @@ if not L.check_access():
 
 # ──────────────────────────── BARRA LATERALE (controlli) ────────────────────────────
 with st.sidebar:
-    st.markdown("###### :material/landscape: &nbsp;TURISM DATA HUB")
-    st.caption("Controlli · uso interno · Indra")
-    # NB: il selettore Regione è stato spostato nella TOPBAR (in alto a destra).
+    # Il logo è in testa via st.logo() (sopra il menu). Qui restano i controlli.
+    st.caption("CONTROLLI")
+    # NB: il selettore Regione è nella TOPBAR (in alto a destra).
     st.radio("Modalità dati", [L.MODE_REAL, L.MODE_SYN], key="mode", index=0,
              help="Riguarda il motore dei mercati (pilastro «Cosa fare»). "
                   "Le viste descrittive usano sempre i dati reali ISTAT/BdI.")
@@ -1850,31 +1855,18 @@ def page_base_dati_regionale():
                 "(Open Data regionali).")
 
 
-_TOPBAR_BRAND = """
-<div style="display:flex;align-items:center;gap:12px">
-  <div style="width:40px;height:40px;border-radius:10px;background:#0e6b70;display:grid;
-              place-items:center;color:#fff;flex:none">
-    <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-14 4 9 3-5 5 10"/></svg>
-  </div>
-  <div>
-    <div style="font-size:1.08rem;font-weight:700;letter-spacing:-.01em;color:#10262a;line-height:1.12">Turism Data Hub</div>
-    <div style="font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:#8aa0a4">Portale nazionale del turismo</div>
-  </div>
-</div>"""
-
-
 def render_topbar():
-    """Barra superiore: brand/logo a sinistra, selettore Regione a destra (design Istituzionale)."""
-    left, right = st.columns([3, 1.15], vertical_alignment="center")
+    """Barra superiore: contesto a sinistra, selettore Regione a destra (design Istituzionale)."""
+    left, right = st.columns([3.4, 1.15], vertical_alignment="center")
     with left:
-        st.markdown(_TOPBAR_BRAND, unsafe_allow_html=True)
+        st.markdown("<div style='font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;"
+                    "color:#8aa0a4;font-weight:600;padding-top:6px'>Strumento ad uso interno · scala nazionale</div>",
+                    unsafe_allow_html=True)
     with right:
         _regn = L.RG.region_names()
         st.selectbox("📍 Regione", list(_regn), format_func=lambda c: _regn[c], key="region_code",
-                     label_visibility="collapsed",
                      help="Regione attiva su tutte le pagine multi-regione (anche cliccando la mappa in «Italia»).")
-    st.markdown("<div style='border-bottom:1px solid #e4ebec;margin:.35rem 0 1.1rem'></div>",
+    st.markdown("<div style='border-bottom:1px solid #e4ebec;margin:.1rem 0 1.1rem'></div>",
                 unsafe_allow_html=True)
 
 

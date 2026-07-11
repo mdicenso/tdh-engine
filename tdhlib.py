@@ -71,7 +71,8 @@ CSS = """<style>
     --accent:#0e6b70; --accent-ink:#0a4f53; --accent-soft:rgba(14,107,112,.10);
   }
   html, body, [class*="css"] { font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
-  .block-container { padding-top: 2rem; max-width: 1320px; }
+  /* spazio in alto sufficiente a non finire sotto l'header fisso di Streamlit (topbar tagliata) */
+  .block-container { padding-top: 3.9rem; max-width: 1320px; }
 
   /* Tipografia */
   h1 { color: var(--ink); font-weight: 700; font-size: 1.55rem; letter-spacing: -0.02em; }

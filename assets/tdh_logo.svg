@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="212" height="44" viewBox="0 0 212 44">
+  <rect x="2" y="4" width="36" height="36" rx="9" fill="#0e6b70"/>
+  <path d="M9 31 L17 15 L22 25 L25.5 19 L32 31" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="48" y="23" font-family="Segoe UI, Roboto, Arial, sans-serif" font-size="15.5" font-weight="700" fill="#10262a">Turism Data Hub</text>
+  <text x="48.5" y="36" font-family="Segoe UI, Roboto, Arial, sans-serif" font-size="8" letter-spacing="2.2" fill="#8aa0a4">PORTALE DEL TURISMO</text>
+</svg>
