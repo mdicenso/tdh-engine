@@ -272,16 +272,27 @@ da scrapare, nessun export).
 
 `update_check.py` ha un entry-point CLI: senza argomenti fa **solo il controllo** (probe leggero, elenca
 le fonti con dati nuovi, exit 10 se ce ne sono); con `--apply` **scarica davvero** nella cache le fonti
-aggiornabili (`refresh_all()`, salta le fonti `manual`/`ecb`), con **skip intelligente** sulle annuali.
+aggiornabili (`refresh_all()`, salta `manual`/`ecb`); con `--apply --fast` (usato dallo scheduler)
+aggiorna **solo le fonti territoriali con skip intelligente su server veloci** — **ASTAT, Lombardia,
+Toscana**: fanno un *probe leggero* e scaricano **solo se c'è davvero un anno/mese nuovo**. In `--fast`
+sono **escluse tutte le fonti ISTAT** (l'endpoint `esploradati.istat.it` è lento e a volte si appende su
+chiamate non interattive) e **Trends/Wikipedia** (rate-limited): quelle restano aggiornabili a mano da
+**«Gestione dati»**.
 
-Il lanciatore **`aggiorna_fonti.cmd`** (radice progetto) incatena il tutto per lo scheduler: `--apply` →
-`git add .cache` → se la cache è cambiata **commit + push** su GitHub (così il cruscotto su Streamlit
-Cloud si aggiorna da solo), altrimenti non fa nulla. Log in `data/update_scheduler.log`. È un file `.cmd`
-(cmd.exe), quindi non è toccato dal ConstrainedLanguage di PowerShell del PC; si può anche lanciare a mano
-col doppio click. È registrato nel **Task Scheduler di Windows** come task **«TDH Aggiorna Fonti»**,
-cadenza **settimanale** (lunedì mattina), che gira quando l'utente è connesso. Per gestirlo:
-`schtasks /Query /TN "TDH Aggiorna Fonti"`, eseguirlo subito `schtasks /Run /TN "TDH Aggiorna Fonti"`,
-rimuoverlo `schtasks /Delete /TN "TDH Aggiorna Fonti" /F`.
+Il lanciatore **`aggiorna_fonti.cmd`** (radice progetto) incatena il tutto per lo scheduler: forza
+`PYTHONIOENCODING=utf-8` (la console cp1252 va altrimenti in `UnicodeEncodeError` sui caratteri di stato)
+→ `update_check.py --apply --fast` → `git add` **chirurgico dei soli 4 file cache** di ASTAT/Lombardia/
+Toscana (per non trascinare nel commit altri file di cache sporcati da app/test) → se sono cambiati
+**commit + push** su GitHub (così il cruscotto su Streamlit Cloud si aggiorna da solo), altrimenti non fa
+nulla. Log in `data/update_scheduler.log`. È un file `.cmd` (cmd.exe), quindi non è toccato dal
+ConstrainedLanguage di PowerShell del PC; si può anche lanciare a mano col doppio click.
+
+**Task Scheduler di Windows**: task **«TDH Aggiorna Fonti»**, cadenza **settimanale** (lunedì 09:30), gira
+quando l'utente è connesso. ⚠️ Il Task Scheduler **non** lancia bene un `.cmd` il cui percorso contiene
+spazi/`@` (la cartella OneDrive del progetto), quindi il task punta a un **wrapper senza spazi**
+`C:\Users\mcenso\tdh_aggiorna_fonti.cmd` che con `call "…"` richiama il launcher vero nel progetto.
+Gestione: `schtasks /Query /TN "TDH Aggiorna Fonti"`, esecuzione immediata `schtasks /Run /TN "TDH
+Aggiorna Fonti"`, rimozione `schtasks /Delete /TN "TDH Aggiorna Fonti" /F`.
 
 > Regola di progetto: ad ogni modifica che cambia comportamento/metodo, aggiornare questo README.
 

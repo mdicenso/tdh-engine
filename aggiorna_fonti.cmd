@@ -12,6 +12,8 @@ setlocal enableextensions
 set "PROJ=C:\Users\mcenso\OneDrive - Indra\@_Desktop_ OLD\@@@_Appoggio AI\Work_Area\Programma Abruzzo\Motore Tourism Data HUB\TDH_Engine"
 set "PY=C:\Users\mcenso\tdh_venv\Scripts\python.exe"
 set "GIT=C:\Program Files\Git\cmd\git.exe"
+REM console cp1252 -> forza UTF-8 per i caratteri di stato (evita UnicodeEncodeError)
+set "PYTHONIOENCODING=utf-8"
 cd /d "%PROJ%"
 if not exist "data" mkdir "data"
 set "LOG=%PROJ%\data\update_scheduler.log"
@@ -21,12 +23,14 @@ echo ==================================================>>"%LOG%"
 echo [%DATE% %TIME%] TDH - aggiornamento automatico fonti>>"%LOG%"
 echo TDH: controllo e scarico eventuali dati nuovi nella cache...
 
-"%PY%" update_check.py --apply >>"%LOG%" 2>&1
+"%PY%" -u update_check.py --apply --fast >>"%LOG%" 2>&1
 
 REM pulizia del junk OneDrive che a volte disturba git
 del /f /s /q ".git\refs\desktop.ini" >nul 2>&1
 
-"%GIT%" add .cache >>"%LOG%" 2>&1
+REM commit CHIRURGICO: solo i 4 file cache gestiti da --fast (ASTAT/Lombardia/Toscana),
+REM cosi' non finiscono nel commit eventuali altri file di cache sporcati da test o app.
+"%GIT%" add .cache/astat_bolzano_flussi_mensili.csv .cache/astat_bolzano_capacita_categoria.csv .cache/lombardia_flussi_provincia_mese.csv .cache/toscana_movimento_comune_anno.csv >>"%LOG%" 2>&1
 "%GIT%" diff --cached --quiet
 set "CHANGED=%errorlevel%"
 

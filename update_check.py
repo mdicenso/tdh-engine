@@ -346,12 +346,14 @@ def refresh_approved_candidates() -> list[dict]:
     return out
 
 
-def refresh_all() -> list[dict]:
-    """Riscarica nella cache REALE tutte le fonti refreshabili (per lo schedulatore, modalità B):
-    fonti core + candidate APPROVATE. Le fonti 'manual' (BdI, Eurostat) vengono saltate."""
+def refresh_all(skip_live: set | None = None) -> list[dict]:
+    """Riscarica nella cache REALE le fonti refreshabili (per lo schedulatore, modalità B):
+    fonti core + candidate APPROVATE. Le fonti 'manual' (BdI, Eurostat) e 'ecb' sono sempre
+    saltate; `skip_live` aggiunge altri tipi da saltare (es. Trends/Wikipedia in modalità fast)."""
+    skip = {"manual", "ecb"} | (skip_live or set())  # ecb è sempre live, non ha cache
     out = []
     for s in SOURCES:
-        if s["live"] in ("manual", "ecb"):  # ecb è sempre live, non ha cache
+        if s["live"] in skip:
             continue
         r = apply_update(s["key"])
         out.append({"fonte": s["label"], **r})
@@ -369,9 +371,18 @@ if __name__ == "__main__":
         pass
     if "--apply" in sys.argv:
         # modalità B: riscarica davvero nella cache (lo schedulatore poi committa le modifiche)
-        print("Riscarico le fonti refreshabili nella cache…")
+        # --fast (per lo scheduler): aggiorna SOLO le fonti territoriali con "skip intelligente"
+        # su server veloci/affidabili — astat (ASTAT SDMX), lombardia (Socrata), toscana (CKAN):
+        # probe leggero + download solo se c'è davvero un anno/mese nuovo. Salta TUTTE le fonti
+        # ISTAT (esploradati.istat.it è lento/appeso per chiamate automatiche) e trends/wikipedia
+        # (rate-limited). Quelle restano aggiornabili a mano da «Gestione dati».
+        fast = "--fast" in sys.argv
+        skip = {"trends", "wikipedia", "istat_glob", "istat_presenze",
+                "istat_capacita", "istat_estero"} if fast else None
+        print("Riscarico le fonti refreshabili nella cache…"
+              + (" (modalità fast: escludo Trends/Wikipedia)" if fast else ""))
         ok = 0
-        for r in refresh_all():
+        for r in refresh_all(skip_live=skip):
             flag = "✓" if r.get("ok") else "✗"
             print(f"  {flag} {r['fonte']}: {r['msg']}")
             ok += int(bool(r.get("ok")))
