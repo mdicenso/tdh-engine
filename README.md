@@ -316,14 +316,18 @@ simulata; vedi anche la pagina di studio *Advisor Operatori*). Fonte aperta **CC
 Venezia, Bologna, Bergamo) + **3 regioni intere** (Puglia, Sicilia, Trentino-A.A.) — **niente Abruzzo**; è
 **region-independent** (selettore territorio proprio, non segue il selettore di regione). Gli URL cambiano
 ad ogni snapshot → il reader li **enumera dinamicamente** da `get-the-data` (auto-aggiornabile). Reader in
-`real_sources`: `fetch_str_market` (scarica i 10 `.gz`, ~80MB, e proietta in **3 cache aggregate compatte**
-committate — `str_airbnb_territorio.csv` / `_zona.csv` / `_roomtype.csv`; il grezzo per-annuncio NON è
-committato), `_str_italy_urls`, `fetch_str_latest_snapshot`. Metriche per territorio: **prezzo ADR** e
-**n. annunci** (prima battuta, mostrate in pagina) + già in cache occupazione-proxy (da `availability_365`),
-rating medio, % operatori multi-annuncio, % con licenza/CIR. Nota: `price` è dell'*annuncio* (non
-prenotazioni reali); i prezzi sono trattati come **EUR**; l'occupazione è un **proxy**. Helper in `tdhlib`:
-`str_territori`, `str_kpi`, `str_zone`, `str_roomtypes`, `chart_str_adr_territori`, `chart_str_zone`,
-`chart_str_roomtype`. Registrata in Gestione dati e in matrice (riga *Affitti brevi / STR*). **Auto-refresh**:
+`real_sources`: `fetch_str_market` (scarica i 10 `listings.csv.gz` + le `visualisations/reviews.csv`, ~300MB,
+e proietta in **4 cache aggregate compatte** committate — `str_airbnb_territorio.csv` / `_zona.csv` /
+`_roomtype.csv` / `_recensioni_mese.csv`; il grezzo per-annuncio NON è committato), `_str_italy_urls`,
+`fetch_str_latest_snapshot`. La pagina ha 5 grafici: **(1)** ADR a confronto tra territori, **(2)** zone con
+più annunci, **(3)** mix per tipo di alloggio, **(4)** *struttura del mercato* a confronto (% intero alloggio,
+% operatori professionali = host multi-annuncio, % con licenza/CIR), **(5)** *andamento nel tempo* = recensioni
+per mese come **proxy della domanda** (dal 2009: crescita + crollo COVID-2020; limite: bias di sopravvivenza).
+KPI: n. annunci, ADR mediano/medio + struttura (intero/professionali/licenza/occupazione-proxy). Nota: `price`
+è dell'*annuncio* (non prenotazioni reali), trattato come **EUR**; occupazione = **proxy** da `availability_365`.
+Helper in `tdhlib`: `str_territori`, `str_kpi`, `str_zone`, `str_roomtypes`, `str_reviews_monthly`,
+`chart_str_adr_territori`, `chart_str_zone`, `chart_str_roomtype`, `chart_str_struttura`, `chart_str_reviews`.
+Registrata in Gestione dati e in matrice (riga *Affitti brevi / STR*). **Auto-refresh**:
 fonte `str` in `update_check.py` (skip intelligente sulla data di snapshot; **esclusa dallo scheduler
 `--fast`** perché scarica ~80MB — si aggiorna con `--apply` completo o `fetch_str_market(refresh=True)`).
 

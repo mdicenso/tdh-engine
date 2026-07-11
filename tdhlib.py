@@ -1700,6 +1700,54 @@ def chart_str_roomtype(slug: str) -> go.Figure | None:
     return _layout(fig, h=300)
 
 
+_STR_REV_PATH = ".cache/str_airbnb_recensioni_mese.csv"
+
+
+@st.cache_data(show_spinner=False)
+def str_reviews_monthly() -> pd.DataFrame:
+    if not os.path.exists(_STR_REV_PATH):
+        return pd.DataFrame()
+    df = pd.read_csv(_STR_REV_PATH)
+    df["date"] = pd.to_datetime(df["mese"].astype(str) + "-01", errors="coerce")
+    return df
+
+
+def chart_str_struttura() -> go.Figure | None:
+    """Confronto tra territori su struttura del mercato: % intero alloggio, % operatori
+    professionali (multi-annuncio), % con licenza/CIR (barre orizzontali raggruppate)."""
+    df = str_territori()
+    if df.empty:
+        return None
+    d = df.sort_values("pct_licenza")
+    fig = go.Figure()
+    for col, color, lbl in [("pct_intero", "#0e7490", "Intero alloggio"),
+                            ("pct_multihost", "#f59e0b", "Operatori professionali"),
+                            ("pct_licenza", "#16a34a", "Con licenza/CIR")]:
+        if col in d.columns:
+            fig.add_bar(y=d["territorio"], x=d[col], orientation="h", name=lbl, marker_color=color,
+                        hovertemplate="<b>%{y}</b><br>" + lbl + ": %{x:.0f}%<extra></extra>")
+    fig.update_layout(barmode="group", legend=dict(orientation="h", y=1.08, x=0))
+    fig.update_xaxes(title="% degli annunci", range=[0, 100])
+    return _layout(fig, h=520)
+
+
+def chart_str_reviews(slug: str) -> go.Figure | None:
+    """Andamento nel tempo dell'attività: recensioni per mese del territorio (proxy della domanda)."""
+    df = str_reviews_monthly()
+    if df.empty:
+        return None
+    d = df[df["slug"] == slug].dropna(subset=["date"]).sort_values("date")
+    if d.empty:
+        return None
+    fig = go.Figure(go.Scatter(x=d["date"], y=d["n_recensioni"], mode="lines",
+                               line=dict(color="#0e7490", width=1.8),
+                               fill="tozeroy", fillcolor="rgba(14,116,144,0.08)",
+                               hovertemplate="%{x|%m/%Y}<br>%{y:,.0f} recensioni<extra></extra>"))
+    fig.update_yaxes(title="recensioni / mese")
+    fig.update_xaxes(title=None)
+    return _layout(fig, h=340)
+
+
 # ════════════════════════════════════════════════════════════════════════════
 # MERCATI D'ORIGINE — i 10 paesi da cui arrivano i turisti stranieri.
 #   spesa in Italia + n. turisti (Banca d'Italia, TS1 per paese, completi al 2025)

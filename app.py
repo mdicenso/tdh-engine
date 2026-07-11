@@ -1131,16 +1131,36 @@ def page_affitti_brevi():
         fig = L.chart_str_roomtype(slug)
         if fig:
             st.plotly_chart(fig, use_container_width=True)
-    with st.expander("▸ Struttura del mercato (anteprima: occupazione, qualità, operatori, licenze)"):
-        L.kpi_row([
-            {"label": "Occupazione (proxy)", "value": f"{k.get('occ_proxy'):.0f}%" if k.get("occ_proxy") is not None else "—",
-             "hint": "da disponibilità"},
-            {"label": "Rating medio", "value": f"{k.get('rating_medio'):.2f}" if k.get("rating_medio") is not None else "—"},
-            {"label": "Operatori multi-annuncio", "value": f"{k.get('pct_multihost'):.0f}%" if k.get("pct_multihost") is not None else "—",
-             "hint": "professionali"},
-            {"label": "Con licenza/CIR", "value": f"{k.get('pct_licenza'):.0f}%" if k.get("pct_licenza") is not None else "—"},
-        ])
-        st.caption("Metriche già calcolate in cache, da sviluppare in una prossima iterazione.")
+    st.divider()
+    st.subheader("Struttura del mercato")
+    L.kpi_row([
+        {"label": "Intero alloggio", "value": f"{k.get('pct_intero'):.0f}%" if k.get("pct_intero") is not None else "—",
+         "hint": "vs stanze"},
+        {"label": "Operatori professionali", "value": f"{k.get('pct_multihost'):.0f}%" if k.get("pct_multihost") is not None else "—",
+         "hint": "host multi-annuncio"},
+        {"label": "Con licenza/CIR", "value": f"{k.get('pct_licenza'):.0f}%" if k.get("pct_licenza") is not None else "—",
+         "hint": "regolarità"},
+        {"label": "Occupazione (proxy)", "value": f"{k.get('occ_proxy'):.0f}%" if k.get("occ_proxy") is not None else "—",
+         "hint": f"rating medio {k.get('rating_medio')}"},
+    ])
+    st.markdown("**Grafico 4 — Struttura del mercato a confronto tra i territori**")
+    fig = L.chart_str_struttura()
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+    st.caption("«Operatori professionali» = host con più di un annuncio (indizio di gestione non amatoriale). "
+               "«Con licenza/CIR» = annunci che espongono un codice identificativo (regolarità). "
+               "Occupazione = *proxy* dalla disponibilità del calendario, non da prenotazioni reali.")
+
+    st.divider()
+    st.subheader("Andamento nel tempo")
+    st.markdown(f"**Grafico 5 — Attività nel tempo: recensioni per mese ({k.get('territorio')})**")
+    fig = L.chart_str_reviews(slug)
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+    st.caption("Recensioni datate (Inside Airbnb, dal 2009) come **proxy dell'attività/domanda** nel tempo: "
+               "si vede la crescita del mercato e il crollo COVID-2020. Limiti: solo annunci ancora online oggi "
+               "(bias di sopravvivenza) e non tutte le notti generano una recensione.")
+
     st.markdown("**Tabella 1 — Zone per numero di annunci**")
     z = L.str_zone(slug, top=25)
     if z is not None and not z.empty:

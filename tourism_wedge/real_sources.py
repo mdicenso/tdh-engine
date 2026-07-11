@@ -1002,6 +1002,7 @@ STR_INDEX = "https://insideairbnb.com/get-the-data/"
 STR_CACHE_TERR = "str_airbnb_territorio.csv"
 STR_CACHE_ZONA = "str_airbnb_zona.csv"
 STR_CACHE_ROOM = "str_airbnb_roomtype.csv"
+STR_CACHE_REV = "str_airbnb_recensioni_mese.csv"  # serie storica attività (recensioni/mese)
 _STR_LABEL = {"naples": "Napoli", "bologna": "Bologna", "rome": "Roma", "bergamo": "Bergamo",
               "milan": "Milano", "florence": "Firenze", "venice": "Venezia",
               "puglia": "Puglia", "sicily": "Sicilia", "trentino": "Trentino-Alto Adige"}
@@ -1042,11 +1043,27 @@ def fetch_str_market(cache_dir: str = ".cache", timeout: int = 180, refresh: boo
     p_terr = os.path.join(cache_dir, STR_CACHE_TERR)
     p_zona = os.path.join(cache_dir, STR_CACHE_ZONA)
     p_room = os.path.join(cache_dir, STR_CACHE_ROOM)
-    if all(os.path.exists(p) for p in (p_terr, p_zona, p_room)) and not refresh:
+    p_rev = os.path.join(cache_dir, STR_CACHE_REV)
+    if all(os.path.exists(p) for p in (p_terr, p_zona, p_room, p_rev)) and not refresh:
         return pd.read_csv(p_terr), pd.read_csv(p_zona), pd.read_csv(p_room)
 
+    def _reviews_monthly(list_url, tmo):
+        """Scarica le recensioni (versione leggera visualisations) e conta per mese YYYY-MM."""
+        rev_url = list_url.replace("/data/listings.csv.gz", "/visualisations/reviews.csv")
+        rev_url = urllib.parse.quote(rev_url, safe=":/?#[]@!$&'()*+,;=%~")
+        req = urllib.request.Request(rev_url, headers={"User-Agent": "Mozilla/5.0"})
+        raw = urllib.request.urlopen(req, timeout=tmo).read().decode("utf-8", "replace")
+        cnt: dict = {}
+        rd = csv.reader(io.StringIO(raw))
+        next(rd, None)  # header listing_id,date
+        for row in rd:
+            if len(row) >= 2 and len(row[1]) >= 7:
+                m = row[1][:7]  # YYYY-MM
+                cnt[m] = cnt.get(m, 0) + 1
+        return cnt
+
     urls = _str_italy_urls(timeout=min(timeout, 60))
-    terr_rows, zona_rows, room_rows = [], [], []
+    terr_rows, zona_rows, room_rows, rev_rows = [], [], [], []
     for slug, (url, date) in urls.items():
         try:
             # percent-encode i caratteri non-ASCII nel path (es. 'südtirol' → %C3%BC)
@@ -1061,12 +1078,14 @@ def fetch_str_market(cache_dir: str = ".cache", timeout: int = 180, refresh: boo
             continue
         label = _STR_LABEL.get(slug, slug.title())
         tipo = "regione" if slug in _STR_REGION else "città"
-        prices, occ, ratings, hosts_multi, superhost, licensed = [], [], [], 0, 0, 0
+        prices, occ, ratings, hosts_multi, superhost, licensed, entire = [], [], [], 0, 0, 0, 0
         by_zona: dict = {}
         by_room: dict = {}
         n = 0
         for r in listings:
             n += 1
+            if (r.get("room_type") or "").strip().lower().startswith("entire"):
+                entire += 1
             pr = _str_price(r.get("price"))
             if pr:
                 prices.append(pr)
@@ -1100,11 +1119,17 @@ def fetch_str_market(cache_dir: str = ".cache", timeout: int = 180, refresh: boo
             "slug": slug, "territorio": label, "tipo": tipo, "snapshot": date, "n_annunci": n,
             "adr_mediano": round(statistics.median(prices)) if prices else None,
             "adr_medio": round(statistics.mean(prices)) if prices else None,
+            "pct_intero": round(entire / n * 100, 1) if n else None,
             "occ_proxy": round(statistics.mean(occ), 1) if occ else None,
             "rating_medio": round(statistics.mean(ratings), 2) if ratings else None,
             "pct_superhost": round(superhost / n * 100, 1) if n else None,
             "pct_multihost": round(hosts_multi / n * 100, 1) if n else None,
             "pct_licenza": round(licensed / n * 100, 1) if n else None})
+        try:
+            for m, c in _reviews_monthly(url, timeout).items():
+                rev_rows.append({"slug": slug, "territorio": label, "mese": m, "n_recensioni": c})
+        except Exception:  # noqa: BLE001 (recensioni assenti/lente: si prosegue senza serie storica)
+            pass
         for z, pl in by_zona.items():
             zona_rows.append({"slug": slug, "territorio": label, "zona": z, "n_annunci": len(pl),
                               "adr_mediano": round(statistics.median(pl)) if pl else None})
@@ -1114,9 +1139,13 @@ def fetch_str_market(cache_dir: str = ".cache", timeout: int = 180, refresh: boo
     df_terr = pd.DataFrame(terr_rows).sort_values("n_annunci", ascending=False).reset_index(drop=True)
     df_zona = pd.DataFrame(zona_rows).sort_values(["territorio", "n_annunci"], ascending=[True, False]).reset_index(drop=True)
     df_room = pd.DataFrame(room_rows).sort_values(["territorio", "n_annunci"], ascending=[True, False]).reset_index(drop=True)
+    df_rev = pd.DataFrame(rev_rows, columns=["slug", "territorio", "mese", "n_recensioni"])
+    if not df_rev.empty:
+        df_rev = df_rev.sort_values(["territorio", "mese"]).reset_index(drop=True)
     df_terr.to_csv(p_terr, index=False)
     df_zona.to_csv(p_zona, index=False)
     df_room.to_csv(p_room, index=False)
+    df_rev.to_csv(p_rev, index=False)
     return df_terr, df_zona, df_room
 
 
