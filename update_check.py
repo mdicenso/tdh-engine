@@ -89,6 +89,8 @@ SOURCES = [
      "paths": [f"{CACHE}/sardegna_flussi_comune_mese.csv"], "live": "sardegna"},
     {"key": "turnot", "label": "ISTAT Viaggi e Vacanze · notti residenti per scopo", "cadence": "annuale",
      "paths": [f"{CACHE}/istat_turnot_scopo_regione.csv"], "live": "turnot"},
+    {"key": "str", "label": "Affitti brevi / STR (Inside Airbnb)", "cadence": "snapshot",
+     "paths": [f"{CACHE}/str_airbnb_territorio.csv"], "live": "str"},
     {"key": "wikipedia", "label": "Wikipedia pageviews", "cadence": "mensile",
      "paths": sorted(glob.glob(f"{CACHE}/wiki_*.csv")) or [f"{CACHE}/wiki_de.csv"], "live": "wikipedia"},
     {"key": "bdi", "label": "Spesa turisti (Banca d'Italia)", "cadence": "trimestrale",
@@ -175,6 +177,9 @@ def _fresh_last_period(source: dict) -> pd.Timestamp | None:
     if kind == "turnot":  # probe leggero: anno più recente V&V (una sola serie)
         y = RS.fetch_turnot_latest_year()
         return pd.Timestamp(f"{int(y)}-12-31") if y else None
+    if kind == "str":  # probe leggero: data snapshot più recente (dall'indice get-the-data)
+        d = RS.fetch_str_latest_snapshot()
+        return pd.Timestamp(d) if d else None
     if kind == "ecb":
         df = RS.fetch_fx_monthly("USD")
         return pd.to_datetime(df["date"]).max()
@@ -327,6 +332,20 @@ def apply_update(key: str) -> dict:
                 return {"ok": True, "msg": f"già aggiornato (anno {cache_year}); nessun anno nuovo"}
             df = RS.fetch_turnot_purpose(refresh=True)
             return {"ok": True, "msg": f"ISTAT V&V aggiornato · fino al {int(pd.to_numeric(df['anno']).max())}"}
+        if kind == "str":
+            fresh = RS.fetch_str_latest_snapshot()
+            cache_path = f"{CACHE}/str_airbnb_territorio.csv"
+            cache_snap = None
+            if os.path.exists(cache_path):
+                try:
+                    s = pd.read_csv(cache_path, usecols=["snapshot"])["snapshot"].astype(str)
+                    cache_snap = s.max() if len(s) else None
+                except Exception:  # noqa: BLE001
+                    pass
+            if fresh and cache_snap and cache_snap >= fresh:
+                return {"ok": True, "msg": f"già aggiornato (snapshot {cache_snap}); nessuno più recente"}
+            terr, _z, _r = RS.fetch_str_market(refresh=True)
+            return {"ok": True, "msg": f"Affitti brevi aggiornati · {len(terr)} territori · snapshot {terr['snapshot'].max()}"}
         if kind == "ecb":
             return {"ok": True, "msg": "ECB è sempre live: nessuna cache da aggiornare"}
         return {"ok": False, "msg": "refresh non ancora disponibile per questa fonte (Fase 2)"}
@@ -408,7 +427,7 @@ if __name__ == "__main__":
         # (rate-limited). Quelle restano aggiornabili a mano da «Gestione dati».
         fast = "--fast" in sys.argv
         skip = {"trends", "wikipedia", "istat_glob", "istat_presenze",
-                "istat_capacita", "istat_estero", "sardegna", "turnot"} if fast else None
+                "istat_capacita", "istat_estero", "sardegna", "turnot", "str"} if fast else None
         print("Riscarico le fonti refreshabili nella cache…"
               + (" (modalità fast: escludo Trends/Wikipedia)" if fast else ""))
         ok = 0

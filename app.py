@@ -1094,6 +1094,65 @@ def page_operatori():
     st.caption("Dati simulati · Indra Italia · prototipo. In produzione: Registro ricettivo · OTA/booking · GA4 portale.")
 
 
+def page_affitti_brevi():
+    L.page_header("Affitti brevi (STR)", group="Cosa è successo", emoji="🏠",
+                  subtitle="Mercato REALE degli affitti brevi (Inside Airbnb): prezzi e numero di annunci "
+                           "per territorio. Dato a livello di città/regione — indipendente dalla regione selezionata.")
+    df = L.str_territori()
+    if df.empty:
+        st.warning("Cache Inside Airbnb non disponibile. Ricostruisci la fonte «Affitti brevi (STR)» "
+                   "(update_check → apply_update(\"str\") o fetch_str_market(refresh=True)).")
+        return
+    # selettore territorio (7 città + 3 regioni), ordinato per n. annunci
+    opts = {f"{r.territorio} ({r.tipo})": r.slug for r in df.itertuples()}
+    scelta = st.selectbox("Territorio", list(opts.keys()), key="str_terr")
+    slug = opts[scelta]
+    k = L.str_kpi(slug)
+    st.caption(f"Fonte: **Inside Airbnb** · snapshot **{k.get('snapshot','—')}** · licenza CC BY 4.0. "
+               f"Prezzo = ADR dell'*annuncio* (non prenotazioni reali); occupazione = *proxy*.")
+    L.kpi_row([
+        {"label": "Annunci attivi", "value": _it_num(k.get("n_annunci"))},
+        {"label": "ADR mediano", "value": f"€ {_it_num(k.get('adr_mediano'))}", "hint": "prezzo/notte"},
+        {"label": "ADR medio", "value": f"€ {_it_num(k.get('adr_medio'))}"},
+        {"label": "Tipo", "value": (k.get("tipo") or "—").capitalize()},
+    ])
+    st.markdown("**Grafico 1 — ADR mediano a confronto tra i territori**")
+    fig = L.chart_str_adr_territori(sel_slug=slug)
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+    c1, c2 = st.columns([3, 2])
+    with c1:
+        st.markdown(f"**Grafico 2 — Zone con più annunci ({k.get('territorio')})**")
+        fig = L.chart_str_zone(slug, top=12)
+        if fig:
+            st.plotly_chart(fig, use_container_width=True)
+    with c2:
+        st.markdown("**Grafico 3 — Per tipo di alloggio**")
+        fig = L.chart_str_roomtype(slug)
+        if fig:
+            st.plotly_chart(fig, use_container_width=True)
+    with st.expander("▸ Struttura del mercato (anteprima: occupazione, qualità, operatori, licenze)"):
+        L.kpi_row([
+            {"label": "Occupazione (proxy)", "value": f"{k.get('occ_proxy'):.0f}%" if k.get("occ_proxy") is not None else "—",
+             "hint": "da disponibilità"},
+            {"label": "Rating medio", "value": f"{k.get('rating_medio'):.2f}" if k.get("rating_medio") is not None else "—"},
+            {"label": "Operatori multi-annuncio", "value": f"{k.get('pct_multihost'):.0f}%" if k.get("pct_multihost") is not None else "—",
+             "hint": "professionali"},
+            {"label": "Con licenza/CIR", "value": f"{k.get('pct_licenza'):.0f}%" if k.get("pct_licenza") is not None else "—"},
+        ])
+        st.caption("Metriche già calcolate in cache, da sviluppare in una prossima iterazione.")
+    st.markdown("**Tabella 1 — Zone per numero di annunci**")
+    z = L.str_zone(slug, top=25)
+    if z is not None and not z.empty:
+        show = z.rename(columns={"zona": "Zona", "n_annunci": "Annunci", "adr_mediano": "ADR mediano €"})[
+            ["Zona", "Annunci", "ADR mediano €"]].copy()
+        show["Annunci"] = show["Annunci"].map(_it_num)
+        show["ADR mediano €"] = show["ADR mediano €"].map(_it_num)
+        st.dataframe(show, hide_index=True, use_container_width=True)
+    st.caption("Fonte: Inside Airbnb (insideairbnb.com) · CC BY 4.0 · 7 città + 3 regioni intere (Puglia, "
+               "Sicilia, Trentino-A.A.) · niente Abruzzo. Universo: annunci Airbnb, non l'intero comparto extra-alberghiero.")
+
+
 def page_spesa():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     nome = L.RG.region(code)["nome"]
@@ -1729,6 +1788,7 @@ pg = st.navigation({
         st.Page(page_spesa, title="Spesa turistica", icon=":material/payments:"),
         st.Page(page_mercati_paese, title="Mercati per paese", icon=":material/public:"),
         st.Page(page_base_dati_regionale, title="Base Dati Regionale", icon=":material/dataset:"),
+        st.Page(page_affitti_brevi, title="Affitti brevi (STR)", icon=":material/home:"),
         st.Page(page_operatori, title="Operatori (demo)", icon=":material/person:"),
     ],
     "Cosa fare": [
@@ -1751,7 +1811,7 @@ pg = st.navigation({
 # Pagine che hanno senso a livello NAZIONALE (vista d'insieme «Italia») senza una regione.
 # Step B: le descrittive Regione/Struttura/Occupazione/Spesa usano il totale Italia (ISTAT area="IT").
 NATIONAL_OK = {"Home", "Italia", "Confronto regioni", "Mercati per paese", "Mercati d'origine",
-               "Operatori (demo)", "Assistente", "Architettura", "Gestione dati", "Advisor Operatori",
+               "Operatori (demo)", "Affitti brevi (STR)", "Assistente", "Architettura", "Gestione dati", "Advisor Operatori",
                "Base Dati Regionale",
                "Regione", "Per provincia", "Per struttura", "Occupazione", "Spesa turistica"}
 

@@ -1607,6 +1607,100 @@ def chart_turnot_purpose(code: str) -> go.Figure | None:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# AFFITTI BREVI (STR) — Inside Airbnb (CC BY 4.0). Mercato degli affitti brevi per
+#   territorio: 7 città + 3 regioni intere (niente Abruzzo). Cache aggregate:
+#   territorio (KPI), zona (quartiere), room_type. Occupazione = PROXY. [[tdh-engine-project]]
+# ════════════════════════════════════════════════════════════════════════════
+_STR_TERR_PATH = ".cache/str_airbnb_territorio.csv"
+_STR_ZONA_PATH = ".cache/str_airbnb_zona.csv"
+_STR_ROOM_PATH = ".cache/str_airbnb_roomtype.csv"
+
+
+@st.cache_data(show_spinner=False)
+def str_territori() -> pd.DataFrame:
+    if not os.path.exists(_STR_TERR_PATH):
+        return pd.DataFrame()
+    return pd.read_csv(_STR_TERR_PATH)
+
+
+@st.cache_data(show_spinner=False)
+def _str_zone_all() -> pd.DataFrame:
+    if not os.path.exists(_STR_ZONA_PATH):
+        return pd.DataFrame()
+    return pd.read_csv(_STR_ZONA_PATH)
+
+
+@st.cache_data(show_spinner=False)
+def _str_room_all() -> pd.DataFrame:
+    if not os.path.exists(_STR_ROOM_PATH):
+        return pd.DataFrame()
+    return pd.read_csv(_STR_ROOM_PATH)
+
+
+def str_kpi(slug: str) -> dict:
+    """Riga KPI del territorio (dict) o {} se assente."""
+    df = str_territori()
+    if df.empty:
+        return {}
+    r = df[df["slug"] == slug]
+    return r.iloc[0].to_dict() if not r.empty else {}
+
+
+def str_zone(slug: str, top: int | None = 15) -> pd.DataFrame:
+    df = _str_zone_all()
+    if df.empty:
+        return df
+    d = df[df["slug"] == slug].sort_values("n_annunci", ascending=False)
+    return d.head(top) if top else d
+
+
+def str_roomtypes(slug: str) -> pd.DataFrame:
+    df = _str_room_all()
+    return df[df["slug"] == slug] if not df.empty else df
+
+
+def chart_str_adr_territori(sel_slug: str | None = None) -> go.Figure | None:
+    """Confronto ADR mediano tra tutti i territori (barre orizzontali), evidenzia il selezionato."""
+    df = str_territori()
+    if df.empty:
+        return None
+    d = df.dropna(subset=["adr_mediano"]).sort_values("adr_mediano")
+    colors = ["#f59e0b" if s == sel_slug else "#0e7490" for s in d["slug"]]
+    fig = go.Figure(go.Bar(x=d["adr_mediano"], y=d["territorio"], orientation="h", marker_color=colors,
+                           customdata=d["n_annunci"],
+                           hovertemplate="<b>%{y}</b><br>ADR mediano € %{x:,.0f}<br>"
+                                         "%{customdata:,.0f} annunci<extra></extra>"))
+    fig.update_xaxes(title="ADR mediano (€/notte)")
+    return _layout(fig, h=420)
+
+
+def chart_str_zone(slug: str, top: int = 12) -> go.Figure | None:
+    d = str_zone(slug, top=top)
+    if d is None or d.empty:
+        return None
+    d = d.sort_values("n_annunci")
+    fig = go.Figure(go.Bar(x=d["n_annunci"], y=d["zona"], orientation="h", marker_color="#0e7490",
+                           customdata=d["adr_mediano"],
+                           hovertemplate="<b>%{y}</b><br>%{x:,.0f} annunci<br>"
+                                         "ADR mediano € %{customdata:,.0f}<extra></extra>"))
+    fig.update_xaxes(title="numero di annunci")
+    return _layout(fig, h=440)
+
+
+def chart_str_roomtype(slug: str) -> go.Figure | None:
+    d = str_roomtypes(slug)
+    if d is None or d.empty:
+        return None
+    d = d.sort_values("n_annunci")
+    fig = go.Figure(go.Bar(x=d["n_annunci"], y=d["room_type"], orientation="h", marker_color="#16a34a",
+                           customdata=d["adr_mediano"],
+                           hovertemplate="<b>%{y}</b><br>%{x:,.0f} annunci<br>"
+                                         "ADR mediano € %{customdata:,.0f}<extra></extra>"))
+    fig.update_xaxes(title="numero di annunci")
+    return _layout(fig, h=300)
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # MERCATI D'ORIGINE — i 10 paesi da cui arrivano i turisti stranieri.
 #   spesa in Italia + n. turisti (Banca d'Italia, TS1 per paese, completi al 2025)
 #   spesa per turismo all'estero = taglia del mercato (World Bank ST.INT.XPND.CD)
@@ -2436,6 +2530,14 @@ def builtin_sources() -> list[dict]:
                          "(lavoro / vacanza lunga / breve), annuale dal 2014 — tutte le regioni",
                          "ISTAT · Viaggi e Vacanze (DCCV_TURNOT)", "https://esploradati.istat.it/",
                          "annuale", A, _csv_rows(turnot), _fmt_mtime(turnot)))
+    strp = ".cache/str_airbnb_territorio.csv"
+    if os.path.exists(strp):
+        rows.append(_row("Affitti brevi / STR (Inside Airbnb)",
+                         "Mercato degli affitti brevi per territorio: prezzo (ADR), n. annunci, occupazione "
+                         "proxy, qualità, operatori, licenze — 7 città + 3 regioni (Puglia/Sicilia/Trentino)",
+                         "Inside Airbnb", "https://insideairbnb.com/get-the-data/",
+                         "snapshot", A, (_csv_rows(strp) or 0) + (_csv_rows(".cache/str_airbnb_zona.csv") or 0),
+                         _fmt_mtime(strp)))
     trends = sorted(glob.glob(".cache/trends_*.csv"))
     if trends:
         _geos = [mk.code for mk in DEFAULT_MARKETS]
@@ -2665,6 +2767,7 @@ def coverage_matrix() -> list[dict]:
         ("Mercato ESTERO mensile sub-nazionale", "❌", "🟡", "🟡", "Lombardia + Sardegna", "🟡 Lombardia (12 province) e Sardegna (per comune!): presenze/arrivi mensili per paese estero di origine; ISTAT lo dà solo annuale (_9)"),
         ("Movimento a livello COMUNALE", "❌", "🟡", "🟡", "Toscana + Sardegna", "🟡 Toscana (~272 comuni, annuale, ita/str) e Sardegna (~330 comuni, MENSILE × mercato estero): sotto il livello provinciale ISTAT"),
         ("Anagrafica strutture ricettive", "🟡", "❌", "❌", "registri regionali", "🔴 BUCO: registri non federati come open data"),
+        ("Affitti brevi / STR (prezzo, annunci)", "❌", "🟡", "🟡", "Inside Airbnb", "🟡 mercato affitti brevi: 7 città + 3 regioni intere (Puglia/Sicilia/Trentino), NIENTE Abruzzo; ADR/n.annunci/occ.proxy/licenze per annuncio (CC BY 4.0)"),
         ("Spesa turistica per paese", "✅", "🟡", "🟡", "BdI + stima da _9", "regionale/provinciale STIMATA (presenze _9 × spesa/notte BdI); dato diretto solo TOTALE regionale (BdI TS2)"),
         ("Accessibilità aerea (voli/pax)", "✅", "✅", "—", "Eurostat avia_par", "regionale via mappa regione→aeroporto"),
         ("Accessibilità ferroviaria", "✅", "❌", "❌", "Aut. Trasporti", "🟡 solo totale nazionale; manca il dettaglio regionale"),

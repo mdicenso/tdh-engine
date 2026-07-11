@@ -990,6 +990,146 @@ def fetch_turnot_latest_year(timeout: int = 60) -> int | None:
 
 
 # --------------------------------------------------------------------------
+# INSIDE AIRBNB — mercato degli AFFITTI BREVI (STR), fonte aperta CC BY 4.0.
+# Copertura Italia: 7 città (Roma, Milano, Napoli, Firenze, Venezia, Bologna,
+# Bergamo) + 3 regioni intere (Puglia, Sicilia, Trentino-A.A.). Niente Abruzzo.
+# È a livello di ANNUNCIO (listings.csv.gz, ~90 colonne). Gli URL cambiano ad
+# ogni snapshot → enumerati dinamicamente dalla pagina get-the-data (auto-aggiorn.).
+# Il reader NON committa il grezzo (decine di MB): proietta in 3 cache compatte
+# (territorio / zona / room_type). Occupazione = PROXY da availability_365.
+# --------------------------------------------------------------------------
+STR_INDEX = "https://insideairbnb.com/get-the-data/"
+STR_CACHE_TERR = "str_airbnb_territorio.csv"
+STR_CACHE_ZONA = "str_airbnb_zona.csv"
+STR_CACHE_ROOM = "str_airbnb_roomtype.csv"
+_STR_LABEL = {"naples": "Napoli", "bologna": "Bologna", "rome": "Roma", "bergamo": "Bergamo",
+              "milan": "Milano", "florence": "Firenze", "venice": "Venezia",
+              "puglia": "Puglia", "sicily": "Sicilia", "trentino": "Trentino-Alto Adige"}
+_STR_REGION = {"puglia", "sicily", "trentino"}  # dataset di REGIONE intera
+
+
+def _str_price(s: str):
+    s = (s or "").strip().replace("$", "").replace(",", "")
+    try:
+        v = float(s)
+        return v if v > 0 else None
+    except ValueError:
+        return None
+
+
+def _str_italy_urls(timeout: int = 60) -> dict:
+    """Enumera i dataset italiani da get-the-data → {slug: (url, snapshot_date)}."""
+    import re as _re
+    req = urllib.request.Request(STR_INDEX, headers={"User-Agent": "Mozilla/5.0"})
+    html = urllib.request.urlopen(req, timeout=timeout).read().decode("utf-8", "replace")
+    out = {}
+    for u in sorted(set(_re.findall(r"https://data\.insideairbnb\.com/italy/[^\"' )]+listings\.csv\.gz", html))):
+        parts = u.split("/")
+        slug = parts[-4]          # .../italy/<region>/<slug>/<date>/data/listings.csv.gz
+        date = parts[-3]
+        out[slug] = (u, date)
+    return out
+
+
+def fetch_str_market(cache_dir: str = ".cache", timeout: int = 180, refresh: bool = False):
+    """Costruisce/legge le 3 cache aggregate del mercato affitti brevi (Inside Airbnb).
+    Ritorna (df_territorio, df_zona, df_roomtype). Con refresh=False e cache presenti le
+    rilegge; altrimenti scarica i 10 listings.csv.gz italiani e li aggrega."""
+    import gzip
+    import statistics
+    import urllib.parse
+    os.makedirs(cache_dir, exist_ok=True)
+    p_terr = os.path.join(cache_dir, STR_CACHE_TERR)
+    p_zona = os.path.join(cache_dir, STR_CACHE_ZONA)
+    p_room = os.path.join(cache_dir, STR_CACHE_ROOM)
+    if all(os.path.exists(p) for p in (p_terr, p_zona, p_room)) and not refresh:
+        return pd.read_csv(p_terr), pd.read_csv(p_zona), pd.read_csv(p_room)
+
+    urls = _str_italy_urls(timeout=min(timeout, 60))
+    terr_rows, zona_rows, room_rows = [], [], []
+    for slug, (url, date) in urls.items():
+        try:
+            # percent-encode i caratteri non-ASCII nel path (es. 'südtirol' → %C3%BC)
+            url_req = urllib.parse.quote(url, safe=":/?#[]@!$&'()*+,;=%~")
+            req = urllib.request.Request(url_req, headers={"User-Agent": "Mozilla/5.0"})
+            raw = urllib.request.urlopen(req, timeout=timeout).read()
+            txt = gzip.decompress(raw).decode("utf-8", "replace")
+        except Exception:  # noqa: BLE001
+            continue
+        listings = list(csv.DictReader(io.StringIO(txt)))
+        if not listings:
+            continue
+        label = _STR_LABEL.get(slug, slug.title())
+        tipo = "regione" if slug in _STR_REGION else "città"
+        prices, occ, ratings, hosts_multi, superhost, licensed = [], [], [], 0, 0, 0
+        by_zona: dict = {}
+        by_room: dict = {}
+        n = 0
+        for r in listings:
+            n += 1
+            pr = _str_price(r.get("price"))
+            if pr:
+                prices.append(pr)
+            av = r.get("availability_365", "")
+            if str(av).strip().lstrip("-").isdigit():
+                occ.append((365 - int(av)) / 365 * 100)
+            rs = r.get("review_scores_rating", "")
+            try:
+                if rs.strip():
+                    ratings.append(float(rs))
+            except (ValueError, AttributeError):
+                pass
+            try:
+                if int(float(r.get("host_listings_count") or 0)) > 1:
+                    hosts_multi += 1
+            except ValueError:
+                pass
+            if (r.get("host_is_superhost") or "").strip() == "t":
+                superhost += 1
+            if (r.get("license") or "").strip():
+                licensed += 1
+            z = (r.get("neighbourhood_cleansed") or "").strip() or "—"
+            zz = by_zona.setdefault(z, [])
+            if pr:
+                zz.append(pr)
+            rt = (r.get("room_type") or "").strip() or "—"
+            rr = by_room.setdefault(rt, [])
+            if pr:
+                rr.append(pr)
+        terr_rows.append({
+            "slug": slug, "territorio": label, "tipo": tipo, "snapshot": date, "n_annunci": n,
+            "adr_mediano": round(statistics.median(prices)) if prices else None,
+            "adr_medio": round(statistics.mean(prices)) if prices else None,
+            "occ_proxy": round(statistics.mean(occ), 1) if occ else None,
+            "rating_medio": round(statistics.mean(ratings), 2) if ratings else None,
+            "pct_superhost": round(superhost / n * 100, 1) if n else None,
+            "pct_multihost": round(hosts_multi / n * 100, 1) if n else None,
+            "pct_licenza": round(licensed / n * 100, 1) if n else None})
+        for z, pl in by_zona.items():
+            zona_rows.append({"slug": slug, "territorio": label, "zona": z, "n_annunci": len(pl),
+                              "adr_mediano": round(statistics.median(pl)) if pl else None})
+        for rt, pl in by_room.items():
+            room_rows.append({"slug": slug, "territorio": label, "room_type": rt, "n_annunci": len(pl),
+                              "adr_mediano": round(statistics.median(pl)) if pl else None})
+    df_terr = pd.DataFrame(terr_rows).sort_values("n_annunci", ascending=False).reset_index(drop=True)
+    df_zona = pd.DataFrame(zona_rows).sort_values(["territorio", "n_annunci"], ascending=[True, False]).reset_index(drop=True)
+    df_room = pd.DataFrame(room_rows).sort_values(["territorio", "n_annunci"], ascending=[True, False]).reset_index(drop=True)
+    df_terr.to_csv(p_terr, index=False)
+    df_zona.to_csv(p_zona, index=False)
+    df_room.to_csv(p_room, index=False)
+    return df_terr, df_zona, df_room
+
+
+def fetch_str_latest_snapshot(timeout: int = 60) -> str | None:
+    """Data dello snapshot più recente tra i dataset italiani (probe leggero sull'indice)."""
+    try:
+        urls = _str_italy_urls(timeout)
+        return max(d for _u, d in urls.values()) if urls else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+# --------------------------------------------------------------------------
 # WIKIPEDIA — pageviews mensili per articolo (secondo segnale anticipatore, per lingua).
 # Wikimedia REST: filtro agent='user' (esclude bot) e titolo articolo per lingua
 # (la regione in tedesco/olandese è 'Abruzzen'). UA obbligatorio.

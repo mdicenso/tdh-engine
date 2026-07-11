@@ -1,0 +1,41 @@
+slug,territorio,room_type,n_annunci,adr_mediano
+bergamo,Bergamo,Entire home/apt,3236,130
+bergamo,Bergamo,Private room,652,93
+bergamo,Bergamo,Hotel room,26,112
+bergamo,Bergamo,Shared room,4,37
+bologna,Bologna,Entire home/apt,3583,137
+bologna,Bologna,Private room,940,94
+bologna,Bologna,Shared room,15,27
+bologna,Bologna,Hotel room,6,571
+florence,Firenze,Entire home/apt,10369,177
+florence,Firenze,Private room,2013,108
+florence,Firenze,Hotel room,54,136
+florence,Firenze,Shared room,12,64
+milan,Milano,Entire home/apt,20337,140
+milan,Milano,Private room,2515,90
+milan,Milano,Shared room,59,37
+milan,Milano,Hotel room,26,128
+naples,Napoli,Entire home/apt,6508,119
+naples,Napoli,Private room,4237,94
+naples,Napoli,Hotel room,90,125
+naples,Napoli,Shared room,63,25
+puglia,Puglia,Entire home/apt,34976,150
+puglia,Puglia,Private room,8212,107
+puglia,Puglia,Hotel room,174,106
+puglia,Puglia,Shared room,25,52
+rome,Roma,Entire home/apt,25913,181
+rome,Roma,Private room,8051,115
+rome,Roma,Hotel room,269,140
+rome,Roma,Shared room,91,46
+sicily,Sicilia,Entire home/apt,41131,137
+sicily,Sicilia,Private room,10495,95
+sicily,Sicilia,Hotel room,178,119
+sicily,Sicilia,Shared room,60,33
+trentino,Trentino-Alto Adige,Entire home/apt,7082,172
+trentino,Trentino-Alto Adige,Private room,1187,126
+trentino,Trentino-Alto Adige,Hotel room,13,169
+trentino,Trentino-Alto Adige,Shared room,7,61
+venice,Venezia,Entire home/apt,6385,227
+venice,Venezia,Private room,1713,118
+venice,Venezia,Hotel room,67,141
+venice,Venezia,Shared room,12,44
