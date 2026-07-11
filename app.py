@@ -43,12 +43,9 @@ if not L.check_access():
 
 # ──────────────────────────── BARRA LATERALE (controlli) ────────────────────────────
 with st.sidebar:
-    st.markdown("### :material/landscape: Turism Data Hub")
-    st.caption("Strumento ad uso interno · scala nazionale · Indra")
-    _regn = L.RG.region_names()
-    st.selectbox("📍 Regione", list(_regn), format_func=lambda c: _regn[c], key="region_code",
-                 help="Regione attiva su tutte le pagine multi-regione. La puoi scegliere anche "
-                      "cliccando la mappa nella pagina «Italia».")
+    st.markdown("###### :material/landscape: &nbsp;TURISM DATA HUB")
+    st.caption("Controlli · uso interno · Indra")
+    # NB: il selettore Regione è stato spostato nella TOPBAR (in alto a destra).
     st.radio("Modalità dati", [L.MODE_REAL, L.MODE_SYN], key="mode", index=0,
              help="Riguarda il motore dei mercati (pilastro «Cosa fare»). "
                   "Le viste descrittive usano sempre i dati reali ISTAT/BdI.")
@@ -1788,15 +1785,18 @@ def page_base_dati_regionale():
     if kpis:
         L.kpi_row(kpis)
 
-    if ov is not None and isinstance(ov.get("presenze"), pd.DataFrame) and not ov["presenze"].empty:
-        st.markdown("**Grafico 1 — Presenze mensili (totale e straniere)**")
-        st.plotly_chart(L.chart_region_presences(ov["presenze"]), use_container_width=True)
-    st.markdown("**Grafico 2 — Top mercati esteri per paese (ISTAT _9)**")
-    mfig = L.chart_estero_markets(code, top=12)
-    if mfig:
-        st.plotly_chart(mfig, use_container_width=True)
-    else:
-        st.info("ISTAT _9 non ha il dettaglio per singolo paese per questo territorio.")
+    g1, g2 = st.columns([3, 2])
+    with g1:
+        if ov is not None and isinstance(ov.get("presenze"), pd.DataFrame) and not ov["presenze"].empty:
+            st.markdown("**Grafico 1 — Presenze mensili (totale e straniere)**")
+            st.plotly_chart(L.chart_region_presences(ov["presenze"]), use_container_width=True)
+    with g2:
+        st.markdown("**Grafico 2 — Top mercati esteri per paese (ISTAT _9)**")
+        mfig = L.chart_estero_markets(code, top=12)
+        if mfig:
+            st.plotly_chart(mfig, use_container_width=True)
+        else:
+            st.info("ISTAT _9 non ha il dettaglio per singolo paese per questo territorio.")
     lfig = L.chart_region_letti(code)
     if lfig:
         st.markdown("**Grafico 3 — Posti letto per anno (ISTAT capacità)**")
@@ -1850,6 +1850,34 @@ def page_base_dati_regionale():
                 "(Open Data regionali).")
 
 
+_TOPBAR_BRAND = """
+<div style="display:flex;align-items:center;gap:12px">
+  <div style="width:40px;height:40px;border-radius:10px;background:#0e6b70;display:grid;
+              place-items:center;color:#fff;flex:none">
+    <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-14 4 9 3-5 5 10"/></svg>
+  </div>
+  <div>
+    <div style="font-size:1.08rem;font-weight:700;letter-spacing:-.01em;color:#10262a;line-height:1.12">Turism Data Hub</div>
+    <div style="font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:#8aa0a4">Portale nazionale del turismo</div>
+  </div>
+</div>"""
+
+
+def render_topbar():
+    """Barra superiore: brand/logo a sinistra, selettore Regione a destra (design Istituzionale)."""
+    left, right = st.columns([3, 1.15], vertical_alignment="center")
+    with left:
+        st.markdown(_TOPBAR_BRAND, unsafe_allow_html=True)
+    with right:
+        _regn = L.RG.region_names()
+        st.selectbox("📍 Regione", list(_regn), format_func=lambda c: _regn[c], key="region_code",
+                     label_visibility="collapsed",
+                     help="Regione attiva su tutte le pagine multi-regione (anche cliccando la mappa in «Italia»).")
+    st.markdown("<div style='border-bottom:1px solid #e4ebec;margin:.35rem 0 1.1rem'></div>",
+                unsafe_allow_html=True)
+
+
 # ──────────────────── NAVIGAZIONE A DUE PILASTRI (st.navigation) + DISPATCH ────────────────────
 SINTESI_PAGE = st.Page(page_sintesi, title="Sintesi", icon=":material/dashboard:")
 pg = st.navigation({
@@ -1898,6 +1926,8 @@ NATIONAL_OK = {"Home", "Italia", "Confronto regioni", "Mercati per paese", "Merc
 
 # Ogni pagina (tranne Home) ha il proprio page_header con breadcrumb + badge regione:
 # nessun hero globale (evita il doppio banner). hero() resta disponibile ma non è più usato qui.
+if pg.title != "Home":
+    render_topbar()
 _rc = st.session_state.get("region_code", L.RG.NATIONAL)
 
 if L.RG.is_national(_rc) and pg.title not in NATIONAL_OK:

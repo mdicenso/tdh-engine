@@ -213,23 +213,15 @@ def page_header(title: str, subtitle: str = "", group: str = "", emoji: str = ""
     grande su fondo pagina, badge regione a pill petrolio, filetto di chiusura. `emoji` è
     accettato per compatibilità ma NON renderizzato (look pulito, senza icone-emoji)."""
     crumb = (f"{group} &nbsp;›&nbsp; {title}" if group else title)
-    badge = ""
-    if region_code is not None:
-        nome = RG.region(region_code)["nome"]
-        badge = ("<span style='margin-left:auto;background:rgba(14,107,112,.10);color:#0a4f53;"
-                 "border:1px solid rgba(14,107,112,.28);border-radius:999px;padding:5px 14px;"
-                 f"font-size:.82rem;font-weight:600;white-space:nowrap'>{nome}</span>")
+    # la regione attiva è mostrata nella TOPBAR (in alto a destra): niente badge qui.
     sub = (f"<div style='font-size:.86rem;color:#5c7176;margin-top:5px;max-width:920px'>{subtitle}</div>"
            if subtitle else "")
     st.markdown(f"""
     <div style="margin:.1rem 0 1rem;padding-bottom:.7rem;border-bottom:1px solid #e4ebec">
       <div style="font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;
                   color:#8aa0a4;font-weight:600">{crumb}</div>
-      <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
-        <div style="font-size:1.5rem;font-weight:700;letter-spacing:-.02em;line-height:1.15;
-                    color:#10262a">{title}</div>
-        {badge}
-      </div>
+      <div style="font-size:1.5rem;font-weight:700;letter-spacing:-.02em;line-height:1.15;
+                  color:#10262a;margin-top:6px">{title}</div>
       {sub}
     </div>""", unsafe_allow_html=True)
 

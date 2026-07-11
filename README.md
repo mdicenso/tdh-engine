@@ -11,7 +11,10 @@ Look applicato a tutta l'app (11-07-2026), pensato per un **prodotto privato/da 
 banner-gradiente né emoji nel titolo), **card KPI a filetto** (senza barra colorata in cima), tipografia
 sobria con label in maiuscoletto e numeri tabulari, grafici con griglia tenue. Definito in
 `.streamlit/config.toml` (`[theme]`) + `tdhlib.inject_css()` (token in `:root`) + i componenti
-`page_header`/`hero`/`kpi_row`/`_layout`. Tre direzioni erano state prototipate in `@_scorciatoie/`
+`page_header`/`hero`/`kpi_row`/`_layout`. **Layout** allineato al mockup: **topbar** (`render_topbar()` in
+`app.py`) con brand/logo a sinistra e **selettore Regione a destra** (spostato dalla sidebar); grafici
+**affiancati** dove ha senso (es. sintesi di «Base Dati Regionale»: presenze + mercati in due colonne).
+Tre direzioni erano state prototipate in `@_scorciatoie/`
 (`design_1_mezzanotte`, `design_2_istituzionale` ← scelto, `design_3_mediterraneo`). NB: il tema è
 **chiaro**; una modalità scura è un possibile sviluppo (in Streamlit richiede lavoro extra oltre al
 `config.toml`).
