@@ -1749,6 +1749,93 @@ def chart_str_reviews(slug: str) -> go.Figure | None:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# STR NAZIONALE (ANTEPRIMA) — front-end su schema AirROI/AirDNA con DATI DI ESEMPIO.
+#   Metriche di mercato reali (occupazione, ADR, RevPAR, ricavi, annunci, permanenza),
+#   copertura nazionale (tutte le regioni). I valori qui sono SINTETICI e realistici:
+#   nel prodotto PRIVATO si sostituiscono con le chiamate API (AirROI /markets/metrics/*).
+#   NB: non committare dati AirROI/AirDNA reali (licenza); qui è tutto mock. [[tdh-engine-project]]
+# ════════════════════════════════════════════════════════════════════════════
+# (market, regione, occupancy 0-1, ADR €, active_listings, avg_length_of_stay notti)
+_STR_NAT_SAMPLE = [
+    ("Roma", "Lazio", 0.45, 162, 37084, 3.4), ("Milano", "Lombardia", 0.48, 136, 25750, 3.0),
+    ("Firenze", "Toscana", 0.43, 166, 13472, 3.3), ("Venezia", "Veneto", 0.44, 202, 8766, 3.1),
+    ("Napoli", "Campania", 0.36, 107, 11575, 3.5), ("Bologna", "Emilia-Romagna", 0.53, 128, 4948, 2.9),
+    ("Torino", "Piemonte", 0.44, 95, 6000, 3.1), ("Palermo", "Sicilia", 0.40, 92, 5200, 3.8),
+    ("Catania", "Sicilia", 0.42, 88, 3400, 3.7), ("Bari", "Puglia", 0.43, 105, 2600, 3.6),
+    ("Lecce", "Puglia", 0.38, 120, 3100, 4.2), ("Matera", "Basilicata", 0.40, 110, 900, 2.8),
+    ("Verona", "Veneto", 0.47, 130, 3000, 2.9), ("Rimini", "Emilia-Romagna", 0.41, 115, 4200, 4.5),
+    ("Como", "Lombardia", 0.46, 175, 2800, 3.2), ("Costiera Amalfitana", "Campania", 0.50, 260, 2200, 4.0),
+    ("Taormina", "Sicilia", 0.48, 190, 1400, 4.1), ("Cortina d'Ampezzo", "Veneto", 0.38, 240, 900, 4.3),
+    ("Bolzano-Dolomiti", "Trentino-Alto Adige", 0.52, 165, 3500, 4.6), ("Cagliari", "Sardegna", 0.42, 130, 2400, 4.0),
+    ("Alghero", "Sardegna", 0.40, 140, 1600, 4.4), ("L'Aquila", "Abruzzo", 0.34, 95, 700, 3.5),
+    ("Perugia", "Umbria", 0.39, 100, 1500, 3.0),
+]
+# profilo di stagionalità (mensile, picco estivo) — usato per la vista di dettaglio mock
+_STR_NAT_SEASON = [0.60, 0.62, 0.78, 0.95, 1.05, 1.20, 1.35, 1.40, 1.15, 0.90, 0.62, 0.68]
+
+
+@st.cache_data(show_spinner=False)
+def str_nat_sample() -> pd.DataFrame:
+    """Dataset di ESEMPIO (sintetico) del mercato STR nazionale, schema AirROI/AirDNA."""
+    df = pd.DataFrame(_STR_NAT_SAMPLE, columns=["market", "regione", "occ", "adr", "listings", "alos"])
+    df["revpar"] = (df["occ"] * df["adr"]).round(1)
+    df["revenue"] = (df["revpar"] * 365).round(0).astype("int64")  # ricavo annuo per annuncio
+    df["occ_pct"] = (df["occ"] * 100).round(1)
+    return df.sort_values("revenue", ascending=False).reset_index(drop=True)
+
+
+_STR_NAT_METRICS = {"revenue": ("Ricavo annuo/annuncio", "€ %{x:,.0f}"),
+                    "revpar": ("RevPAR", "€ %{x:,.1f}"),
+                    "adr": ("ADR", "€ %{x:,.0f}"),
+                    "occ_pct": ("Occupazione", "%{x:.0f}%"),
+                    "listings": ("Annunci attivi", "%{x:,.0f}")}
+
+
+def chart_str_nat_ranking(metric: str = "revenue", top: int = 15) -> go.Figure | None:
+    df = str_nat_sample()
+    if df.empty or metric not in df.columns:
+        return None
+    d = df.sort_values(metric, ascending=False).head(top).sort_values(metric)
+    lbl, tmpl = _STR_NAT_METRICS.get(metric, (metric, "%{x}"))
+    fig = go.Figure(go.Bar(x=d[metric], y=d["market"], orientation="h", marker_color="#0e7490",
+                           hovertemplate="<b>%{y}</b><br>" + lbl + ": " + tmpl + "<extra></extra>"))
+    fig.update_xaxes(title=lbl)
+    return _layout(fig, h=460)
+
+
+def str_nat_seasonality(market: str) -> pd.DataFrame:
+    """Curva mensile di ESEMPIO (occupazione/ADR) per un mercato, dal profilo stagionale."""
+    df = str_nat_sample()
+    r = df[df["market"] == market]
+    if r.empty:
+        return pd.DataFrame()
+    occ, adr = float(r["occ"].iloc[0]), float(r["adr"].iloc[0])
+    mean = sum(_STR_NAT_SEASON) / 12
+    rows = []
+    for m, f in enumerate(_STR_NAT_SEASON, start=1):
+        rows.append({"mese": m, "occ_pct": round(min(occ * f / mean, 0.98) * 100, 1),
+                     "adr": round(adr * (0.85 + 0.30 * (f / max(_STR_NAT_SEASON))))})
+    return pd.DataFrame(rows)
+
+
+def chart_str_nat_seasonality(market: str) -> go.Figure | None:
+    d = str_nat_seasonality(market)
+    if d.empty:
+        return None
+    mesi = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"]
+    fig = go.Figure()
+    fig.add_bar(x=mesi, y=d["occ_pct"], name="Occupazione %", marker_color="#0e7490",
+                hovertemplate="%{x}<br>occ. %{y:.0f}%<extra></extra>")
+    fig.add_scatter(x=mesi, y=d["adr"], name="ADR €", yaxis="y2", mode="lines+markers",
+                    line=dict(color="#f59e0b", width=2),
+                    hovertemplate="%{x}<br>ADR € %{y:,.0f}<extra></extra>")
+    fig.update_layout(yaxis=dict(title="occupazione %"),
+                      yaxis2=dict(title="ADR €", overlaying="y", side="right", showgrid=False),
+                      legend=dict(orientation="h", y=1.12, x=0))
+    return _layout(fig, h=340)
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # MERCATI D'ORIGINE — i 10 paesi da cui arrivano i turisti stranieri.
 #   spesa in Italia + n. turisti (Banca d'Italia, TS1 per paese, completi al 2025)
 #   spesa per turismo all'estero = taglia del mercato (World Bank ST.INT.XPND.CD)

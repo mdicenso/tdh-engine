@@ -331,6 +331,19 @@ Registrata in Gestione dati e in matrice (riga *Affitti brevi / STR*). **Auto-re
 fonte `str` in `update_check.py` (skip intelligente sulla data di snapshot; **esclusa dallo scheduler
 `--fast`** perché scarica ~80MB — si aggiorna con `--apply` completo o `fetch_str_market(refresh=True)`).
 
+**STR a copertura nazionale — anteprima (AirROI/AirDNA)**: pagina **«STR Italia (anteprima)»** (gruppo
+*Cosa è successo*), **prototipo di front-end con dati SINTETICI** (23 mercati su ~14 regioni, incl. Abruzzo)
+sullo schema delle API STR commerciali. Contesto: il TDH è destinato a diventare un **prodotto privato/da
+vendere** (non pubblico) → le fonti a pagamento tornano utilizzabili. **AirROI** copre ~**100 mercati italiani**
+(livello città/comune) con metriche **reali** (occupancy, ADR, RevPAR, revenue, active_listings, ALOS,
+stagionalità via `/markets/metrics/*`), **pay-as-you-go ~$0,05-0,10/mercato → ~$5-10 per snapshot nazionale**;
+**AirDNA** più completa ma ad abbonamento/enterprise. ⚠️ **Licenza**: i ToS AirROI vietano
+pubblicazione/redistribuzione e limitano la cache a **30 giorni** → i dati reali **non** vanno committati né
+mostrati pubblicamente; uso previsto solo nel **deploy privato** (chiamata a runtime con chiave, uso interno;
+per la vendita a terzi servirà una licenza OEM/redistribuzione). La pagina di esempio (helper `str_nat_*` in
+`tdhlib`, valori mock) serve a costruire e valutare la UX prima di attivare l'API reale. Vedi pagina di studio
+*Advisor Operatori*.
+
 ### Aggiornamento automatico delle fonti (scheduler)
 
 `update_check.py` ha un entry-point CLI: senza argomenti fa **solo il controllo** (probe leggero, elenca

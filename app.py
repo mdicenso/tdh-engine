@@ -1173,6 +1173,57 @@ def page_affitti_brevi():
                "Sicilia, Trentino-A.A.) · niente Abruzzo. Universo: annunci Airbnb, non l'intero comparto extra-alberghiero.")
 
 
+def page_str_nazionale():
+    L.page_header("STR Italia — anteprima (AirROI/AirDNA)", group="Cosa è successo", emoji="🇮🇹",
+                  subtitle="Come sarebbe il mercato affitti brevi a COPERTURA NAZIONALE con metriche reali "
+                           "(occupazione, ADR, RevPAR, ricavi). Prototipo di front-end su schema AirROI/AirDNA.")
+    L.demo_banner()
+    st.info("**Dati di ESEMPIO** (sintetici, realistici) — servono a costruire e valutare il front-end. Nel "
+            "prodotto **privato** i valori arrivano dalle API a pagamento (AirROI `/markets/metrics/*`): "
+            "occupazione/ricavi **reali**, ~100 mercati italiani, tutte le regioni. I dati veri **non** vanno "
+            "committati (licenza) → chiamata a runtime con chiave nel deploy privato.", icon=":material/science:")
+    df = L.str_nat_sample()
+
+    metriche = {"Ricavo annuo/annuncio": "revenue", "RevPAR": "revpar", "ADR": "adr",
+                "Occupazione": "occ_pct", "Annunci attivi": "listings"}
+    sel = st.selectbox("Classifica i mercati per:", list(metriche.keys()), key="strnat_metric")
+    st.markdown(f"**Grafico 1 — Mercati italiani per {sel.lower()} (esempio)**")
+    fig = L.chart_str_nat_ranking(metriche[sel], top=15)
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.divider()
+    market = st.selectbox("Dettaglio mercato:", df["market"].tolist(), key="strnat_market")
+    r = df[df["market"] == market].iloc[0]
+    st.caption(f"**{market}** · {r['regione']} — schema AirROI: occupancy, avg_rate (ADR), revpar, revenue, "
+               "active_listings_count, avg_length_of_stay.")
+    L.kpi_row([
+        {"label": "Occupazione", "value": f"{r['occ_pct']:.0f}%"},
+        {"label": "ADR", "value": f"€ {_it_num(r['adr'])}", "hint": "prezzo/notte"},
+        {"label": "RevPAR", "value": f"€ {r['revpar']:.0f}", "hint": "ricavo/notte disponibile"},
+        {"label": "Ricavo annuo/annuncio", "value": f"€ {_it_num(r['revenue'])}"},
+    ])
+    L.kpi_row([
+        {"label": "Annunci attivi", "value": _it_num(r["listings"])},
+        {"label": "Permanenza media", "value": f"{r['alos']:.1f} notti"},
+    ])
+    st.markdown(f"**Grafico 2 — Stagionalità (occupazione e ADR per mese) · {market} (esempio)**")
+    fig = L.chart_str_nat_seasonality(market)
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("**Tabella 1 — Tutti i mercati (esempio)**")
+    show = df.rename(columns={"market": "Mercato", "regione": "Regione", "occ_pct": "Occ. %",
+                              "adr": "ADR €", "revpar": "RevPAR €", "revenue": "Ricavo/anno €",
+                              "listings": "Annunci", "alos": "Perm. media"})[
+        ["Mercato", "Regione", "Occ. %", "ADR €", "RevPAR €", "Ricavo/anno €", "Annunci", "Perm. media"]].copy()
+    for c in ["ADR €", "Ricavo/anno €", "Annunci"]:
+        show[c] = show[c].map(_it_num)
+    st.dataframe(show, hide_index=True, use_container_width=True)
+    st.caption("⚠️ Valori SINTETICI di esempio (non dati reali). Schema compatibile con AirROI e AirDNA. "
+               "Copertura reale prevista: ~100 mercati italiani su tutte le regioni (AirROI, ~$5-10 per snapshot).")
+
+
 def page_spesa():
     code = st.session_state.get("region_code", L.RG.DEFAULT_REGION)
     nome = L.RG.region(code)["nome"]
@@ -1809,6 +1860,7 @@ pg = st.navigation({
         st.Page(page_mercati_paese, title="Mercati per paese", icon=":material/public:"),
         st.Page(page_base_dati_regionale, title="Base Dati Regionale", icon=":material/dataset:"),
         st.Page(page_affitti_brevi, title="Affitti brevi (STR)", icon=":material/home:"),
+        st.Page(page_str_nazionale, title="STR Italia (anteprima)", icon=":material/insights:"),
         st.Page(page_operatori, title="Operatori (demo)", icon=":material/person:"),
     ],
     "Cosa fare": [
@@ -1831,7 +1883,7 @@ pg = st.navigation({
 # Pagine che hanno senso a livello NAZIONALE (vista d'insieme «Italia») senza una regione.
 # Step B: le descrittive Regione/Struttura/Occupazione/Spesa usano il totale Italia (ISTAT area="IT").
 NATIONAL_OK = {"Home", "Italia", "Confronto regioni", "Mercati per paese", "Mercati d'origine",
-               "Operatori (demo)", "Affitti brevi (STR)", "Assistente", "Architettura", "Gestione dati", "Advisor Operatori",
+               "Operatori (demo)", "Affitti brevi (STR)", "STR Italia (anteprima)", "Assistente", "Architettura", "Gestione dati", "Advisor Operatori",
                "Base Dati Regionale",
                "Regione", "Per provincia", "Per struttura", "Occupazione", "Spesa turistica"}
 
