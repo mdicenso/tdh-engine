@@ -268,6 +268,21 @@ cadenza annuale, **skip intelligente** (riscarica solo se CKAN pubblica un anno 
 candidato con feed pulito: **Sardegna** (osservatorio, CSV CC0); **Trentino/ISPAT** scartato (solo HTML
 da scrapare, nessun export).
 
+### Aggiornamento automatico delle fonti (scheduler)
+
+`update_check.py` ha un entry-point CLI: senza argomenti fa **solo il controllo** (probe leggero, elenca
+le fonti con dati nuovi, exit 10 se ce ne sono); con `--apply` **scarica davvero** nella cache le fonti
+aggiornabili (`refresh_all()`, salta le fonti `manual`/`ecb`), con **skip intelligente** sulle annuali.
+
+Il lanciatore **`aggiorna_fonti.cmd`** (radice progetto) incatena il tutto per lo scheduler: `--apply` →
+`git add .cache` → se la cache è cambiata **commit + push** su GitHub (così il cruscotto su Streamlit
+Cloud si aggiorna da solo), altrimenti non fa nulla. Log in `data/update_scheduler.log`. È un file `.cmd`
+(cmd.exe), quindi non è toccato dal ConstrainedLanguage di PowerShell del PC; si può anche lanciare a mano
+col doppio click. È registrato nel **Task Scheduler di Windows** come task **«TDH Aggiorna Fonti»**,
+cadenza **settimanale** (lunedì mattina), che gira quando l'utente è connesso. Per gestirlo:
+`schtasks /Query /TN "TDH Aggiorna Fonti"`, eseguirlo subito `schtasks /Run /TN "TDH Aggiorna Fonti"`,
+rimuoverlo `schtasks /Delete /TN "TDH Aggiorna Fonti" /F`.
+
 > Regola di progetto: ad ogni modifica che cambia comportamento/metodo, aggiornare questo README.
 
 <!-- deploy: rebuild forzato 2026-07-03 (pull nuovo tdhlib: chart_italy_map(year=), bdi_region_years) -->
