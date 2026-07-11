@@ -1426,125 +1426,134 @@ def page_home():
 
 def page_advisor_operatori():
     L.page_header("Advisor Operatori", group="Sistema", emoji="🧭",
-                  subtitle="Dove prendere i dati REALI degli operatori (affitti brevi): confronto delle "
-                           "fonti candidate. Documento di studio, non ancora integrato nel motore.")
-    st.caption("Per rifare la pagina **Operatori** con dati reali servono metriche a livello di struttura "
-               "(prezzo, occupazione, qualità). Qui il confronto delle tre fonti candidate contro i vincoli "
-               "del progetto — **nessun dato è caricato** in Gestione dati.")
-    st.markdown("**Vincoli del progetto:** multi-regione (tutte le 20) · granularità provincia / città "
-                "metropolitana · serie storica per anno · preferibile gratuito &amp; open · "
-                "accessibile via proxy Indra (HTTPS + truststore).")
-    st.info("**Nota.** Nessuna fonte fornisce i dati *proprietari* della demo attuale — canali di vendita, "
-            "funnel di prenotazione, conversione, affluenza per giorno: stanno nei gestionali/channel "
-            "manager dei singoli operatori e non esistono come dato aperto. Le fonti coprono invece il "
-            "**mercato degli affitti brevi**: prezzo, occupazione, recensioni, qualità.", icon=":material/info:")
+                  subtitle="Fonti per i dati REALI degli affitti brevi (STR). Riscontri VERIFICATI a luglio 2026.")
+    st.success("**Aggiornamento (lug 2026).** ✅ **Inside Airbnb integrata** (pagine «Affitti brevi (STR)» + "
+               "«STR Italia — anteprima»). 🔄 Contesto cambiato: il TDH sarà un **prodotto privato da vendere** "
+               "→ le fonti a pagamento tornano ammissibili. **AirROI** verificata: copre **~100 mercati italiani** "
+               "(città/comune, tutte le regioni, Abruzzo incluso) con metriche reali, a **~$5-10 per snapshot "
+               "nazionale**. Dettaglio completo (costi, licenza, lista feed acquistabili) nel file "
+               "`dati_manuali/AIRROI e AIRDNA/`.", icon=":material/verified:")
+    st.caption("Le tre fonti coprono il **mercato degli affitti brevi** (prezzo, occupazione, ricavi, recensioni). "
+               "I dati *proprietari* della demo Operatori (canali di vendita, funnel, conversione, affluenza/giorno) "
+               "restano nei gestionali dei singoli operatori e **non esistono come dato acquistabile**.")
+    st.markdown("**Vincoli del progetto (aggiornati):** multi-regione, tutta Italia (la regione è una variabile) · "
+                "granularità città/comune · serie storica · deploy **privato** → **fonti a pagamento ammesse** "
+                "(attenzione alla **licenza di redistribuzione** se il portale è venduto a terzi).")
 
     st.subheader("Verdetto a colpo d'occhio")
     v1, v2, v3 = st.columns(3)
     with v1.container(border=True):
         st.markdown("#### 🟢 Inside Airbnb")
-        st.success("Consigliata per partire")
-        st.markdown("Dati reali, aperti e scaricabili senza chiave. Poche città, ma **gratis** e licenza libera.")
+        st.success("Integrata — base gratuita")
+        st.markdown("Dati reali, aperti, senza chiave. 7 città + 3 regioni (no Abruzzo), occupazione *proxy*. "
+                    "**Già nel TDH.**")
         st.caption("Costo: gratuito · CC BY 4.0")
     with v2.container(border=True):
-        st.markdown("#### 🟡 AirDNA")
-        st.warning("Solo se c'è budget")
-        st.markdown("La più completa per copertura nazionale, granularità e storia — ma **a pagamento** e licenza chiusa.")
-        st.caption("Costo: ~$12–40/mese · API enterprise negoziata")
+        st.markdown("#### 🟢 AirROI")
+        st.success("Miglior costo/beneficio nazionale")
+        st.markdown("~100 mercati italiani (città/comune, tutte le regioni) con metriche **reali** (occ/ADR/RevPAR/"
+                    "ricavi). API pay-as-you-go. **Vincolo: licenza** (no redistribuzione, cache 30gg → deploy privato).")
+        st.caption("Costo: ~$5-10 per snapshot Italia · $0,01-0,10/chiamata")
     with v3.container(border=True):
-        st.markdown("#### 🟡 AirROI")
-        st.warning("Da sondare")
-        st.markdown("Metriche “pronte” come AirDNA, strumenti web gratis e **API a bassissimo costo**. Incognite su Italia/licenza.")
-        st.caption("Costo: web gratis · API $0,01/chiamata")
+        st.markdown("#### 🟡 AirDNA")
+        st.warning("Solo con budget / enterprise")
+        st.markdown("La più completa (copertura + storico + benchmarking) ma abbonamento/enterprise e licenza chiusa. "
+                    "Conviene solo per esigenze enterprise.")
+        st.caption("Costo: $125-600/mese · API enterprise su preventivo")
 
-    st.subheader("Tabella 1 — Matrice comparativa")
+    st.subheader("Tabella 1 — Matrice comparativa (verificata)")
     matrix = [
-        {"Criterio": "Copertura Italia", "Inside Airbnb": "🟡 Parziale — 5 città + 3 regioni",
-         "AirDNA": "🟢 Ampia — anche mercati piccoli", "AirROI": "🟡 190+ paesi, dettaglio IT da verificare"},
+        {"Criterio": "Copertura Italia", "Inside Airbnb": "🟢 Integrata — 7 città + 3 regioni (no Abruzzo)",
+         "AirROI": "🟢 ~100 mercati (città/comune), tutte le regioni", "AirDNA": "🟢 Ampia + storico profondo"},
         {"Criterio": "Granularità", "Inside Airbnb": "🟡 Annuncio → città/quartiere",
-         "AirDNA": "🟢 Mercato/sottomercato, coordinate", "AirROI": "🟢 Mercato/sottomercato"},
-        {"Criterio": "Serie storica", "Inside Airbnb": "🟢 Sì — trimestrale + archivio",
-         "AirDNA": "🟢 12–60 mesi (mensile)", "AirROI": "🟡 Sì, profondità da verificare"},
-        {"Criterio": "Metriche operatore", "Inside Airbnb": "🟡 Grezze — da aggregare",
-         "AirDNA": "🟢 Pronte (occ/ADR/RevPAR…)", "AirROI": "🟢 Pronte (occ/ADR/RevPAR…)"},
-        {"Criterio": "Accesso", "Inside Airbnb": "🟢 File CSV diretti (no chiave)",
-         "AirDNA": "🟡 Dashboard + API a pagamento", "AirROI": "🟢 Web gratis + API REST"},
-        {"Criterio": "Integrazione Python", "Inside Airbnb": "🟢 urllib + pandas",
-         "AirDNA": "🟡 API (a pagamento)", "AirROI": "🟢 API HTTPS/JSON"},
+         "AirROI": "🟢 Città/comune (mercato)", "AirDNA": "🟢 Mercato/sottomercato, coordinate"},
+        {"Criterio": "Serie storica", "Inside Airbnb": "🟢 via recensioni datate (2009→)",
+         "AirROI": "🟡 storico via API (mensile/pacing)", "AirDNA": "🟢 12–60 mesi (mensile)"},
+        {"Criterio": "Metriche", "Inside Airbnb": "🟡 grezze + occupazione *proxy*",
+         "AirROI": "🟢 reali: occ/ADR/RevPAR/ricavi/ALOS", "AirDNA": "🟢 reali + benchmarking + forecast"},
+        {"Criterio": "Accesso", "Inside Airbnb": "🟢 CSV liberi (no chiave)",
+         "AirROI": "🟢 API pay-as-you-go + web", "AirDNA": "🟡 SaaS + API enterprise"},
         {"Criterio": "Costo", "Inside Airbnb": "🟢 Gratuito",
-         "AirDNA": "🔴 A pagamento", "AirROI": "🟢 Quasi gratis"},
-        {"Criterio": "Licenza / redistribuzione", "Inside Airbnb": "🟢 CC BY 4.0",
-         "AirDNA": "🔴 Proprietaria", "AirROI": "🟡 Proprietaria — da leggere"},
-        {"Criterio": "Proxy Indra (HTTPS)", "Inside Airbnb": "🟢 OK", "AirDNA": "🟢 OK", "AirROI": "🟢 OK"},
-        {"Criterio": "Adatta a multi-regione + anni", "Inside Airbnb": "🟡 Parzialmente",
-         "AirDNA": "🟢 La migliore (se budget)", "AirROI": "🟡 Forse — da verificare"},
+         "AirROI": "🟢 ~$5-10 per snapshot Italia", "AirDNA": "🔴 $125-600/mese o enterprise"},
+        {"Criterio": "Licenza / redistribuzione", "Inside Airbnb": "🟢 CC BY 4.0 (aperta)",
+         "AirROI": "🔴 proprietaria — no redistrib., cache 30gg", "AirDNA": "🔴 proprietaria / chiusa"},
+        {"Criterio": "Deploy pubblico?", "Inside Airbnb": "🟢 Sì (committabile)",
+         "AirROI": "🔴 No — solo deploy privato", "AirDNA": "🔴 No — solo deploy privato"},
+        {"Criterio": "Adatta a Italia intera + reale", "Inside Airbnb": "🟡 parziale (no occ. reale)",
+         "AirROI": "🟢 sì (miglior costo/beneficio)", "AirDNA": "🟢 sì (con budget)"},
     ]
-    st.dataframe(pd.DataFrame(matrix), hide_index=True, use_container_width=True)
-    st.caption("🟢 buono · 🟡 parziale / da verificare · 🔴 debole / assente — valutazione rispetto ai vincoli del TDH.")
+    st.dataframe(pd.DataFrame(matrix)[["Criterio", "Inside Airbnb", "AirROI", "AirDNA"]],
+                 hide_index=True, use_container_width=True)
+    st.caption("🟢 buono · 🟡 parziale · 🔴 debole / vincolo — valutazione rispetto ai vincoli del TDH (prodotto privato).")
 
     st.subheader("Approfondimento per fonte")
-    with st.expander("1 · Inside Airbnb — gratuita, aperta"):
+    with st.expander("1 · Inside Airbnb — gratuita, aperta ✅ INTEGRATA"):
         st.markdown(
-            "Progetto no-profit che pubblica gli annunci Airbnb città per città, puliti e con dizionario dati. "
-            "La scelta naturale per **iniziare senza costi**.\n\n"
-            "- **Copre in Italia**: Roma, Milano, Napoli, Firenze, Venezia + archivi regionali Sicilia, Puglia, Trentino A.A.\n"
-            "- **Livello**: singolo annuncio (lat/lon, quartiere) → aggregabile a città/quartiere\n"
-            "- **File**: `listings` (prezzo, voto, recensioni, disponibilità, tipo), `calendar`, `reviews`\n"
-            "- **Storia**: snapshot trimestrali + archivio pluriennale; recensioni datate dal ~2010\n"
-            "- **Occupazione**: *proxy* (dalla disponibilità, non da prenotazioni reali)\n"
-            "- **Licenza**: Creative Commons CC BY 4.0")
+            "Progetto no-profit che pubblica gli annunci Airbnb città per città. **Già integrata nel TDH** "
+            "(pagine «Affitti brevi (STR)» + reader `fetch_str_market`).\n\n"
+            "- **Copre in Italia**: 7 città (Roma, Milano, Napoli, Firenze, Venezia, Bologna, Bergamo) + 3 "
+            "regioni intere (Puglia, Sicilia, Trentino-A.A.) — **niente Abruzzo**\n"
+            "- **Livello**: singolo annuncio (lat/lon, quartiere) → aggregato a città/zona\n"
+            "- **Metriche**: n. annunci, prezzo, tipo alloggio, recensioni/qualità, licenza/CIR; occupazione = *proxy*\n"
+            "- **Storia**: serie di attività dalle recensioni datate (2009→)\n"
+            "- **Licenza**: CC BY 4.0 (aperta, committabile nel repo)")
         pc1, pc2 = st.columns(2)
-        pc1.success("**Pro**\n\n- Gratis e riutilizzabile\n- Download CSV diretto (proxy-safe)\n"
-                    "- Dato reale e granulare, con qualità/recensioni\n- Storia lunga via recensioni datate")
-        pc2.error("**Contro**\n\n- Solo ~5 città + 3 regioni (non tutte le 20)\n- Occupancy stimata, non di vendita\n"
-                  "- Dati grezzi → aggregazione/pulizia\n- Solo Airbnb (no hotel/Booking)")
-    with st.expander("2 · AirDNA — a pagamento, completa"):
+        pc1.success("**Pro**\n\n- Gratis e ridistribuibile (CC BY)\n- CSV diretto, deploy pubblico ok\n"
+                    "- Dato reale e granulare (qualità/licenze)\n- Serie storica via recensioni")
+        pc2.error("**Contro**\n\n- Solo 7 città + 3 regioni (no Abruzzo)\n- Occupancy stimata (proxy)\n"
+                  "- Solo Airbnb (no Vrbo/Booking)\n- Un solo snapshot corrente (no storico prezzi)")
+    with st.expander("2 · AirROI — copertura nazionale reale, low-cost 🟢 (deploy privato)"):
         st.markdown(
-            "Piattaforma commerciale di riferimento. Aggrega Airbnb, Vrbo e Booking.com e fornisce metriche "
-            "**già pronte** per mercato e sottomercato, con serie storiche.\n\n"
-            "- **Copre in Italia**: ampia, mercati grandi e piccoli, per città/quartiere o coordinate\n"
-            "- **Livello**: mercato/sottomercato → mappabile a provincia / città metropolitana\n"
-            "- **Metriche**: occupancy, ADR, RevPAR, revenue, lead time, length of stay, active listings, stagionalità\n"
+            "Miglior **rapporto costo/beneficio** per la copertura nazionale con metriche reali. API "
+            "**pay-as-you-go** economica.\n\n"
+            "- **Copre in Italia (verificato)**: **~100 mercati** a livello città/comune, **tutte le regioni** "
+            "(Abruzzo incluso: es. Atri, Scanno)\n"
+            "- **Metriche reali**: occupancy, ADR, RevPAR, revenue, active listings, length of stay, "
+            "booking lead time, future pacing, stagionalità (endpoint `markets/metrics/*`)\n"
+            "- **Costo**: endpoint di mercato $0,05-0,10/chiamata → **~$5-10 per snapshot di tutta Italia** "
+            "(trim. ~$20-40/anno; deposito minimo $10; «Preferred Partner» −50%)\n"
+            "- **Licenza (ToS)**: proprietaria — **vietata pubblicazione/redistribuzione**, **cache max 30 giorni**, "
+            "licenza Commercial = uso **interno** → utilizzabile **solo nel deploy privato**")
+        pc1, pc2 = st.columns(2)
+        pc1.success("**Pro**\n\n- 100 mercati IT, tutte le regioni (Abruzzo!)\n- Metriche REALI (occ/ADR/RevPAR/ricavi)\n"
+                    "- Costo irrisorio (~$5-10 Italia)\n- API REST pulita, pay-as-you-go")
+        pc2.error("**Contro**\n\n- Licenza restrittiva: no repo pubblico, cache 30gg\n- Serve chiave + micro-costo\n"
+                  "- Per la VENDITA a terzi serve licenza OEM/redistribuzione\n- Solo Airbnb")
+    with st.expander("3 · AirDNA — completa ma cara / enterprise 🟡"):
+        st.markdown(
+            "Piattaforma commerciale di riferimento (Airbnb+Vrbo+Booking), metriche pronte + benchmarking + "
+            "forecast, ma pensata come SaaS per host/gestori; la copertura dati via API è **enterprise**.\n\n"
+            "- **Piani (verificati)**: Free $0 · **Research $125/mese** ($400/anno) · **Host $150/mese** "
+            "($600/anno) · Property Manager su richiesta · **Enterprise/API su preventivo** (~$250-500/mese o a volume)\n"
+            "- **Metriche**: occupancy, ADR, RevPAR, revenue, lead time, LoS, active listings, stagionalità, forecast\n"
             "- **Storia**: 12–60 mesi (mensile)\n"
-            "- **Accesso/costo**: dashboard da ~$12–40/mese · Enterprise API su preventivo\n"
-            "- **Licenza**: commerciale/proprietaria — non redistribuibile")
+            "- **Licenza**: proprietaria/chiusa — non redistribuibile")
         pc1, pc2 = st.columns(2)
-        pc1.success("**Pro**\n\n- Copertura nazionale ampia, per provincia\n- Metriche pronte (no aggregazione)\n"
-                    "- Multi-piattaforma (Airbnb+Vrbo+Booking)\n- Serie storiche mensili solide")
-        pc2.error("**Contro**\n\n- A pagamento; storico/export sui piani superiori\n- Licenza chiusa: non ripubblicabile\n"
-                  "- API enterprise cara e negoziata\n- Rinnovo automatico (vincolo contrattuale)")
-    with st.expander("3 · AirROI — low-cost, da verificare"):
-        st.markdown(
-            "Concorrente più recente di AirDNA. Strumenti web **gratuiti** + API **pay-as-you-go** economica. "
-            "Sulla carta il miglior compromesso; restano incognite su qualità e copertura reali in Italia.\n\n"
-            "- **Copre**: 190+ paesi (Italia inclusa) — affidabilità IT da verificare sul campo\n"
-            "- **Livello**: mercato/sottomercato (ricerca o coordinate)\n"
-            "- **Metriche**: occupancy, ADR, RevPAR, revenue, lead time, LoS, stagionalità, pacing (13 endpoint)\n"
-            "- **API**: 22 endpoint REST · 100 richieste/min · chiave in <1 min\n"
-            "- **Costo**: tool web gratis senza account · API $0,01/chiamata (credito da $10)\n"
-            "- **Licenza**: proprietaria — leggere i termini API")
-        pc1, pc2 = st.columns(2)
-        pc1.success("**Pro**\n\n- Metriche pronte come AirDNA, API a costo irrisorio\n- Tool web gratuiti senza account\n"
-                    "- API REST pulita → Python semplice\n- Copertura globale dichiarata")
-        pc2.error("**Contro**\n\n- Affidabilità/copertura Italia da provare\n- Licenza dati da chiarire\n"
-                  "- Profondità storica da confermare\n- Fornitore giovane (continuità meno garantita)")
+        pc1.success("**Pro**\n\n- Copertura + storico più profondi\n- Metriche pronte + benchmarking + forecast\n"
+                    "- Multi-piattaforma (Airbnb+Vrbo+Booking)")
+        pc2.error("**Contro**\n\n- Costo alto; API solo enterprise (preventivo)\n- Licenza chiusa\n"
+                  "- Non conveniente vs AirROI per un semplice snapshot nazionale")
 
     st.subheader("Raccomandazione per il TDH")
     st.markdown(
-        "Coerente coi vincoli (multi-regione, per anni, preferenza gratuito & open), un percorso a tre fasi:\n\n"
-        "1. **Base subito, gratis** — occupazione ufficiale ISTAT (già nell'app, tutte le regioni + province, "
-        "per anno) + “cosa cercano” da Google Trends. Fondamento multi-regione già pronto.\n"
-        "2. **Affitti brevi reali con Inside Airbnb (gratis)** — dove copre: ADR, occupancy proxy, voto, "
-        "recensioni, tipo alloggio, con dimensione storica. Dove non copre: solo ISTAT + nota onesta "
-        "“affitti brevi non disponibili per questo territorio”.\n"
-        "3. **Sondare AirROI** come upgrade a basso costo per estendere le metriche pronte; valutare "
-        "**AirDNA** solo se diventa requisito la copertura nazionale completa per provincia con budget dedicato.")
+        "Il TDH sarà un **prodotto privato da vendere** → le fonti a pagamento sono ammesse. Percorso:\n\n"
+        "1. **Base gratuita (fatta)** — **Inside Airbnb** integrata per le città/regioni coperte + ISTAT/Trends "
+        "per il fondamento multi-regione.\n"
+        "2. **Copertura nazionale reale → AirROI** — miglior costo/beneficio (~$5-10 per tutta Italia, "
+        "occupazione/ricavi reali). Front-end **già prototipato** nella pagina «STR Italia (anteprima)» con dati "
+        "d'esempio, pronto a ricevere l'API reale.\n"
+        "3. **AirDNA** — solo se servono storico profondo/benchmarking enterprise e c'è budget dedicato.\n\n"
+        "**Prima di attivare AirROI in produzione**: (a) chiave API; (b) reader `markets/metrics/*` che sostituisce "
+        "i dati d'esempio (cache ≤30 giorni, chiave nei *secrets*, **dato non committato**, solo deploy privato); "
+        "(c) **chiarire con AirROI la licenza di redistribuzione/OEM** se il portale è venduto a clienti terzi.")
+    st.info("Dettaglio completo (costi per endpoint, ToS verbatim, **lista dei feed acquistabili** da AirROI e "
+            "AirDNA con prezzi e URL) nel file locale `dati_manuali/AIRROI e AIRDNA/` "
+            "(`AIRROI_e_AIRDNA.html` + `feed_acquistabili.csv`).", icon=":material/description:")
     st.warning("**Da togliere o marcare “simulato”** nella pagina Operatori: canali, funnel, conversione, "
                "affluenza per giorno — dati proprietari non disponibili apertamente.")
 
-    st.caption("Fonti (luglio 2026): Inside Airbnb insideairbnb.com/get-the-data · "
-               "AirDNA airdna.co/vacation-rental-data/app/it · AirROI airroi.com/airbnb-data. "
-               "Confronto visivo completo generato come artifact separato.")
+    st.caption("Fonti verificate (lug 2026): Inside Airbnb insideairbnb.com/get-the-data · "
+               "AirROI airroi.com/api/pricing + airroi.com/airbnb-data/italy · AirDNA airdna.co/pricing.")
 
 
 def _it_num(v) -> str:
