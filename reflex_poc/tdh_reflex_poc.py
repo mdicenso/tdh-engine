@@ -1,68 +1,104 @@
 """TDH — POC UI in Reflex (Python → React). Pagina 'Regione', design 'Istituzionale'.
-Dati di ESEMPIO (sintetici). Serve a valutare la resa reale vs Streamlit."""
+
+Ora con DATI REALI: legge dal data-layer puro `tdh_data` (ISTAT presenze/capacità,
+Banca d'Italia spesa, ISTAT esteri per paese), lo stesso che alimenta il cruscotto
+Streamlit. Multi-regione: selettore su tutte le 20 regioni + Italia.
+Fase 1 della migrazione a Reflex (11-07-2026): pagina Regione con dati reali.
+"""
+import os
+import sys
+
 import reflex as rx
 import plotly.graph_objects as go
+
+# ── aggancio al data-layer condiviso (TDH_Engine) ───────────────────────────
+_TDH_ENGINE = os.environ.get(
+    "TDH_ENGINE_DIR",
+    r"C:/Users/mcenso/OneDrive - Indra/@_Desktop_ OLD/@@@_Appoggio AI/Work_Area/"
+    r"Programma Abruzzo/Motore Tourism Data HUB/TDH_Engine",
+)
+if _TDH_ENGINE not in sys.path:
+    sys.path.insert(0, _TDH_ENGINE)
+import tdh_data as D  # noqa: E402
 
 # ── design tokens (Istituzionale) ──
 ACCENT = "#0e6b70"; ACCENT_INK = "#0a4f53"; INK = "#10262a"; MUT = "#5c7176"
 FAINT = "#8aa0a4"; LINE = "#e4ebec"; BG = "#f5f7f7"; PANEL = "#ffffff"; GOOD = "#15803d"; WARN = "#b45309"
-MESI = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"]
 
-DATA = {
-    "Toscana": dict(pres="2.418.905", letti="540.312", spesa="6.842 M€", rank="3ª regione per spesa", mercati="61",
-                    serie=[820, 860, 1010, 1280, 1620, 2050, 2380, 2419, 1780, 1240, 760, 900],
-                    mkt=[("Germania", 2.72), ("Francia", 1.32), ("Svizzera", 0.91), ("Regno Unito", 0.71), ("Paesi Bassi", 0.55)]),
-    "Lazio": dict(pres="3.980.120", letti="410.500", spesa="8.601 M€", rank="1ª regione per spesa", mercati="70",
-                  serie=[1600, 1650, 1900, 2300, 2700, 3100, 3400, 3980, 3000, 2400, 1700, 1750],
-                  mkt=[("Stati Uniti", 3.10), ("Germania", 1.62), ("Francia", 1.40), ("Regno Unito", 1.18), ("Spagna", 0.92)]),
-    "Lombardia": dict(pres="3.210.700", letti="360.200", spesa="9.988 M€", rank="2ª regione per spesa", mercati="66",
-                      serie=[1500, 1550, 1800, 2100, 2300, 2600, 2500, 2400, 2700, 2600, 1900, 1700],
-                      mkt=[("Germania", 1.80), ("Francia", 1.10), ("Stati Uniti", 1.02), ("Regno Unito", 0.90), ("Svizzera", 0.82)]),
-}
-RANK = [("Germania", "▲ +14%", "694 €", "3 rotte", "Aumentare"),
-        ("Paesi Bassi", "▲ +9%", "512 €", "1 rotta", "Aumentare"),
-        ("Regno Unito", "▲ +3%", "729 €", "2 rotte", "Mantenere"),
-        ("Stati Uniti", "▼ −2%", "1.566 €", "0 dirette", "Mantenere")]
+# elenco regioni per il selettore: Italia + le 20 regioni (nome → codice NUTS2)
+REGIONI = [("Italia", "ITALIA")] + list(D.REGIONI_SELECT)
+NOMI = [n for n, _ in REGIONI]
+NAME2CODE = {n: c for n, c in REGIONI}
 
 
 class State(rx.State):
-    region: str = "Toscana"
+    region_code: str = "ITE1"      # default: Toscana
+    region_name: str = "Toscana"
+    titolo: str = "Toscana — quadro turistico"
+    kpi_presenze: str = "—"; kpi_presenze_periodo: str = "—"
+    kpi_letti: str = "—"; kpi_letti_anno: str = "—"
+    kpi_spesa: str = "—"; kpi_spesa_rank: str = "—"
+    kpi_mercati: str = "—"; kpi_mercati_anno: str = "—"
+    serie_mesi: list[str] = []
+    serie_presenze: list[float] = []
+    mercati_nomi: list[str] = []
+    mercati_valori: list[float] = []
+    mercati_rows: list[dict] = []
+
+    def _load(self):
+        s = D.regione_snapshot(self.region_code)
+        self.region_name = s["nome"]
+        self.titolo = s["titolo"]
+        self.kpi_presenze = s["kpi_presenze"]
+        self.kpi_presenze_periodo = s["kpi_presenze_periodo"]
+        self.kpi_letti = s["kpi_letti"]
+        self.kpi_letti_anno = s["kpi_letti_anno"]
+        self.kpi_spesa = s["kpi_spesa"]
+        self.kpi_spesa_rank = s["kpi_spesa_rank"]
+        self.kpi_mercati = s["kpi_mercati"]
+        self.kpi_mercati_anno = s["kpi_mercati_anno"]
+        self.serie_mesi = s["serie_mesi"]
+        self.serie_presenze = s["serie_presenze"]
+        self.mercati_nomi = [m["nome"] for m in s["mercati_top"]]
+        self.mercati_valori = [m["valore"] for m in s["mercati_top"]]
+        tot = sum(m["valore"] for m in s["mercati_top"]) or 1.0
+        self.mercati_rows = [
+            {"nome": m["nome"],
+             "presenze": f"{int(round(m['valore'])):,}".replace(",", "."),
+             "quota": f"{m['valore'] / tot * 100:.1f}%"}
+            for m in s["mercati_top"]
+        ]
 
     @rx.event
-    def set_region(self, value: str):
-        self.region = value
+    def on_load(self):
+        self._load()
 
-    @rx.var
-    def pres(self) -> str: return DATA[self.region]["pres"]
-    @rx.var
-    def letti(self) -> str: return DATA[self.region]["letti"]
-    @rx.var
-    def spesa(self) -> str: return DATA[self.region]["spesa"]
-    @rx.var
-    def rank(self) -> str: return DATA[self.region]["rank"]
-    @rx.var
-    def mercati(self) -> str: return DATA[self.region]["mercati"]
-    @rx.var
-    def titolo(self) -> str: return f"{self.region} — quadro turistico"
+    @rx.event
+    def set_region(self, name: str):
+        self.region_code = NAME2CODE.get(name, self.region_code)
+        self._load()
 
     @rx.var
     def presenze_fig(self) -> go.Figure:
-        s = DATA[self.region]["serie"]
-        fig = go.Figure(go.Scatter(x=MESI, y=s, mode="lines", line=dict(color=ACCENT, width=2.6),
-                                   fill="tozeroy", fillcolor="rgba(14,107,112,.12)"))
+        fig = go.Figure(go.Scatter(x=self.serie_mesi, y=self.serie_presenze, mode="lines",
+                                   line=dict(color=ACCENT, width=2.6), fill="tozeroy",
+                                   fillcolor="rgba(14,107,112,.12)",
+                                   hovertemplate="%{x}<br>%{y:,.0f} presenze<extra></extra>"))
         fig.update_layout(height=300, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
                           plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
         fig.update_xaxes(showgrid=False, linecolor=LINE)
-        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="presenze (migliaia)")
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="presenze straniere (mese)")
         return fig
 
     @rx.var
     def mercati_fig(self) -> go.Figure:
-        m = DATA[self.region]["mkt"][::-1]
-        fig = go.Figure(go.Bar(x=[v for _, v in m], y=[n for n, _ in m], orientation="h", marker_color=ACCENT))
+        n = self.mercati_nomi[::-1]
+        v = self.mercati_valori[::-1]
+        fig = go.Figure(go.Bar(x=v, y=n, orientation="h", marker_color=ACCENT,
+                               hovertemplate="<b>%{y}</b><br>%{x:,.0f} presenze<extra></extra>"))
         fig.update_layout(height=300, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
                           plot_bgcolor="#ffffff", font=dict(color=MUT, size=12))
-        fig.update_xaxes(gridcolor="#eef3f3", title="presenze (milioni)")
+        fig.update_xaxes(gridcolor="#eef3f3", title="presenze (anno)")
         fig.update_yaxes(showgrid=False)
         return fig
 
@@ -96,19 +132,16 @@ def panel(title: str, body: rx.Component) -> rx.Component:
         background=PANEL, border=f"1px solid {LINE}", border_radius="16px", padding="18px 20px")
 
 
-def pill(text: str, kind: str) -> rx.Component:
-    return rx.badge(text, color_scheme="grass" if kind == "a" else "amber", variant="soft", radius="full")
-
-
-def ranking_table() -> rx.Component:
+def mercati_table() -> rx.Component:
     return rx.table.root(
         rx.table.header(rx.table.row(
-            *[rx.table.column_header_cell(h) for h in ["Mercato", "Momentum", "Valore €/turista", "Voli diretti", "Raccomandazione"]])),
-        rx.table.body(*[
-            rx.table.row(
-                rx.table.cell(r[0]), rx.table.cell(r[1]), rx.table.cell(r[2]), rx.table.cell(r[3]),
-                rx.table.cell(pill(r[4], "a" if r[4] == "Aumentare" else "m")))
-            for r in RANK]),
+            rx.table.column_header_cell("Mercato estero"),
+            rx.table.column_header_cell("Presenze (anno)"),
+            rx.table.column_header_cell("Quota sui top 5"))),
+        rx.table.body(rx.foreach(State.mercati_rows, lambda r: rx.table.row(
+            rx.table.cell(r["nome"]),
+            rx.table.cell(r["presenze"]),
+            rx.table.cell(rx.badge(r["quota"], color_scheme="teal", variant="soft", radius="full"))))),
         variant="surface", size="2", width="100%")
 
 
@@ -158,26 +191,27 @@ def main_area() -> rx.Component:
                 rx.hstack(
                     rx.text("Panoramica  ›  Regione", font_size="0.8rem", color=MUT),
                     rx.spacer(),
-                    rx.select(list(DATA.keys()), value=State.region, on_change=State.set_region, width="200px"),
+                    rx.select(NOMI, value=State.region_name, on_change=State.set_region, width="220px"),
                     align="center", width="100%"),
                 border_bottom=f"1px solid {LINE}", padding_bottom="12px", width="100%"),
             rx.box(
                 rx.heading(State.titolo, size="7", color=INK, weight="bold"),
-                rx.text("Presenze, capacità ricettiva e mercati esteri della regione. Fonti ISTAT · Banca d'Italia · Eurostat.",
+                rx.text("Presenze, capacità ricettiva e mercati esteri della regione. Fonti: ISTAT · Banca d'Italia.",
                         color=MUT, font_size="0.9rem", margin_top="4px"),
                 width="100%"),
             rx.box(
-                kpi("Presenze straniere", State.pres, "ultimo mese"),
-                kpi("Posti letto", State.letti, "capacità 2024"),
-                kpi("Spesa straniera", State.spesa, State.rank),
-                kpi("Mercati esteri", State.mercati, "paesi di origine"),
+                kpi("Presenze straniere", State.kpi_presenze, State.kpi_presenze_periodo),
+                kpi("Posti letto", State.kpi_letti, State.kpi_letti_anno),
+                kpi("Spesa straniera", State.kpi_spesa, State.kpi_spesa_rank),
+                kpi("Mercati esteri", State.kpi_mercati, State.kpi_mercati_anno),
                 display="grid", grid_template_columns="repeat(4, 1fr)", gap="14px", width="100%"),
             rx.box(
-                panel("Presenze mensili", rx.plotly(data=State.presenze_fig, width="100%")),
+                panel("Presenze straniere mensili", rx.plotly(data=State.presenze_fig, width="100%")),
                 panel("Top mercati esteri", rx.plotly(data=State.mercati_fig, width="100%")),
                 display="grid", grid_template_columns="3fr 2fr", gap="18px", width="100%"),
-            panel("Ranking mercati — dove investire", ranking_table()),
-            rx.text("POC in Reflex · dati di esempio · design «Istituzionale»", color=FAINT, font_size="0.75rem"),
+            panel("Top 5 mercati esteri — dettaglio", mercati_table()),
+            rx.text("POC in Reflex · DATI REALI (ISTAT · Banca d'Italia) · design «Istituzionale»",
+                    color=FAINT, font_size="0.75rem"),
             spacing="4", width="100%", max_width="1180px"),
         flex="1", min_height="100vh", background=BG, padding="24px 34px",
         display="flex", justify_content="center")
@@ -188,4 +222,4 @@ def index() -> rx.Component:
 
 
 app = rx.App(theme=rx.theme(appearance="light", accent_color="teal", gray_color="slate"))
-app.add_page(index, title="TDH · Regione (POC Reflex)")
+app.add_page(index, title="TDH · Regione (Reflex · dati reali)", on_load=State.on_load)
