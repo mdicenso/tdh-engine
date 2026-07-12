@@ -47,6 +47,18 @@ class State(rx.State):
     # ranking regioni (indipendente dalla regione; l'evidenziazione dipende da region_code)
     rank_regioni: list[dict] = []
     italia_spesa: str = "—"
+    # base dati regionale (pannello pluriennale, dipende dalla regione).
+    # Le serie numeriche hanno "buchi" (None) → backend vars (_): consumate solo lato
+    # server nei grafici, non serializzate al client.
+    _bd_years: list = []
+    _bd_pres_tot: list = []
+    _bd_pres_str: list = []
+    _bd_spesa: list = []
+    bd_rows: list[dict] = []
+    bd_k_sviagg: str = "—"; bd_k_sviagg_a: str = "—"
+    bd_k_snotte: str = "—"; bd_k_snotte_a: str = "—"
+    bd_k_occ: str = "—"; bd_k_occ_a: str = "—"
+    bd_k_quota: str = "—"; bd_k_quota_a: str = "—"
 
     def _load(self):
         s = D.regione_snapshot(self.region_code)
@@ -71,6 +83,18 @@ class State(rx.State):
              "quota": f"{m['valore'] / tot * 100:.1f}%"}
             for m in s["mercati_top"]
         ]
+        # base dati regionale (pannello pluriennale)
+        b = D.base_dati_snapshot(self.region_code)
+        self._bd_years = b["years"]
+        self._bd_pres_tot = b["pres_tot"]
+        self._bd_pres_str = b["pres_str"]
+        self._bd_spesa = b["spesa"]
+        self.bd_rows = b["rows"]
+        k = b["kpi"]
+        self.bd_k_sviagg, self.bd_k_sviagg_a = k["spesa_per_viagg"]["val"], "anno " + k["spesa_per_viagg"]["anno"]
+        self.bd_k_snotte, self.bd_k_snotte_a = k["spesa_per_notte"]["val"], "anno " + k["spesa_per_notte"]["anno"]
+        self.bd_k_occ, self.bd_k_occ_a = k["occ"]["val"], "anno " + k["occ"]["anno"]
+        self.bd_k_quota, self.bd_k_quota_a = k["quota_str"]["val"], "anno " + k["quota_str"]["anno"]
 
     @rx.event
     def on_load(self):
@@ -121,6 +145,35 @@ class State(rx.State):
                           plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
         fig.update_xaxes(gridcolor="#eef3f3", title="spesa turisti stranieri 2024 (M€)")
         fig.update_yaxes(showgrid=False)
+        return fig
+
+    @rx.var
+    def bd_presenze_fig(self) -> go.Figure:
+        # solo gli anni con dati di presenze (ISTAT parte dal 2019)
+        xs, yt, ys = [], [], []
+        for i, y in enumerate(self._bd_years):
+            if self._bd_pres_tot[i] is not None or self._bd_pres_str[i] is not None:
+                xs.append(y); yt.append(self._bd_pres_tot[i]); ys.append(self._bd_pres_str[i])
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=xs, y=yt, name="totale", mode="lines+markers",
+                                 line=dict(color=ACCENT, width=2.4)))
+        fig.add_trace(go.Scatter(x=xs, y=ys, name="straniere", mode="lines+markers",
+                                 line=dict(color="#f59e0b", width=2.4)))
+        fig.update_layout(height=320, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12),
+                          legend=dict(orientation="h", y=1.14, x=0))
+        fig.update_xaxes(showgrid=False, linecolor=LINE, dtick=1)
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="presenze (anno)")
+        return fig
+
+    @rx.var
+    def bd_spesa_fig(self) -> go.Figure:
+        fig = go.Figure(go.Bar(x=self._bd_years, y=self._bd_spesa, marker_color=ACCENT,
+                               hovertemplate="%{x}: %{y:,.0f} M€<extra></extra>"))
+        fig.update_layout(height=320, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(showgrid=False, linecolor=LINE)
+        fig.update_yaxes(gridcolor="#eef3f3", title="spesa straniera (M€)")
         return fig
 
 
@@ -189,7 +242,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_group("Cosa è successo"),
         nav_item("map-pin", "Per provincia"),
         nav_item("house", "Affitti brevi"),
-        nav_item("database", "Base dati regionale"),
+        nav_item("database", "Base dati regionale", active=(active == "basedati"), href="/base-dati"),
         nav_item("banknote", "Spesa turistica"),
         nav_group("Cosa fare"),
         nav_item("trophy", "Ranking regioni", active=(active == "ranking"), href="/ranking"),
@@ -282,6 +335,56 @@ def ranking_page() -> rx.Component:
                 color=FAINT, font_size="0.75rem"))
 
 
+# ════════════════════════════════════════════════════════════════════════════
+# pagina: Base dati regionale ("/base-dati")
+# ════════════════════════════════════════════════════════════════════════════
+def base_dati_table() -> rx.Component:
+    return rx.box(
+        rx.table.root(
+            rx.table.header(rx.table.row(
+                rx.table.column_header_cell("Anno"),
+                rx.table.column_header_cell("Presenze totali"),
+                rx.table.column_header_cell("Presenze straniere"),
+                rx.table.column_header_cell("Quota str."),
+                rx.table.column_header_cell("Spesa straniera"),
+                rx.table.column_header_cell("Occupazione"))),
+            rx.table.body(rx.foreach(State.bd_rows, lambda r: rx.table.row(
+                rx.table.cell(r["anno"]),
+                rx.table.cell(r["pres_tot"]),
+                rx.table.cell(r["pres_str"]),
+                rx.table.cell(r["quota"]),
+                rx.table.cell(r["spesa"]),
+                rx.table.cell(r["occ"])))),
+            variant="surface", size="1", width="100%"),
+        max_height="360px", overflow_y="auto", width="100%")
+
+
+def base_dati_page() -> rx.Component:
+    return page_shell(
+        "basedati", "Cosa è successo  ›  Base dati regionale",
+        rx.box(
+            rx.heading(State.region_name + " — base dati pluriennale", size="7", color=INK, weight="bold"),
+            rx.text("Quadro annuale che unisce ISTAT (presenze, capacità) e Banca d'Italia "
+                    "(spesa, notti, viaggiatori) con le derivate (quota stranieri, spesa/turista, "
+                    "occupazione). Celle «—» = anno senza quel dato.",
+                    color=MUT, font_size="0.9rem", margin_top="4px"),
+            width="100%"),
+        rx.box(
+            kpi("Spesa / viaggiatore", State.bd_k_sviagg, State.bd_k_sviagg_a),
+            kpi("Spesa / notte", State.bd_k_snotte, State.bd_k_snotte_a),
+            kpi("Occupazione", State.bd_k_occ, State.bd_k_occ_a),
+            kpi("Quota stranieri", State.bd_k_quota, State.bd_k_quota_a),
+            display="grid", grid_template_columns="repeat(4, 1fr)", gap="14px", width="100%"),
+        rx.box(
+            panel("Presenze annuali (totale vs straniere)", rx.plotly(data=State.bd_presenze_fig, width="100%")),
+            panel("Spesa straniera annuale", rx.plotly(data=State.bd_spesa_fig, width="100%")),
+            display="grid", grid_template_columns="repeat(2, 1fr)", gap="18px", width="100%"),
+        panel("Serie annuale — dettaglio", base_dati_table()),
+        rx.text("Reflex · DATI REALI (ISTAT · Banca d'Italia) · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
 app = rx.App(theme=rx.theme(appearance="light", accent_color="teal", gray_color="slate"))
 app.add_page(index, route="/", title="TDH · Regione", on_load=State.on_load)
 app.add_page(ranking_page, route="/ranking", title="TDH · Ranking regioni", on_load=State.on_load)
+app.add_page(base_dati_page, route="/base-dati", title="TDH · Base dati regionale", on_load=State.on_load)

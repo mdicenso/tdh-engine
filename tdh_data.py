@@ -463,6 +463,19 @@ def _it_int(n) -> str:
         return "—"
 
 
+def _fmt_val(v, unit: str, dec: int) -> str:
+    """Formatta un valore secondo l'unità del registro REGION_VARS (all'italiana)."""
+    if v is None or (isinstance(v, float) and pd.isna(v)):
+        return "—"
+    if unit == "%":
+        return f"{v:.{dec}f}".replace(".", ",") + "%"
+    if unit == "M€":
+        return f"{_it_int(v)} M€"
+    if unit == "€":
+        return f"{_it_int(v)} €"
+    return _it_int(v)  # n, migliaia
+
+
 def regione_snapshot(code: str, top_mercati: int = 5) -> dict:
     """Quadro turistico sintetico di una regione (o Italia), in tipi Python puri.
     Pensato per alimentare direttamente lo stato di una UI (Reflex/Streamlit) senza
@@ -526,6 +539,52 @@ def regione_snapshot(code: str, top_mercati: int = 5) -> dict:
         "mercati_top": mercati_top,
         "mercati_anno": anno_mkt,
     }
+
+
+def base_dati_snapshot(code: str) -> dict:
+    """Pannello ANNUALE della regione in tipi Python puri (per la pagina 'Base dati
+    regionale'): serie per i grafici, tabella formattata (anno più recente in alto),
+    KPI = ultimo valore disponibile di alcune derivate. Robusto ai dati mancanti."""
+    empty = {"years": [], "pres_tot": [], "pres_str": [], "spesa": [], "rows": [], "kpi": {}}
+    panel = region_annual_panel(code)
+    if panel is None or getattr(panel, "empty", True):
+        return empty
+    years = [int(y) for y in panel.index.tolist()]
+
+    def col(k):
+        if k not in panel.columns:
+            return [None] * len(years)
+        return [None if pd.isna(v) else float(v) for v in panel[k].tolist()]
+
+    pres_tot, pres_str = col("presenze_tot"), col("presenze_str")
+    spesa, quota, occ = col("spesa"), col("quota_str"), col("occ")
+
+    rows = []
+    for i, y in enumerate(years):
+        rows.append({
+            "anno": str(y),
+            "pres_tot": _fmt_val(pres_tot[i], "n", 0),
+            "pres_str": _fmt_val(pres_str[i], "n", 0),
+            "quota": _fmt_val(quota[i], "%", 1),
+            "spesa": _fmt_val(spesa[i], "M€", 0),
+            "occ": _fmt_val(occ[i], "%", 1),
+        })
+    rows = rows[::-1]  # anno più recente in alto
+
+    def last_valid(k):
+        if k not in panel.columns:
+            return (None, None)
+        s = panel[k].dropna()
+        return (None, None) if s.empty else (int(s.index[-1]), float(s.iloc[-1]))
+
+    kpi = {}
+    for k in ("spesa_per_viagg", "spesa_per_notte", "occ", "quota_str"):
+        yr, val = last_valid(k)
+        kpi[k] = {"val": _fmt_val(val, REGION_VAR_UNIT.get(k, ""), REGION_VAR_DEC.get(k, 0)),
+                  "anno": (str(yr) if yr else "—")}
+
+    return {"years": years, "pres_tot": pres_tot, "pres_str": pres_str,
+            "spesa": spesa, "rows": rows, "kpi": kpi}
 
 
 REGIONI_SELECT = [(info["nome"], code) for code, info in RG.REGIONS.items()]
