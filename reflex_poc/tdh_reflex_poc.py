@@ -642,9 +642,10 @@ def affitti_page() -> rx.Component:
         rx.box(
             kpi("Annunci attivi", State.str_k_annunci, "snapshot Inside Airbnb"),
             kpi("ADR mediano", State.str_k_adr, "€/notte"),
+            kpi("Soddisfazione ★", State.str_k_rating, "rating medio Airbnb (su 5)"),
             kpi("Operatori professionali", State.str_k_multihost, "host con più annunci"),
             kpi("Con licenza / CIR", State.str_k_licenza, "% degli annunci"),
-            display="grid", grid_template_columns="repeat(4, 1fr)", gap="14px", width="100%"),
+            display="grid", grid_template_columns="repeat(5, 1fr)", gap="12px", width="100%"),
         rx.box(
             panel("ADR mediano — confronto territori", rx.plotly(data=State.str_adr_fig, width="100%")),
             panel("Recensioni / mese (proxy della domanda)", rx.plotly(data=State.str_rev_fig, width="100%")),
@@ -653,7 +654,8 @@ def affitti_page() -> rx.Component:
             panel("Zone / quartieri per numero di annunci", rx.plotly(data=State.str_zone_fig, width="100%")),
             panel("Tipologia di alloggio", rx.plotly(data=State.str_room_fig, width="100%")),
             display="grid", grid_template_columns="repeat(2, 1fr)", gap="18px", width="100%"),
-        rx.text("Reflex · DATI REALI (Inside Airbnb) · l'occupazione è un proxy · design «Istituzionale»",
+        rx.text("Reflex · DATI REALI (Inside Airbnb) · «Soddisfazione» = rating medio, primo segnale "
+                "di sentiment (Tier 0) · design «Istituzionale»",
                 color=FAINT, font_size="0.75rem"))
 
 
