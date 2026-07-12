@@ -587,6 +587,36 @@ def base_dati_snapshot(code: str) -> dict:
             "spesa": spesa, "rows": rows, "kpi": kpi}
 
 
+_GEOJSON_PATH = os.path.join(_ROOT, "assets", "italy_regions.geojson")
+
+
+@functools.lru_cache(maxsize=None)
+def _italy_geojson():
+    """GeoJSON delle regioni italiane (feature.properties.reg_name). None se manca."""
+    if not os.path.exists(_GEOJSON_PATH):
+        return None
+    return json.load(open(_GEOJSON_PATH, encoding="utf-8"))
+
+
+def mappa_snapshot(year: int | None = None) -> dict:
+    """Dati per la mappa coropletica d'Italia (spesa straniera per regione): geojson +
+    liste allineate names/codes/z (in ordine di feature). `codes[i]` = NUTS2 della
+    regione i-esima (per il click → selezione); z = spesa M€ (Banca d'Italia)."""
+    gj = _italy_geojson()
+    if gj is None:
+        return {"geojson": None, "names": [], "codes": [], "z": [], "anno": year or 2024}
+    rk = regions_spend_ranking() if year is None else regions_spend_ranking_year(year)
+    spend = {RG.REGIONS[r["code"]]["bdi"]: r["spesa_M"] for r in rk}
+    names, codes, z = [], [], []
+    for f in gj["features"]:
+        nm = f["properties"]["reg_name"]
+        code = RG.code_for_geo(nm)
+        names.append(nm)
+        codes.append(code or "")
+        z.append(spend.get(RG.region(code)["bdi"]) if code else None)
+    return {"geojson": gj, "names": names, "codes": codes, "z": z, "anno": year or 2024}
+
+
 REGIONI_SELECT = [(info["nome"], code) for code, info in RG.REGIONS.items()]
 
 

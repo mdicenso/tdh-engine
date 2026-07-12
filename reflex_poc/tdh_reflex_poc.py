@@ -59,6 +59,12 @@ class State(rx.State):
     bd_k_snotte: str = "—"; bd_k_snotte_a: str = "—"
     bd_k_occ: str = "—"; bd_k_occ_a: str = "—"
     bd_k_quota: str = "—"; bd_k_quota_a: str = "—"
+    # mappa d'Italia (caricata una volta; l'evidenziazione dipende da region_code).
+    # geojson pesante → backend vars (_): finisce solo dentro la figura, non nello stato client.
+    _map_geojson: dict = {}
+    _map_names: list = []
+    _map_codes: list = []
+    _map_z: list = []
 
     def _load(self):
         s = D.regione_snapshot(self.region_code)
@@ -103,6 +109,10 @@ class State(rx.State):
             self.rank_regioni = [dict(r) for r in D.regions_spend_ranking()]
             tot = D.region_spend("ITALIA")
             self.italia_spesa = f"{D._it_int(tot[0])} M€" if tot else "—"
+        if not self._map_codes:
+            m = D.mappa_snapshot()
+            self._map_geojson = m["geojson"] or {}
+            self._map_names, self._map_codes, self._map_z = m["names"], m["codes"], m["z"]
 
     @rx.event
     def set_region(self, name: str):
@@ -176,6 +186,42 @@ class State(rx.State):
         fig.update_yaxes(gridcolor="#eef3f3", title="spesa straniera (M€)")
         return fig
 
+    @rx.event
+    def on_map_click(self, points: list[dict]):
+        """Click su una regione della mappa → la seleziona (aggiorna KPI e altre pagine)."""
+        if not points:
+            return
+        idx = points[0].get("pointIndex")
+        if idx is None:
+            idx = points[0].get("pointNumber")
+        if idx is None or idx < 0 or idx >= len(self._map_codes):
+            return
+        code = self._map_codes[idx]
+        if code:
+            self.region_code = code
+            self._load()
+
+    @rx.var
+    def map_fig(self) -> go.Figure:
+        gj = self._map_geojson
+        if not gj:
+            return go.Figure()
+        sel = [i for i, c in enumerate(self._map_codes) if c == self.region_code]
+        fig = go.Figure(go.Choropleth(
+            geojson=gj, featureidkey="properties.reg_name",
+            locations=self._map_names, z=self._map_z, customdata=self._map_codes,
+            colorscale="Teal", marker_line_color="white", marker_line_width=0.6,
+            selectedpoints=(sel or None),
+            selected=dict(marker=dict(opacity=1.0)),
+            unselected=dict(marker=dict(opacity=0.5)),
+            colorbar=dict(title=dict(text="spesa straniera<br>2024 (M€)", side="right")),
+            hovertemplate="<b>%{location}</b><br>spesa %{z:,.0f} M€<extra></extra>"))
+        fig.update_geos(fitbounds="locations", visible=False, projection_type="mercator",
+                        bgcolor="rgba(0,0,0,0)")
+        fig.update_layout(height=640, margin=dict(l=0, r=0, t=6, b=0),
+                          paper_bgcolor="rgba(0,0,0,0)", font=dict(color=MUT, size=12))
+        return fig
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # componenti condivisi (design-system)
@@ -237,7 +283,7 @@ def sidebar(active: str = "regione") -> rx.Component:
                border_bottom=f"1px solid {LINE}", width="100%"),
         nav_group("Panoramica"),
         nav_item("layout-dashboard", "Regione", active=(active == "regione"), href="/"),
-        nav_item("map", "Italia · mappa"),
+        nav_item("map", "Italia · mappa", active=(active == "mappa"), href="/mappa"),
         nav_item("globe", "Mercati d'origine"),
         nav_group("Cosa è successo"),
         nav_item("map-pin", "Per provincia"),
@@ -384,7 +430,32 @@ def base_dati_page() -> rx.Component:
                 color=FAINT, font_size="0.75rem"))
 
 
+# ════════════════════════════════════════════════════════════════════════════
+# pagina: Italia · mappa ("/mappa")
+# ════════════════════════════════════════════════════════════════════════════
+def map_page() -> rx.Component:
+    return page_shell(
+        "mappa", "Panoramica  ›  Italia · mappa",
+        rx.box(
+            rx.heading("Italia — spesa turistica straniera per regione (2024)", size="7", color=INK, weight="bold"),
+            rx.text("Mappa colorata per spesa dei turisti stranieri (Banca d'Italia). "
+                    "Clicca una regione per selezionarla: KPI e altre pagine si aggiornano. "
+                    "La regione selezionata è a piena intensità, le altre attenuate.",
+                    color=MUT, font_size="0.9rem", margin_top="4px"),
+            width="100%"),
+        rx.box(
+            kpi("Totale Italia", State.italia_spesa, "spesa straniera 2024"),
+            kpi("Regione selezionata", State.kpi_spesa, State.region_name),
+            kpi("Posizione", State.kpi_spesa_rank, "nella classifica"),
+            display="grid", grid_template_columns="repeat(3, 1fr)", gap="14px", width="100%"),
+        panel("Mappa della spesa straniera",
+              rx.plotly(data=State.map_fig, on_click=State.on_map_click, width="100%")),
+        rx.text("Reflex · DATI REALI (Banca d'Italia) · clic per selezionare · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
 app = rx.App(theme=rx.theme(appearance="light", accent_color="teal", gray_color="slate"))
 app.add_page(index, route="/", title="TDH · Regione", on_load=State.on_load)
+app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)
 app.add_page(ranking_page, route="/ranking", title="TDH · Ranking regioni", on_load=State.on_load)
 app.add_page(base_dati_page, route="/base-dati", title="TDH · Base dati regionale", on_load=State.on_load)
