@@ -618,6 +618,117 @@ def mercati_snapshot(code: str, top_bar: int = 12, top_lines: int = 5) -> dict:
             "line_years": [int(y) for y in anni], "line_series": line_series}
 
 
+# ════════════════════════════════════════════════════════════════════════════
+# STR / AFFITTI BREVI (Inside Airbnb) — indipendente dalla regione
+# (7 città + 3 regioni: Sicilia, Puglia, Trentino; no Abruzzo)
+# ════════════════════════════════════════════════════════════════════════════
+_STR_TERR_PATH = _cpath("str_airbnb_territorio.csv")
+_STR_ZONA_PATH = _cpath("str_airbnb_zona.csv")
+_STR_ROOM_PATH = _cpath("str_airbnb_roomtype.csv")
+_STR_REV_PATH = _cpath("str_airbnb_recensioni_mese.csv")
+
+
+@functools.lru_cache(maxsize=None)
+def str_territori():
+    return pd.read_csv(_STR_TERR_PATH) if os.path.exists(_STR_TERR_PATH) else pd.DataFrame()
+
+
+@functools.lru_cache(maxsize=None)
+def _str_zone_all():
+    return pd.read_csv(_STR_ZONA_PATH) if os.path.exists(_STR_ZONA_PATH) else pd.DataFrame()
+
+
+@functools.lru_cache(maxsize=None)
+def _str_room_all():
+    return pd.read_csv(_STR_ROOM_PATH) if os.path.exists(_STR_ROOM_PATH) else pd.DataFrame()
+
+
+@functools.lru_cache(maxsize=None)
+def str_reviews_monthly():
+    if not os.path.exists(_STR_REV_PATH):
+        return pd.DataFrame()
+    df = pd.read_csv(_STR_REV_PATH)
+    df["date"] = pd.to_datetime(df["mese"].astype(str) + "-01", errors="coerce")
+    return df
+
+
+def str_territori_list() -> list:
+    """Lista (territorio, slug) dei territori STR coperti, ordinata per n. annunci desc."""
+    df = str_territori()
+    if df.empty:
+        return []
+    d = df.sort_values("n_annunci", ascending=False)
+    return [(str(r["territorio"]), str(r["slug"])) for _, r in d.iterrows()]
+
+
+def _pct(v, dec: int = 1) -> str:
+    if v is None or (isinstance(v, float) and pd.isna(v)):
+        return "—"
+    return f"{float(v):.{dec}f}".replace(".", ",") + "%"
+
+
+def str_snapshot(slug: str) -> dict:
+    """Quadro affitti brevi (Inside Airbnb) del territorio `slug`, in tipi Python puri.
+    Indipendente dalla regione. Robusto ai dati mancanti."""
+    empty = {"slug": slug, "territorio": "—", "tipo": "—", "k_annunci": "—", "k_adr": "—",
+             "k_intero": "—", "k_multihost": "—", "k_licenza": "—", "k_rating": "—",
+             "adr_nomi": [], "adr_val": [], "adr_slugs": [], "zone_nomi": [], "zone_val": [],
+             "room_nomi": [], "room_val": [], "rev_x": [], "rev_y": []}
+    terr = str_territori()
+    if terr.empty:
+        return empty
+    row = terr[terr["slug"] == slug]
+    r = row.iloc[0].to_dict() if not row.empty else {}
+
+    def num(k):
+        v = r.get(k)
+        return None if v is None or (isinstance(v, float) and pd.isna(v)) else float(v)
+
+    d = terr.dropna(subset=["adr_mediano"]).sort_values("adr_mediano")
+    adr_nomi = [str(x) for x in d["territorio"]]
+    adr_val = [float(x) for x in d["adr_mediano"]]
+    adr_slugs = [str(x) for x in d["slug"]]
+
+    zdf = _str_zone_all()
+    zone_nomi, zone_val = [], []
+    if not zdf.empty:
+        z = zdf[zdf["slug"] == slug].sort_values("n_annunci", ascending=False).head(12)
+        zone_nomi = [str(x) for x in z["zona"]]
+        zone_val = [float(x) for x in z["n_annunci"]]
+
+    rdf = _str_room_all()
+    room_nomi, room_val = [], []
+    if not rdf.empty:
+        rt = rdf[rdf["slug"] == slug].sort_values("n_annunci")
+        room_nomi = [str(x) for x in rt["room_type"]]
+        room_val = [float(x) for x in rt["n_annunci"]]
+
+    rev = str_reviews_monthly()
+    rev_x, rev_y = [], []
+    if not rev.empty:
+        rv = rev[rev["slug"] == slug].dropna(subset=["date"]).sort_values("date")
+        rev_x = [t.strftime("%Y-%m") for t in rv["date"]]
+        rev_y = [float(x) for x in rv["n_recensioni"]]
+
+    adr = num("adr_mediano")
+    rating = num("rating_medio")
+    return {
+        "slug": slug,
+        "territorio": str(r.get("territorio", "—")),
+        "tipo": str(r.get("tipo", "—")),
+        "k_annunci": _it_int(num("n_annunci")),
+        "k_adr": (f"€ {_it_int(adr)}" if adr is not None else "—"),
+        "k_intero": _pct(num("pct_intero")),
+        "k_multihost": _pct(num("pct_multihost")),
+        "k_licenza": _pct(num("pct_licenza")),
+        "k_rating": (f"{rating:.2f}".replace(".", ",") if rating is not None else "—"),
+        "adr_nomi": adr_nomi, "adr_val": adr_val, "adr_slugs": adr_slugs,
+        "zone_nomi": zone_nomi, "zone_val": zone_val,
+        "room_nomi": room_nomi, "room_val": room_val,
+        "rev_x": rev_x, "rev_y": rev_y,
+    }
+
+
 _GEOJSON_PATH = os.path.join(_ROOT, "assets", "italy_regions.geojson")
 
 

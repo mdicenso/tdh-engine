@@ -30,6 +30,11 @@ REGIONI = [("Italia", "ITALIA")] + list(D.REGIONI_SELECT)
 NOMI = [n for n, _ in REGIONI]
 NAME2CODE = {n: c for n, c in REGIONI}
 
+# territori STR (Inside Airbnb) — indipendenti dalla regione
+STR_TERRITORI = D.str_territori_list()
+STR_NOMI = [n for n, _ in STR_TERRITORI]
+STR_NAME2SLUG = {n: s for n, s in STR_TERRITORI}
+
 
 class State(rx.State):
     region_code: str = "ITE1"      # default: Toscana
@@ -72,6 +77,15 @@ class State(rx.State):
     _me_line_series: list = []
     me_rows: list[dict] = []
     me_anno: str = "—"; me_n: str = "—"; me_primo: str = "—"; me_primo_val: str = "—"
+    # affitti brevi / STR (Inside Airbnb) — indipendente dalla regione (selettore proprio)
+    str_slug: str = "rome"
+    str_terr_nome: str = "Roma"; str_tipo: str = "—"
+    str_k_annunci: str = "—"; str_k_adr: str = "—"; str_k_intero: str = "—"
+    str_k_multihost: str = "—"; str_k_licenza: str = "—"; str_k_rating: str = "—"
+    _str_adr_nomi: list = []; _str_adr_val: list = []; _str_adr_slugs: list = []
+    _str_zone_nomi: list = []; _str_zone_val: list = []
+    _str_room_nomi: list = []; _str_room_val: list = []
+    _str_rev_x: list = []; _str_rev_y: list = []
 
     def _load(self):
         s = D.regione_snapshot(self.region_code)
@@ -127,6 +141,24 @@ class State(rx.State):
             m = D.mappa_snapshot()
             self._map_geojson = m["geojson"] or {}
             self._map_names, self._map_codes, self._map_z = m["names"], m["codes"], m["z"]
+        if not self._str_adr_slugs:
+            self._load_str()
+
+    def _load_str(self):
+        s = D.str_snapshot(self.str_slug)
+        self.str_terr_nome, self.str_tipo = s["territorio"], s["tipo"]
+        self.str_k_annunci, self.str_k_adr = s["k_annunci"], s["k_adr"]
+        self.str_k_intero, self.str_k_multihost = s["k_intero"], s["k_multihost"]
+        self.str_k_licenza, self.str_k_rating = s["k_licenza"], s["k_rating"]
+        self._str_adr_nomi, self._str_adr_val, self._str_adr_slugs = s["adr_nomi"], s["adr_val"], s["adr_slugs"]
+        self._str_zone_nomi, self._str_zone_val = s["zone_nomi"], s["zone_val"]
+        self._str_room_nomi, self._str_room_val = s["room_nomi"], s["room_val"]
+        self._str_rev_x, self._str_rev_y = s["rev_x"], s["rev_y"]
+
+    @rx.event
+    def set_str_territorio(self, nome: str):
+        self.str_slug = STR_NAME2SLUG.get(nome, self.str_slug)
+        self._load_str()
 
     @rx.event
     def set_region(self, name: str):
@@ -263,6 +295,54 @@ class State(rx.State):
         fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="presenze (anno)")
         return fig
 
+    @rx.var
+    def str_adr_fig(self) -> go.Figure:
+        colors = ["#f59e0b" if sl == self.str_slug else ACCENT for sl in self._str_adr_slugs]
+        fig = go.Figure(go.Bar(x=self._str_adr_val, y=self._str_adr_nomi, orientation="h",
+                               marker_color=colors,
+                               hovertemplate="<b>%{y}</b><br>ADR mediano € %{x:,.0f}<extra></extra>"))
+        fig.update_layout(height=430, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(gridcolor="#eef3f3", title="ADR mediano (€/notte)")
+        fig.update_yaxes(showgrid=False)
+        return fig
+
+    @rx.var
+    def str_rev_fig(self) -> go.Figure:
+        fig = go.Figure(go.Scatter(x=self._str_rev_x, y=self._str_rev_y, mode="lines",
+                                   line=dict(color=ACCENT, width=1.8), fill="tozeroy",
+                                   fillcolor="rgba(14,107,112,.10)",
+                                   hovertemplate="%{x}<br>%{y:,.0f} recensioni<extra></extra>"))
+        fig.update_layout(height=430, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(showgrid=False, linecolor=LINE)
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="recensioni / mese")
+        return fig
+
+    @rx.var
+    def str_zone_fig(self) -> go.Figure:
+        n = self._str_zone_nomi[::-1]
+        v = self._str_zone_val[::-1]
+        fig = go.Figure(go.Bar(x=v, y=n, orientation="h", marker_color=ACCENT,
+                               hovertemplate="<b>%{y}</b><br>%{x:,.0f} annunci<extra></extra>"))
+        fig.update_layout(height=430, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(gridcolor="#eef3f3", title="numero di annunci")
+        fig.update_yaxes(showgrid=False)
+        return fig
+
+    @rx.var
+    def str_room_fig(self) -> go.Figure:
+        n = self._str_room_nomi
+        v = self._str_room_val
+        fig = go.Figure(go.Bar(x=v, y=n, orientation="h", marker_color="#16a34a",
+                               hovertemplate="<b>%{y}</b><br>%{x:,.0f} annunci<extra></extra>"))
+        fig.update_layout(height=300, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(gridcolor="#eef3f3", title="numero di annunci")
+        fig.update_yaxes(showgrid=False)
+        return fig
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # componenti condivisi (design-system)
@@ -328,7 +408,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_item("globe", "Mercati d'origine", active=(active == "mercati"), href="/mercati"),
         nav_group("Cosa è successo"),
         nav_item("map-pin", "Per provincia"),
-        nav_item("house", "Affitti brevi"),
+        nav_item("house", "Affitti brevi", active=(active == "str"), href="/affitti-brevi"),
         nav_item("database", "Base dati regionale", active=(active == "basedati"), href="/base-dati"),
         nav_item("banknote", "Spesa turistica"),
         nav_group("Cosa fare"),
@@ -536,9 +616,51 @@ def mercati_page() -> rx.Component:
                 color=FAINT, font_size="0.75rem"))
 
 
+# ════════════════════════════════════════════════════════════════════════════
+# pagina: Affitti brevi / STR ("/affitti-brevi")
+# ════════════════════════════════════════════════════════════════════════════
+def affitti_page() -> rx.Component:
+    return page_shell(
+        "str", "Cosa è successo  ›  Affitti brevi (STR)",
+        rx.box(
+            rx.hstack(
+                rx.vstack(
+                    rx.heading("Affitti brevi — " + State.str_terr_nome, size="7", color=INK, weight="bold"),
+                    rx.text("Struttura del mercato Airbnb (fonte: Inside Airbnb): annunci, prezzi, "
+                            "operatori, licenze e domanda nel tempo. Copertura: 7 città + 3 regioni — "
+                            "vista NAZIONALE, indipendente dalla regione selezionata in alto.",
+                            color=MUT, font_size="0.9rem", margin_top="4px"),
+                    align_items="start", spacing="1"),
+                rx.spacer(),
+                rx.vstack(
+                    rx.text("Territorio", font_size="0.7rem", color=MUT, font_weight="600"),
+                    rx.select(STR_NOMI, value=State.str_terr_nome, on_change=State.set_str_territorio,
+                              width="220px"),
+                    spacing="1", align_items="end"),
+                align="start", width="100%"),
+            width="100%"),
+        rx.box(
+            kpi("Annunci attivi", State.str_k_annunci, "snapshot Inside Airbnb"),
+            kpi("ADR mediano", State.str_k_adr, "€/notte"),
+            kpi("Operatori professionali", State.str_k_multihost, "host con più annunci"),
+            kpi("Con licenza / CIR", State.str_k_licenza, "% degli annunci"),
+            display="grid", grid_template_columns="repeat(4, 1fr)", gap="14px", width="100%"),
+        rx.box(
+            panel("ADR mediano — confronto territori", rx.plotly(data=State.str_adr_fig, width="100%")),
+            panel("Recensioni / mese (proxy della domanda)", rx.plotly(data=State.str_rev_fig, width="100%")),
+            display="grid", grid_template_columns="repeat(2, 1fr)", gap="18px", width="100%"),
+        rx.box(
+            panel("Zone / quartieri per numero di annunci", rx.plotly(data=State.str_zone_fig, width="100%")),
+            panel("Tipologia di alloggio", rx.plotly(data=State.str_room_fig, width="100%")),
+            display="grid", grid_template_columns="repeat(2, 1fr)", gap="18px", width="100%"),
+        rx.text("Reflex · DATI REALI (Inside Airbnb) · l'occupazione è un proxy · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
 app = rx.App(theme=rx.theme(appearance="light", accent_color="teal", gray_color="slate"))
 app.add_page(index, route="/", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)
 app.add_page(mercati_page, route="/mercati", title="TDH · Mercati d'origine", on_load=State.on_load)
+app.add_page(affitti_page, route="/affitti-brevi", title="TDH · Affitti brevi (STR)", on_load=State.on_load)
 app.add_page(ranking_page, route="/ranking", title="TDH · Ranking regioni", on_load=State.on_load)
 app.add_page(base_dati_page, route="/base-dati", title="TDH · Base dati regionale", on_load=State.on_load)
