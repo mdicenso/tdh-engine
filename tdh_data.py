@@ -587,6 +587,37 @@ def base_dati_snapshot(code: str) -> dict:
             "spesa": spesa, "rows": rows, "kpi": kpi}
 
 
+def mercati_snapshot(code: str, top_bar: int = 12, top_lines: int = 5) -> dict:
+    """Mercati esteri della regione in tipi Python puri (per la pagina 'Mercati
+    d'origine'): classifica ultimo anno (barre + tabella con quota) e serie storiche
+    annuali dei primi `top_lines` paesi. Robusto ai dati mancanti."""
+    empty = {"anno": None, "n": 0, "primo": "—", "primo_val": "—",
+             "bar_nomi": [], "bar_val": [], "rows": [], "line_years": [], "line_series": []}
+    mk = estero_markets(code)  # tutti i paesi, ultimo anno, ordinati desc
+    if mk is None or mk.empty:
+        return empty
+    anni = estero_years(code)
+    anno = anni[-1] if anni else None
+    top = mk.head(top_bar)
+    bar_nomi = [r["nome"] for _, r in top.iterrows()]
+    bar_val = [float(r["valore"]) for _, r in top.iterrows()]
+    tot = float(mk["valore"].sum()) or 1.0
+    rows = [{"nome": r["nome"],
+             "valore": _it_int(r["valore"]),
+             "quota": f"{r['valore'] / tot * 100:.1f}".replace(".", ",") + "%"}
+            for _, r in top.iterrows()]
+    # serie storiche dei primi `top_lines` paesi, allineate agli anni della regione
+    line_series = []
+    for _, r in mk.head(top_lines).iterrows():
+        s = estero_country_series(code, r["country"])
+        m = {int(a): float(v) for a, v in zip(s["anno"], s["valore"])} if s is not None else {}
+        line_series.append({"nome": r["nome"], "values": [m.get(y) for y in anni]})
+    return {"anno": anno, "n": len(mk),
+            "primo": str(mk.iloc[0]["nome"]), "primo_val": _it_int(mk.iloc[0]["valore"]),
+            "bar_nomi": bar_nomi, "bar_val": bar_val, "rows": rows,
+            "line_years": [int(y) for y in anni], "line_series": line_series}
+
+
 _GEOJSON_PATH = os.path.join(_ROOT, "assets", "italy_regions.geojson")
 
 

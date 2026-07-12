@@ -65,6 +65,13 @@ class State(rx.State):
     _map_names: list = []
     _map_codes: list = []
     _map_z: list = []
+    # mercati d'origine (dipende dalla regione)
+    _me_bar_nomi: list = []
+    _me_bar_val: list = []
+    _me_line_years: list = []
+    _me_line_series: list = []
+    me_rows: list[dict] = []
+    me_anno: str = "—"; me_n: str = "—"; me_primo: str = "—"; me_primo_val: str = "—"
 
     def _load(self):
         s = D.regione_snapshot(self.region_code)
@@ -101,6 +108,13 @@ class State(rx.State):
         self.bd_k_snotte, self.bd_k_snotte_a = k["spesa_per_notte"]["val"], "anno " + k["spesa_per_notte"]["anno"]
         self.bd_k_occ, self.bd_k_occ_a = k["occ"]["val"], "anno " + k["occ"]["anno"]
         self.bd_k_quota, self.bd_k_quota_a = k["quota_str"]["val"], "anno " + k["quota_str"]["anno"]
+        # mercati d'origine
+        me = D.mercati_snapshot(self.region_code)
+        self._me_bar_nomi, self._me_bar_val = me["bar_nomi"], me["bar_val"]
+        self._me_line_years, self._me_line_series = me["line_years"], me["line_series"]
+        self.me_rows = me["rows"]
+        self.me_anno = str(me["anno"]) if me["anno"] else "—"
+        self.me_n, self.me_primo, self.me_primo_val = str(me["n"]), me["primo"], me["primo_val"]
 
     @rx.event
     def on_load(self):
@@ -222,6 +236,33 @@ class State(rx.State):
                           paper_bgcolor="rgba(0,0,0,0)", font=dict(color=MUT, size=12))
         return fig
 
+    @rx.var
+    def me_bar_fig(self) -> go.Figure:
+        n = self._me_bar_nomi[::-1]
+        v = self._me_bar_val[::-1]
+        fig = go.Figure(go.Bar(x=v, y=n, orientation="h", marker_color=ACCENT,
+                               hovertemplate="<b>%{y}</b><br>%{x:,.0f} presenze<extra></extra>"))
+        fig.update_layout(height=430, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(gridcolor="#eef3f3", title="presenze straniere (anno)")
+        fig.update_yaxes(showgrid=False)
+        return fig
+
+    @rx.var
+    def me_lines_fig(self) -> go.Figure:
+        palette = ["#0e6b70", "#f59e0b", "#7c3aed", "#059669", "#dc2626", "#2563eb"]
+        fig = go.Figure()
+        for i, s in enumerate(self._me_line_series):
+            fig.add_trace(go.Scatter(x=self._me_line_years, y=s["values"], name=s["nome"],
+                                     mode="lines+markers",
+                                     line=dict(color=palette[i % len(palette)], width=2.2)))
+        fig.update_layout(height=430, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12),
+                          legend=dict(orientation="h", y=1.13, x=0))
+        fig.update_xaxes(showgrid=False, linecolor=LINE)
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="presenze (anno)")
+        return fig
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # componenti condivisi (design-system)
@@ -284,7 +325,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_group("Panoramica"),
         nav_item("layout-dashboard", "Regione", active=(active == "regione"), href="/"),
         nav_item("map", "Italia · mappa", active=(active == "mappa"), href="/mappa"),
-        nav_item("globe", "Mercati d'origine"),
+        nav_item("globe", "Mercati d'origine", active=(active == "mercati"), href="/mercati"),
         nav_group("Cosa è successo"),
         nav_item("map-pin", "Per provincia"),
         nav_item("house", "Affitti brevi"),
@@ -454,8 +495,50 @@ def map_page() -> rx.Component:
                 color=FAINT, font_size="0.75rem"))
 
 
+# ════════════════════════════════════════════════════════════════════════════
+# pagina: Mercati d'origine ("/mercati")
+# ════════════════════════════════════════════════════════════════════════════
+def mercati_dettaglio_table() -> rx.Component:
+    return rx.box(
+        rx.table.root(
+            rx.table.header(rx.table.row(
+                rx.table.column_header_cell("Mercato estero"),
+                rx.table.column_header_cell("Presenze (anno)"),
+                rx.table.column_header_cell("Quota su tutti i mercati"))),
+            rx.table.body(rx.foreach(State.me_rows, lambda r: rx.table.row(
+                rx.table.cell(r["nome"]),
+                rx.table.cell(r["valore"]),
+                rx.table.cell(rx.badge(r["quota"], color_scheme="teal", variant="soft", radius="full"))))),
+            variant="surface", size="1", width="100%"),
+        max_height="360px", overflow_y="auto", width="100%")
+
+
+def mercati_page() -> rx.Component:
+    return page_shell(
+        "mercati", "Panoramica  ›  Mercati d'origine",
+        rx.box(
+            rx.heading(State.region_name + " — mercati esteri d'origine", size="7", color=INK, weight="bold"),
+            rx.text("Da quali paesi arrivano i turisti stranieri (presenze, ISTAT). Classifica "
+                    "dell'ultimo anno e andamento storico dei primi 5 mercati (visibile il crollo 2020).",
+                    color=MUT, font_size="0.9rem", margin_top="4px"),
+            width="100%"),
+        rx.box(
+            kpi("Mercati esteri", State.me_n, "paesi di origine"),
+            kpi("Primo mercato", State.me_primo, State.me_primo_val + " presenze"),
+            kpi("Anno", State.me_anno, "ultimo disponibile"),
+            display="grid", grid_template_columns="repeat(3, 1fr)", gap="14px", width="100%"),
+        rx.box(
+            panel("Top mercati (ultimo anno)", rx.plotly(data=State.me_bar_fig, width="100%")),
+            panel("Andamento storico — primi 5 mercati", rx.plotly(data=State.me_lines_fig, width="100%")),
+            display="grid", grid_template_columns="repeat(2, 1fr)", gap="18px", width="100%"),
+        panel("Classifica mercati — dettaglio", mercati_dettaglio_table()),
+        rx.text("Reflex · DATI REALI (ISTAT esteri per paese) · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
 app = rx.App(theme=rx.theme(appearance="light", accent_color="teal", gray_color="slate"))
 app.add_page(index, route="/", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)
+app.add_page(mercati_page, route="/mercati", title="TDH · Mercati d'origine", on_load=State.on_load)
 app.add_page(ranking_page, route="/ranking", title="TDH · Ranking regioni", on_load=State.on_load)
 app.add_page(base_dati_page, route="/base-dati", title="TDH · Base dati regionale", on_load=State.on_load)
