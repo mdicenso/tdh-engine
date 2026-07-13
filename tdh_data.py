@@ -678,6 +678,135 @@ def province_snapshot(code: str) -> dict:
             "top_peso": f"{top['presenze'] / tot_reg * 100:.0f}%", "share_top3": f"{share3:.0f}%"}
 
 
+# ════════════════════════════════════════════════════════════════════════════
+# ALLOCATORE — "Azioni & budget": ranking mercati esteri (il cuore-motore)
+# Usa il MOTORE VERO (tourism_wedge.rank_markets, fonte unica) via import LAZY +
+# chdir temporaneo su TDH_Engine (assemble_real usa .cache relativo alla cwd).
+# ════════════════════════════════════════════════════════════════════════════
+_MK_ISTAT = {"DE": "DE", "AT": "AT", "FR": "FR", "ES": "ES", "US": "US",
+             "NL": "NL", "CH": "CH_LI", "GB": "GB"}
+_MK_BDI = {"DE": "DE", "AT": "AT", "FR": "FR", "ES": "ES", "US": "US",
+           "NL": None, "CH": "CH", "GB": "GB"}
+
+
+@functools.lru_cache(maxsize=None)
+def _bdi_spend_per_market() -> dict:
+    p = _cpath("bdi_spend_per_market.csv")
+    if not os.path.exists(p):
+        return {}
+    df = pd.read_csv(p)
+    return {str(r["code"]): float(r["eur_per_viaggiatore"])
+            for _, r in df.iterrows() if pd.notna(r["eur_per_viaggiatore"])}
+
+
+def _bdi_spend_per_night(year: int) -> dict:
+    long = bdi_country_long()
+    if long is None or long.empty:
+        return {}
+    d = long.copy()
+    d["anno"] = d["date"].dt.year
+    d = d[d["anno"] == year]
+    if d.empty:
+        return {}
+    g = d.groupby("code").agg(spesa=("spesa", "sum"), notti=("notti", "sum"), q=("date", "count"))
+    return {c: r["spesa"] * 1e6 / (r["notti"] * 1e3)
+            for c, r in g.iterrows() if r["q"] >= 4 and r["notti"] > 0}
+
+
+def _region_market_value(code: str, markets) -> dict:
+    """Peso economico REALE di ogni mercato nella regione = presenze (ISTAT _9, ultimo anno)
+    × spesa/notte del mercato (BdI). {code: M€}. {} se dati assenti."""
+    df = estero_regione_long()
+    if df is None:
+        return {}
+    area = RG.istat_area(code)
+    ni = df[(df["area"] == area) & (df["datatype"] == "NI")]
+    if ni.empty:
+        return {}
+    yr = int(ni["anno"].max())
+    ni = ni[ni["anno"] == yr]
+    spn = _bdi_spend_per_night(yr)
+    if not spn:
+        return {}
+    med = float(pd.Series(list(spn.values())).median())
+    pres = dict(zip(ni["country"], ni["valore"]))
+    out = {}
+    for mk in markets:
+        p = pres.get(_MK_ISTAT.get(mk.code, mk.code))
+        if p is None and mk.code == "GB":
+            p = pres.get("UK")
+        eurn = spn.get(_MK_BDI.get(mk.code) or "", med)
+        out[mk.code] = round(float(p or 0) * eurn / 1e6, 3)
+    return out if any(out.values()) else {}
+
+
+def _reco_cat(reco: str) -> str:
+    for k in ("Aumentare", "Ridurre", "Monitorare"):
+        if reco.startswith(k):
+            return k
+    return "Mantenere"
+
+
+@functools.lru_cache(maxsize=None)
+def azioni_snapshot(code: str) -> dict:
+    """Azioni raccomandate per la regione: ranking mercati esteri con priorità.
+    score = max(forza,0) × momentum × peso_economico × fattibilità (dal motore).
+    Vista nazionale (ITALIA): usa la regione di default come esempio (has_national=True)."""
+    national = RG.is_national(code)
+    eng = RG.DEFAULT_REGION if national else code
+    base = {"actions": [], "n_alta": 0, "n_aumentare": 0, "picco_top": "—",
+            "region": RG.region(eng)["nome"], "has_national": national, "error": ""}
+    cwd = os.getcwd()
+    try:
+        os.chdir(_ROOT)
+        from tourism_wedge import engine_aggregate as _EA
+        from tourism_wedge import DEFAULT_MARKETS as _MKTS
+        info = RG.region(eng)
+        df = _EA.assemble_real(start="2019-01", region_code=eng, trends_kw=info["trends_kw"])
+        ranked = _EA.rank_markets(df, value_override=(_bdi_spend_per_market() or None),
+                                  weight_override=(_region_market_value(eng, _MKTS) or None))
+    except Exception as e:  # noqa: BLE001
+        return {**base, "error": f"{type(e).__name__}: {e}"}
+    finally:
+        os.chdir(cwd)
+
+    def peak(mk_code):
+        col = f"search_{mk_code}"
+        if col not in df.columns:
+            return None
+        d = df.copy()
+        d["m"] = d["date"].dt.month
+        prof = d.groupby("m")[col].mean()
+        return int(prof.idxmax()) if not prof.empty else None
+
+    order = {"Alta": 0, "Media": 1, "Bassa": 2}
+    acts = []
+    for c in ranked:
+        cat = _reco_cat(c["raccomandazione"])
+        forza = c.get("forza_anticipatrice") or 0
+        mom = c.get("momentum_search_pct") or 0
+        if cat == "Aumentare" and forza >= 0.4 and mom > 20:
+            prio = "Alta"
+        elif cat in ("Aumentare", "Ridurre"):
+            prio = "Media"
+        else:
+            prio = "Bassa"
+        pm = peak(c["code"])
+        acts.append({
+            "market": c["market"], "code": c["code"], "reco": c["raccomandazione"], "cat": cat,
+            "priorita": prio, "forza": f"{c['forza_anticipatrice']:+.2f}",
+            "momentum": f"{c['momentum_search_pct']:+.0f}%",
+            "valore": f"€ {int(c['valore_eur_per_visitatore'])}",
+            "picco": (MESI_IT[pm - 1] if pm else "—"),
+            "score": int(c["score"]), "rank": c["rank"],
+        })
+    acts.sort(key=lambda a: (order[a["priorita"]], -a["score"]))
+    return {**base, "actions": acts,
+            "n_alta": sum(1 for a in acts if a["priorita"] == "Alta"),
+            "n_aumentare": sum(1 for a in acts if a["cat"] == "Aumentare"),
+            "picco_top": (acts[0]["picco"] if acts else "—")}
+
+
 def mercati_snapshot(code: str, top_bar: int = 12, top_lines: int = 5) -> dict:
     """Mercati esteri della regione in tipi Python puri (per la pagina 'Mercati
     d'origine'): classifica ultimo anno (barre + tabella con quota) e serie storiche

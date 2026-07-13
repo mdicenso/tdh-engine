@@ -100,6 +100,10 @@ class State(rx.State):
     prov_top_nome: str = "—"; prov_top_presenze: str = "—"; prov_top_peso: str = "—"; prov_share3: str = "—"
     _prov_bar_nomi: list = []; _prov_bar_val: list = []
     prov_rows: list[dict] = []
+    # azioni & budget (allocatore, dipende dalla regione)
+    azioni_rows: list[dict] = []
+    az_n_alta: str = "—"; az_n_aumentare: str = "—"; az_picco_top: str = "—"
+    az_region: str = "—"; az_has_national: bool = False; az_error: str = ""
 
     def _load(self):
         s = D.regione_snapshot(self.region_code)
@@ -159,6 +163,12 @@ class State(rx.State):
         self.prov_has_note = man > 0
         self.prov_note = (f"{man} province non ancora in cache (prefetch dati in corso — "
                           "ricarica tra poco per vederle)." if man else "")
+        # azioni & budget (allocatore)
+        az = D.azioni_snapshot(self.region_code)
+        self.azioni_rows = az["actions"]
+        self.az_n_alta, self.az_n_aumentare = str(az["n_alta"]), str(az["n_aumentare"])
+        self.az_picco_top, self.az_region = az["picco_top"], az["region"]
+        self.az_has_national, self.az_error = az["has_national"], az["error"]
         # mercati d'origine
         me = D.mercati_snapshot(self.region_code)
         self._me_bar_nomi, self._me_bar_val = me["bar_nomi"], me["bar_val"]
@@ -483,7 +493,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_item("banknote", "Spesa turistica", active=(active == "spesa"), href="/spesa"),
         nav_group("Cosa fare"),
         nav_item("trophy", "Ranking regioni", active=(active == "ranking"), href="/ranking"),
-        nav_item("target", "Azioni & budget"),
+        nav_item("target", "Azioni & budget", active=(active == "azioni"), href="/azioni"),
         nav_group("Sistema"),
         nav_item("messages-square", "Assistente"),
         spacing="1", align_items="start", width="264px", min_width="264px",
@@ -833,7 +843,56 @@ def province_page() -> rx.Component:
                 color=FAINT, font_size="0.75rem"))
 
 
+# ════════════════════════════════════════════════════════════════════════════
+# pagina: Azioni & budget ("/azioni") — l'allocatore
+# ════════════════════════════════════════════════════════════════════════════
+def azione_card(r: rx.Var) -> rx.Component:
+    return rx.box(
+        rx.hstack(
+            rx.badge("Priorità ", r["priorita"],
+                     color_scheme=rx.match(r["priorita"], ("Alta", "red"), ("Media", "amber"), "gray"),
+                     variant="soft", radius="full"),
+            rx.badge(r["reco"],
+                     color_scheme=rx.match(r["cat"], ("Aumentare", "grass"), ("Ridurre", "red"),
+                                           ("Monitorare", "amber"), "gray"),
+                     variant="soft", radius="full"),
+            rx.text(r["market"], font_weight="700", font_size="1.02rem", color=INK),
+            rx.spacer(),
+            rx.text("score ", r["score"], font_size="0.8rem", color=FAINT),
+            align="center", width="100%", spacing="3"),
+        rx.text("forza anticipatrice ", r["forza"], "  ·  momentum ricerca ", r["momentum"],
+                "  ·  valore ", r["valore"], "/visitatore  ·  picco ricerca ", r["picco"],
+                color=MUT, font_size="0.8rem", margin_top="6px"),
+        background=PANEL, border=f"1px solid {LINE}", border_radius="12px", padding="14px 16px", width="100%")
+
+
+def azioni_page() -> rx.Component:
+    return page_shell(
+        "azioni", "Cosa fare  ›  Azioni & budget",
+        rx.box(
+            rx.heading("Azioni raccomandate — " + State.az_region, size="7", color=INK, weight="bold"),
+            rx.text("Dove e quando agire: i mercati esteri ordinati per opportunità = forza "
+                    "anticipatrice × momentum di ricerca × peso economico × fattibilità. "
+                    "Stime d'opportunità, non garanzie di ritorno.", color=MUT, font_size="0.9rem",
+                    margin_top="4px"),
+            width="100%"),
+        rx.cond(State.az_has_national,
+                _note("Vista «Italia»: il motore per-regione mostra " + State.az_region
+                      + " come esempio. Scegli una regione dal menu in alto per le sue azioni."),
+                rx.box()),
+        rx.cond(State.az_error != "", _note("Motore non disponibile: " + State.az_error), rx.box()),
+        rx.box(
+            kpi("Priorità alta", State.az_n_alta, "mercati su cui agire ora"),
+            kpi("Mercati da aumentare", State.az_n_aumentare, "segnale + momentum positivi"),
+            kpi("Picco ricerca n.1", State.az_picco_top, "quando presidiare la domanda"),
+            display="grid", grid_template_columns="repeat(3, 1fr)", gap="14px", width="100%"),
+        rx.vstack(rx.foreach(State.azioni_rows, azione_card), spacing="3", width="100%"),
+        rx.text("Reflex · MOTORE REALE (ISTAT · Google Trends · Banca d'Italia) · "
+                "stime d'opportunità · design «Istituzionale»", color=FAINT, font_size="0.75rem"))
+
+
 app = rx.App(theme=rx.theme(appearance="light", accent_color="teal", gray_color="slate"))
+app.add_page(azioni_page, route="/azioni", title="TDH · Azioni & budget", on_load=State.on_load)
 app.add_page(index, route="/", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)
 app.add_page(mercati_page, route="/mercati", title="TDH · Mercati d'origine", on_load=State.on_load)
