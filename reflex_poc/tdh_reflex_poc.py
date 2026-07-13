@@ -57,6 +57,7 @@ STR_NAME2SLUG = {n: s for n, s in STR_TERRITORI}
 
 class State(rx.State):
     boot_error: str = ""           # se non vuoto: mostra un banner con l'errore di caricamento
+    diag: str = ""                 # diagnostica temporanea (cosa c'è sul server)
     region_code: str = "ITE1"      # default: Toscana
     region_name: str = "Toscana"
     titolo: str = "Toscana — quadro turistico"
@@ -215,6 +216,27 @@ class State(rx.State):
             if not self._str_adr_slugs:
                 self._load_str()
             self.boot_error = ""
+            try:
+                import os as _os
+                root = getattr(D, "_ROOT", "?")
+                cache = _os.path.join(root, ".cache")
+
+                def _ex(rel):
+                    return _os.path.exists(_os.path.join(root, rel))
+
+                nc = len(_os.listdir(cache)) if _os.path.isdir(cache) else -1
+                el = D.estero_regione_long()
+                self.diag = (
+                    f"_ROOT={root} · .cache={nc} file · "
+                    f"_9={_ex('.cache/istat_estero_regione_prov_annuale.csv')} · "
+                    f"bdi_ext={_ex('.cache/bdi_extended.json')} · "
+                    f"geojson={_ex('assets/italy_regions.geojson')} · "
+                    f"istat_ITE1={_ex('.cache/istat_ITE1_NI_ALL_WORLD.csv')} · "
+                    f"esteroLong={'None' if el is None else len(el)} · "
+                    f"ranking={len(D.regions_spend_ranking())} · "
+                    f"mapN={len(D.mappa_snapshot()['names'])}")
+            except Exception as _de:  # noqa: BLE001
+                self.diag = f"diag error: {type(_de).__name__}: {_de}"
         except Exception as e:  # noqa: BLE001
             import traceback
             self.boot_error = f"Errore nel caricamento dati: {type(e).__name__}: {e}\n\n" + traceback.format_exc()[-1800:]
@@ -556,8 +578,14 @@ def page_shell(active: str, breadcrumb: str, *content) -> rx.Component:
     return rx.hstack(
         sidebar(active),
         rx.box(
-            rx.vstack(topbar(breadcrumb), error_banner(), *content,
-                      spacing="4", width="100%", max_width="1180px"),
+            rx.vstack(topbar(breadcrumb), error_banner(),
+                      rx.cond(State.diag != "",
+                              rx.box(rx.text(State.diag, font_family="monospace", font_size="0.68rem",
+                                             color=MUT, white_space="pre-wrap"),
+                                     background="#f1f5f9", border=f"1px solid {LINE}",
+                                     border_radius="8px", padding="8px 12px", width="100%"),
+                              rx.box()),
+                      *content, spacing="4", width="100%", max_width="1180px"),
             flex="1", min_height="100vh", background=BG, padding="24px 34px",
             display="flex", justify_content="center"),
         spacing="0", align="start", width="100%")

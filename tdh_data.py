@@ -28,7 +28,10 @@ import pandas as pd
 
 # ── radici dei dati (assolute) ──────────────────────────────────────────────
 _ROOT = os.path.dirname(os.path.abspath(__file__))
-_CACHE = os.path.join(_ROOT, ".cache")
+# In locale la cache è `.cache`; nel bundle di deploy è rinominata `datacache`
+# (il deploy Reflex pota le cartelle che iniziano con il punto → i dati andrebbero persi).
+_CACHE = next((os.path.join(_ROOT, d) for d in (".cache", "datacache")
+               if os.path.isdir(os.path.join(_ROOT, d))), os.path.join(_ROOT, ".cache"))
 
 # `regions` è autonomo (solo stdlib): import normale, assicurando _ROOT su sys.path
 # (garantisce l'import anche quando l'app gira da un'altra cartella, es. Reflex).
