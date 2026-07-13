@@ -11,13 +11,20 @@ import sys
 import reflex as rx
 import plotly.graph_objects as go
 
-# ── aggancio al data-layer condiviso (TDH_Engine) ───────────────────────────
-_TDH_ENGINE = os.environ.get(
-    "TDH_ENGINE_DIR",
+# ── aggancio al data-layer ───────────────────────────────────────────────────
+# Cerca il data-layer in ordine: (1) override via env, (2) TDH_Engine LIVE (dev
+# locale: gli edit si riflettono subito), (3) bundle auto-contenuto `tdh_engine/`
+# accanto a questo file (usato in DEPLOY, dove il path locale non esiste).
+_HERE = os.path.dirname(os.path.abspath(__file__))
+_CANDIDATES = [
+    os.environ.get("TDH_ENGINE_DIR"),
     r"C:/Users/mcenso/OneDrive - Indra/@_Desktop_ OLD/@@@_Appoggio AI/Work_Area/"
     r"Programma Abruzzo/Motore Tourism Data HUB/TDH_Engine",
-)
-if _TDH_ENGINE not in sys.path:
+    os.path.join(_HERE, "tdh_engine"),
+]
+_TDH_ENGINE = next((p for p in _CANDIDATES
+                    if p and os.path.exists(os.path.join(p, "tdh_data.py"))), None)
+if _TDH_ENGINE and _TDH_ENGINE not in sys.path:
     sys.path.insert(0, _TDH_ENGINE)
 import tdh_data as D  # noqa: E402
 
