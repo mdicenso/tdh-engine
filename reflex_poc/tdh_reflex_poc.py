@@ -22,28 +22,41 @@ _CANDIDATES = [
     r"Programma Abruzzo/Motore Tourism Data HUB/TDH_Engine",
     os.path.join(_HERE, "tdh_engine"),
 ]
-_TDH_ENGINE = next((p for p in _CANDIDATES
-                    if p and os.path.exists(os.path.join(p, "tdh_data.py"))), None)
-if _TDH_ENGINE and _TDH_ENGINE not in sys.path:
-    sys.path.insert(0, _TDH_ENGINE)
-import tdh_data as D  # noqa: E402
+D = None
+_IMPORT_ERR = ""
+try:
+    _TDH_ENGINE = next((p for p in _CANDIDATES
+                        if p and os.path.exists(os.path.join(p, "tdh_data.py"))), None)
+    if _TDH_ENGINE and _TDH_ENGINE not in sys.path:
+        sys.path.insert(0, _TDH_ENGINE)
+    if _TDH_ENGINE is None:
+        _IMPORT_ERR = ("data-layer non trovato. Candidati provati:\n"
+                       + "\n".join(f"- {c}" for c in _CANDIDATES if c)
+                       + f"\n_HERE={_HERE}\ncontenuto _HERE: " + repr(sorted(os.listdir(_HERE))[:40]))
+    else:
+        import tdh_data as D  # noqa: E402
+except Exception as _e:  # noqa: BLE001
+    import traceback as _tb
+    _IMPORT_ERR = _tb.format_exc()
+    D = None
 
 # ── design tokens (Istituzionale) ──
 ACCENT = "#0e6b70"; ACCENT_INK = "#0a4f53"; INK = "#10262a"; MUT = "#5c7176"
 FAINT = "#8aa0a4"; LINE = "#e4ebec"; BG = "#f5f7f7"; PANEL = "#ffffff"; MUTED_BAR = "#a9c3c5"
 
 # elenco regioni per il selettore: Italia + le 20 regioni (nome → codice NUTS2)
-REGIONI = [("Italia", "ITALIA")] + list(D.REGIONI_SELECT)
+REGIONI = ([("Italia", "ITALIA")] + list(D.REGIONI_SELECT)) if D is not None else [("Italia", "ITALIA")]
 NOMI = [n for n, _ in REGIONI]
 NAME2CODE = {n: c for n, c in REGIONI}
 
 # territori STR (Inside Airbnb) — indipendenti dalla regione
-STR_TERRITORI = D.str_territori_list()
+STR_TERRITORI = D.str_territori_list() if D is not None else []
 STR_NOMI = [n for n, _ in STR_TERRITORI]
 STR_NAME2SLUG = {n: s for n, s in STR_TERRITORI}
 
 
 class State(rx.State):
+    boot_error: str = ""           # se non vuoto: mostra un banner con l'errore di caricamento
     region_code: str = "ITE1"      # default: Toscana
     region_name: str = "Toscana"
     titolo: str = "Toscana — quadro turistico"
@@ -186,17 +199,25 @@ class State(rx.State):
 
     @rx.event
     def on_load(self):
-        self._load()
-        if not self.rank_regioni:
-            self.rank_regioni = [dict(r) for r in D.regions_spend_ranking()]
-            tot = D.region_spend("ITALIA")
-            self.italia_spesa = f"{D._it_int(tot[0])} M€" if tot else "—"
-        if not self._map_codes:
-            m = D.mappa_snapshot()
-            self._map_geojson = m["geojson"] or {}
-            self._map_names, self._map_codes, self._map_z = m["names"], m["codes"], m["z"]
-        if not self._str_adr_slugs:
-            self._load_str()
+        if D is None:
+            self.boot_error = "Data-layer non caricato (import fallito):\n\n" + _IMPORT_ERR[-1800:]
+            return
+        try:
+            self._load()
+            if not self.rank_regioni:
+                self.rank_regioni = [dict(r) for r in D.regions_spend_ranking()]
+                tot = D.region_spend("ITALIA")
+                self.italia_spesa = f"{D._it_int(tot[0])} M€" if tot else "—"
+            if not self._map_codes:
+                m = D.mappa_snapshot()
+                self._map_geojson = m["geojson"] or {}
+                self._map_names, self._map_codes, self._map_z = m["names"], m["codes"], m["z"]
+            if not self._str_adr_slugs:
+                self._load_str()
+            self.boot_error = ""
+        except Exception as e:  # noqa: BLE001
+            import traceback
+            self.boot_error = f"Errore nel caricamento dati: {type(e).__name__}: {e}\n\n" + traceback.format_exc()[-1800:]
 
     def _load_str(self):
         s = D.str_snapshot(self.str_slug)
@@ -518,11 +539,25 @@ def topbar(breadcrumb: str) -> rx.Component:
         border_bottom=f"1px solid {LINE}", padding_bottom="12px", width="100%")
 
 
+def error_banner() -> rx.Component:
+    return rx.cond(
+        State.boot_error != "",
+        rx.box(
+            rx.text("⚠️ Diagnostica caricamento dati", font_weight="700", color="#b91c1c",
+                    margin_bottom="6px"),
+            rx.text(State.boot_error, font_family="monospace", font_size="0.72rem", color="#7f1d1d",
+                    white_space="pre-wrap"),
+            background="#fef2f2", border="1px solid #fecaca", border_radius="12px",
+            padding="14px 16px", width="100%"),
+        rx.box())
+
+
 def page_shell(active: str, breadcrumb: str, *content) -> rx.Component:
     return rx.hstack(
         sidebar(active),
         rx.box(
-            rx.vstack(topbar(breadcrumb), *content, spacing="4", width="100%", max_width="1180px"),
+            rx.vstack(topbar(breadcrumb), error_banner(), *content,
+                      spacing="4", width="100%", max_width="1180px"),
             flex="1", min_height="100vh", background=BG, padding="24px 34px",
             display="flex", justify_content="center"),
         spacing="0", align="start", width="100%")

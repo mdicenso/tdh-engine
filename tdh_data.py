@@ -774,9 +774,10 @@ def azioni_snapshot(code: str) -> dict:
         col = f"search_{mk_code}"
         if col not in df.columns:
             return None
-        d = df.copy()
-        d["m"] = d["date"].dt.month
-        prof = d.groupby("m")[col].mean()
+        d = df.dropna(subset=[col])
+        if d.empty:  # mercato senza serie Trends utile → nessun picco (niente idxmax su tutti-NA)
+            return None
+        prof = d.assign(m=d["date"].dt.month).groupby("m")[col].mean().dropna()
         return int(prof.idxmax()) if not prof.empty else None
 
     order = {"Alta": 0, "Media": 1, "Bassa": 2}
