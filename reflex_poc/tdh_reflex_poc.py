@@ -86,6 +86,11 @@ class State(rx.State):
     _str_zone_nomi: list = []; _str_zone_val: list = []
     _str_room_nomi: list = []; _str_room_val: list = []
     _str_rev_x: list = []; _str_rev_y: list = []
+    # spesa turistica (dipende dalla regione)
+    _sp_years: list = []; _sp_spesa: list = []; _sp_viagg_val: list = []
+    sp_rows: list[dict] = []
+    sp_k_anno: str = "—"; sp_k_spesa: str = "—"; sp_k_viagg: str = "—"
+    sp_k_notte: str = "—"; sp_k_permanenza: str = "—"
 
     def _load(self):
         s = D.regione_snapshot(self.region_code)
@@ -122,6 +127,16 @@ class State(rx.State):
         self.bd_k_snotte, self.bd_k_snotte_a = k["spesa_per_notte"]["val"], "anno " + k["spesa_per_notte"]["anno"]
         self.bd_k_occ, self.bd_k_occ_a = k["occ"]["val"], "anno " + k["occ"]["anno"]
         self.bd_k_quota, self.bd_k_quota_a = k["quota_str"]["val"], "anno " + k["quota_str"]["anno"]
+        # spesa turistica
+        sp = D.spesa_snapshot(self.region_code)
+        self._sp_years, self._sp_spesa, self._sp_viagg_val = sp["years"], sp["spesa"], sp["sp_viagg"]
+        self.sp_rows = sp["rows"]
+        kk = sp["kpi"]
+        self.sp_k_anno = kk.get("anno", "—")
+        self.sp_k_spesa = kk.get("spesa", "—")
+        self.sp_k_viagg = kk.get("sp_viagg", "—")
+        self.sp_k_notte = kk.get("sp_notte", "—")
+        self.sp_k_permanenza = kk.get("permanenza", "—")
         # mercati d'origine
         me = D.mercati_snapshot(self.region_code)
         self._me_bar_nomi, self._me_bar_val = me["bar_nomi"], me["bar_val"]
@@ -343,6 +358,27 @@ class State(rx.State):
         fig.update_yaxes(showgrid=False)
         return fig
 
+    @rx.var
+    def sp_spesa_fig(self) -> go.Figure:
+        fig = go.Figure(go.Bar(x=self._sp_years, y=self._sp_spesa, marker_color=ACCENT,
+                               hovertemplate="%{x}: %{y:,.0f} M€<extra></extra>"))
+        fig.update_layout(height=340, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(showgrid=False, linecolor=LINE)
+        fig.update_yaxes(gridcolor="#eef3f3", title="spesa straniera (M€)")
+        return fig
+
+    @rx.var
+    def sp_yield_fig(self) -> go.Figure:
+        fig = go.Figure(go.Scatter(x=self._sp_years, y=self._sp_viagg_val, mode="lines+markers",
+                                   line=dict(color="#f59e0b", width=2.4),
+                                   hovertemplate="%{x}: € %{y:,.0f}/viaggiatore<extra></extra>"))
+        fig.update_layout(height=340, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(showgrid=False, linecolor=LINE)
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="spesa per viaggiatore (€)")
+        return fig
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # componenti condivisi (design-system)
@@ -410,7 +446,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_item("map-pin", "Per provincia"),
         nav_item("house", "Affitti brevi", active=(active == "str"), href="/affitti-brevi"),
         nav_item("database", "Base dati regionale", active=(active == "basedati"), href="/base-dati"),
-        nav_item("banknote", "Spesa turistica"),
+        nav_item("banknote", "Spesa turistica", active=(active == "spesa"), href="/spesa"),
         nav_group("Cosa fare"),
         nav_item("trophy", "Ranking regioni", active=(active == "ranking"), href="/ranking"),
         nav_item("target", "Azioni & budget"),
@@ -659,10 +695,59 @@ def affitti_page() -> rx.Component:
                 color=FAINT, font_size="0.75rem"))
 
 
+def spesa_table() -> rx.Component:
+    return rx.box(
+        rx.table.root(
+            rx.table.header(rx.table.row(
+                rx.table.column_header_cell("Anno"),
+                rx.table.column_header_cell("Spesa"),
+                rx.table.column_header_cell("Viaggiatori"),
+                rx.table.column_header_cell("Pernottamenti"),
+                rx.table.column_header_cell("Spesa/viaggiatore"),
+                rx.table.column_header_cell("Permanenza (notti)"))),
+            rx.table.body(rx.foreach(State.sp_rows, lambda r: rx.table.row(
+                rx.table.cell(r["anno"]),
+                rx.table.cell(r["spesa"]),
+                rx.table.cell(r["viaggiatori"]),
+                rx.table.cell(r["notti"]),
+                rx.table.cell(r["sp_viagg"]),
+                rx.table.cell(r["permanenza"])))),
+            variant="surface", size="1", width="100%"),
+        max_height="340px", overflow_y="auto", width="100%")
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# pagina: Spesa turistica ("/spesa")
+# ════════════════════════════════════════════════════════════════════════════
+def spesa_page() -> rx.Component:
+    return page_shell(
+        "spesa", "Cosa è successo  ›  Spesa turistica",
+        rx.box(
+            rx.heading(State.region_name + " — spesa turistica straniera", size="7", color=INK, weight="bold"),
+            rx.text("Quanto spendono i turisti stranieri (Banca d'Italia) e quanto vale ogni visitatore: "
+                    "spesa totale, spesa per viaggiatore/notte e permanenza media. Solo anni completi.",
+                    color=MUT, font_size="0.9rem", margin_top="4px"),
+            width="100%"),
+        rx.box(
+            kpi("Spesa straniera", State.sp_k_spesa, "anno " + State.sp_k_anno),
+            kpi("Spesa / viaggiatore", State.sp_k_viagg, "€ per viaggiatore"),
+            kpi("Spesa / notte", State.sp_k_notte, "€ per pernottamento"),
+            kpi("Permanenza media", State.sp_k_permanenza, "notti per viaggiatore"),
+            display="grid", grid_template_columns="repeat(4, 1fr)", gap="14px", width="100%"),
+        rx.box(
+            panel("Spesa straniera annuale", rx.plotly(data=State.sp_spesa_fig, width="100%")),
+            panel("Spesa per viaggiatore (yield)", rx.plotly(data=State.sp_yield_fig, width="100%")),
+            display="grid", grid_template_columns="repeat(2, 1fr)", gap="18px", width="100%"),
+        panel("Serie annuale — dettaglio", spesa_table()),
+        rx.text("Reflex · DATI REALI (Banca d'Italia) · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
 app = rx.App(theme=rx.theme(appearance="light", accent_color="teal", gray_color="slate"))
 app.add_page(index, route="/", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)
 app.add_page(mercati_page, route="/mercati", title="TDH · Mercati d'origine", on_load=State.on_load)
 app.add_page(affitti_page, route="/affitti-brevi", title="TDH · Affitti brevi (STR)", on_load=State.on_load)
+app.add_page(spesa_page, route="/spesa", title="TDH · Spesa turistica", on_load=State.on_load)
 app.add_page(ranking_page, route="/ranking", title="TDH · Ranking regioni", on_load=State.on_load)
 app.add_page(base_dati_page, route="/base-dati", title="TDH · Base dati regionale", on_load=State.on_load)

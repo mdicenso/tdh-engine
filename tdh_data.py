@@ -587,6 +587,48 @@ def base_dati_snapshot(code: str) -> dict:
             "spesa": spesa, "rows": rows, "kpi": kpi}
 
 
+def spesa_snapshot(code: str) -> dict:
+    """Spesa turistica STRANIERA (Banca d'Italia) della regione: serie annuali di spesa,
+    pernottamenti, viaggiatori + economia PER-VISITATORE (spesa/viaggiatore, spesa/notte,
+    permanenza media). Solo anni completi (4 trimestri). Tipi Python puri."""
+    empty = {"years": [], "spesa": [], "sp_viagg": [], "sp_notte": [], "permanenza": [],
+             "rows": [], "kpi": {}}
+    g = bdi_region_annual(code)
+    if g is None or getattr(g, "empty", True):
+        return empty
+    g = g[g["trimestri"] >= 4].sort_values("anno")
+    if g.empty:
+        return empty
+    years = [int(a) for a in g["anno"]]
+    spesa = [float(v) for v in g["spesa"]]           # M€
+    notti = [float(v) for v in g["notti"]]           # migliaia
+    viagg = [float(v) for v in g["viaggiatori"]]     # migliaia
+    sp_viagg = [(s * 1e6) / (v * 1e3) if v else None for s, v in zip(spesa, viagg)]   # €/viaggiatore
+    sp_notte = [(s * 1e6) / (n * 1e3) if n else None for s, n in zip(spesa, notti)]   # €/notte
+    permanenza = [(n / v) if v else None for n, v in zip(notti, viagg)]              # notti/viaggiatore
+
+    rows = []
+    for i in range(len(years) - 1, -1, -1):  # anno più recente in alto
+        rows.append({
+            "anno": str(years[i]),
+            "spesa": _fmt_val(spesa[i], "M€", 0),
+            "viaggiatori": _it_int(viagg[i] * 1e3),
+            "notti": _it_int(notti[i] * 1e3),
+            "sp_viagg": _fmt_val(sp_viagg[i], "€", 0),
+            "permanenza": (f"{permanenza[i]:.1f}".replace(".", ",") if permanenza[i] is not None else "—"),
+        })
+    li = len(years) - 1
+    kpi = {
+        "anno": str(years[li]),
+        "spesa": _fmt_val(spesa[li], "M€", 0),
+        "sp_viagg": _fmt_val(sp_viagg[li], "€", 0),
+        "sp_notte": _fmt_val(sp_notte[li], "€", 0),
+        "permanenza": (f"{permanenza[li]:.1f}".replace(".", ",") if permanenza[li] is not None else "—"),
+    }
+    return {"years": years, "spesa": spesa, "sp_viagg": sp_viagg, "sp_notte": sp_notte,
+            "permanenza": permanenza, "rows": rows, "kpi": kpi}
+
+
 def mercati_snapshot(code: str, top_bar: int = 12, top_lines: int = 5) -> dict:
     """Mercati esteri della regione in tipi Python puri (per la pagina 'Mercati
     d'origine'): classifica ultimo anno (barre + tabella con quota) e serie storiche
