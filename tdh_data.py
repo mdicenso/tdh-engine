@@ -629,6 +629,55 @@ def spesa_snapshot(code: str) -> dict:
             "permanenza": permanenza, "rows": rows, "kpi": kpi}
 
 
+@functools.lru_cache(maxsize=1)
+def _prov_map() -> dict:
+    """Mappa NUTS2 → {NUTS3: nome} letta a PATH ASSOLUTO (regions._prov_map usa un path
+    relativo → vuoto se cwd ≠ TDH_Engine, come nell'app Reflex)."""
+    p = os.path.join(_ROOT, "assets", "nuts3_provinces.json")
+    return json.load(open(p, encoding="utf-8")) if os.path.exists(p) else {}
+
+
+def province_snapshot(code: str) -> dict:
+    """Presenze per PROVINCIA (NUTS3) della regione, SOLO da cache (nessun fetch live).
+    Le province senza CSV in cache vengono conteggiate in `n_mancanti` e saltate.
+    Nazionale (ITALIA): has_region=False (le province sono un concetto regionale)."""
+    empty = {"has_region": True, "n": 0, "n_mancanti": 0, "rows": [], "bar_nomi": [],
+             "bar_val": [], "top_nome": "—", "top_presenze": "—", "top_peso": "—", "share_top3": "—"}
+    if RG.is_national(code):
+        return {**empty, "has_region": False}
+    provs = _prov_map().get(code, {})
+    recs, mancanti = [], 0
+    for area, nome in provs.items():
+        totp = _cpath(f"istat_{area}_NI_ALL_WORLD.csv")
+        if not os.path.exists(totp):
+            mancanti += 1
+            continue
+        tot = pd.read_csv(totp, parse_dates=["date"]).sort_values("date")
+        t12 = float(tot.tail(12)["presences"].sum())
+        e12 = None
+        estp = _cpath(f"istat_{area}_NI_ALL_WRL_X_ITA.csv")
+        if os.path.exists(estp):
+            est = pd.read_csv(estp, parse_dates=["date"]).sort_values("date")
+            e12 = float(est.tail(12)["presences"].sum())
+        recs.append({"nome": nome, "presenze": t12, "stranieri": e12,
+                     "quota": (e12 / t12 * 100 if (t12 and e12 is not None) else None)})
+    if not recs:
+        return {**empty, "n_mancanti": mancanti}
+    recs.sort(key=lambda r: -r["presenze"])
+    tot_reg = sum(r["presenze"] for r in recs) or 1.0
+    rows = [{"provincia": r["nome"], "presenze": _it_int(r["presenze"]),
+             "peso": f"{r['presenze'] / tot_reg * 100:.1f}".replace(".", ",") + "%",
+             "stranieri": (_it_int(r["stranieri"]) if r["stranieri"] is not None else "—"),
+             "quota": (f"{r['quota']:.0f}".replace(".", ",") + "%" if r["quota"] is not None else "—")}
+            for r in recs]
+    top = recs[0]
+    share3 = sum(r["presenze"] for r in recs[:3]) / tot_reg * 100
+    return {"has_region": True, "n": len(recs), "n_mancanti": mancanti, "rows": rows,
+            "bar_nomi": [r["nome"] for r in recs], "bar_val": [r["presenze"] for r in recs],
+            "top_nome": top["nome"], "top_presenze": _it_int(top["presenze"]),
+            "top_peso": f"{top['presenze'] / tot_reg * 100:.0f}%", "share_top3": f"{share3:.0f}%"}
+
+
 def mercati_snapshot(code: str, top_bar: int = 12, top_lines: int = 5) -> dict:
     """Mercati esteri della regione in tipi Python puri (per la pagina 'Mercati
     d'origine'): classifica ultimo anno (barre + tabella con quota) e serie storiche

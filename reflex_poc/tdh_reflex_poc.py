@@ -91,6 +91,15 @@ class State(rx.State):
     sp_rows: list[dict] = []
     sp_k_anno: str = "—"; sp_k_spesa: str = "—"; sp_k_viagg: str = "—"
     sp_k_notte: str = "—"; sp_k_permanenza: str = "—"
+    # per provincia (solo-cache, dipende dalla regione)
+    prov_has_region: bool = True
+    prov_has_data: bool = False
+    prov_has_note: bool = False
+    prov_note: str = ""
+    prov_n: str = "0"
+    prov_top_nome: str = "—"; prov_top_presenze: str = "—"; prov_top_peso: str = "—"; prov_share3: str = "—"
+    _prov_bar_nomi: list = []; _prov_bar_val: list = []
+    prov_rows: list[dict] = []
 
     def _load(self):
         s = D.regione_snapshot(self.region_code)
@@ -137,6 +146,19 @@ class State(rx.State):
         self.sp_k_viagg = kk.get("sp_viagg", "—")
         self.sp_k_notte = kk.get("sp_notte", "—")
         self.sp_k_permanenza = kk.get("permanenza", "—")
+        # per provincia (solo-cache)
+        pv = D.province_snapshot(self.region_code)
+        self.prov_has_region = pv["has_region"]
+        self.prov_has_data = pv["n"] > 0
+        self.prov_n = str(pv["n"])
+        self._prov_bar_nomi, self._prov_bar_val = pv["bar_nomi"], pv["bar_val"]
+        self.prov_rows = pv["rows"]
+        self.prov_top_nome, self.prov_top_presenze = pv["top_nome"], pv["top_presenze"]
+        self.prov_top_peso, self.prov_share3 = pv["top_peso"], pv["share_top3"]
+        man = pv["n_mancanti"]
+        self.prov_has_note = man > 0
+        self.prov_note = (f"{man} province non ancora in cache (prefetch dati in corso — "
+                          "ricarica tra poco per vederle)." if man else "")
         # mercati d'origine
         me = D.mercati_snapshot(self.region_code)
         self._me_bar_nomi, self._me_bar_val = me["bar_nomi"], me["bar_val"]
@@ -379,6 +401,18 @@ class State(rx.State):
         fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="spesa per viaggiatore (€)")
         return fig
 
+    @rx.var
+    def prov_bar_fig(self) -> go.Figure:
+        n = self._prov_bar_nomi[::-1]
+        v = self._prov_bar_val[::-1]
+        fig = go.Figure(go.Bar(x=v, y=n, orientation="h", marker_color=ACCENT,
+                               hovertemplate="<b>%{y}</b><br>%{x:,.0f} presenze (12 mesi)<extra></extra>"))
+        fig.update_layout(height=430, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(gridcolor="#eef3f3", title="presenze (ultimi 12 mesi)")
+        fig.update_yaxes(showgrid=False)
+        return fig
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # componenti condivisi (design-system)
@@ -443,7 +477,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_item("map", "Italia · mappa", active=(active == "mappa"), href="/mappa"),
         nav_item("globe", "Mercati d'origine", active=(active == "mercati"), href="/mercati"),
         nav_group("Cosa è successo"),
-        nav_item("map-pin", "Per provincia"),
+        nav_item("map-pin", "Per provincia", active=(active == "province"), href="/per-provincia"),
         nav_item("house", "Affitti brevi", active=(active == "str"), href="/affitti-brevi"),
         nav_item("database", "Base dati regionale", active=(active == "basedati"), href="/base-dati"),
         nav_item("banknote", "Spesa turistica", active=(active == "spesa"), href="/spesa"),
@@ -743,11 +777,68 @@ def spesa_page() -> rx.Component:
                 color=FAINT, font_size="0.75rem"))
 
 
+# ════════════════════════════════════════════════════════════════════════════
+# pagina: Per provincia ("/per-provincia")
+# ════════════════════════════════════════════════════════════════════════════
+def _note(txt) -> rx.Component:
+    return rx.box(rx.text(txt, color="#b45309", font_size="0.85rem"),
+                  background="#fff7ed", border="1px solid #fed7aa", border_radius="10px",
+                  padding="10px 14px", width="100%")
+
+
+def province_table() -> rx.Component:
+    return rx.box(
+        rx.table.root(
+            rx.table.header(rx.table.row(
+                rx.table.column_header_cell("Provincia"),
+                rx.table.column_header_cell("Presenze (12 mesi)"),
+                rx.table.column_header_cell("Peso %"),
+                rx.table.column_header_cell("Stranieri"),
+                rx.table.column_header_cell("Quota str."))),
+            rx.table.body(rx.foreach(State.prov_rows, lambda r: rx.table.row(
+                rx.table.cell(r["provincia"]),
+                rx.table.cell(r["presenze"]),
+                rx.table.cell(r["peso"]),
+                rx.table.cell(r["stranieri"]),
+                rx.table.cell(r["quota"])))),
+            variant="surface", size="1", width="100%"),
+        max_height="340px", overflow_y="auto", width="100%")
+
+
+def province_page() -> rx.Component:
+    body_dati = rx.vstack(
+        rx.box(
+            kpi("Province con dati", State.prov_n, "presenti in cache"),
+            kpi("Provincia n.1", State.prov_top_nome,
+                State.prov_top_presenze + " presenze · " + State.prov_top_peso),
+            kpi("Concentrazione top 3", State.prov_share3, "del totale regionale"),
+            display="grid", grid_template_columns="repeat(3, 1fr)", gap="14px", width="100%"),
+        rx.cond(State.prov_has_note, _note(State.prov_note), rx.box()),
+        panel("Presenze per provincia (ultimi 12 mesi)", rx.plotly(data=State.prov_bar_fig, width="100%")),
+        panel("Dettaglio per provincia", province_table()),
+        spacing="4", width="100%")
+    return page_shell(
+        "province", "Cosa è successo  ›  Per provincia",
+        rx.box(
+            rx.heading(State.region_name + " — presenze per provincia", size="7", color=INK, weight="bold"),
+            rx.text("Dove si concentra il turismo regionale: presenze degli ultimi 12 mesi per "
+                    "provincia (ISTAT), con quota di stranieri.", color=MUT, font_size="0.9rem", margin_top="4px"),
+            width="100%"),
+        rx.cond(
+            State.prov_has_region,
+            rx.cond(State.prov_has_data, body_dati,
+                    _note("Nessun dato provinciale in cache per questa regione. " + State.prov_note)),
+            _note("Le province sono un concetto regionale: scegli una regione (non «Italia») dal menu in alto a destra.")),
+        rx.text("Reflex · DATI REALI (ISTAT) · solo province già in cache · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
 app = rx.App(theme=rx.theme(appearance="light", accent_color="teal", gray_color="slate"))
 app.add_page(index, route="/", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)
 app.add_page(mercati_page, route="/mercati", title="TDH · Mercati d'origine", on_load=State.on_load)
 app.add_page(affitti_page, route="/affitti-brevi", title="TDH · Affitti brevi (STR)", on_load=State.on_load)
 app.add_page(spesa_page, route="/spesa", title="TDH · Spesa turistica", on_load=State.on_load)
+app.add_page(province_page, route="/per-provincia", title="TDH · Per provincia", on_load=State.on_load)
 app.add_page(ranking_page, route="/ranking", title="TDH · Ranking regioni", on_load=State.on_load)
 app.add_page(base_dati_page, route="/base-dati", title="TDH · Base dati regionale", on_load=State.on_load)
