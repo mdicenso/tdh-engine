@@ -693,8 +693,11 @@ def map_page() -> rx.Component:
             kpi("Regione selezionata", State.kpi_spesa, State.region_name),
             kpi("Posizione", State.kpi_spesa_rank, "nella classifica"),
             display="grid", grid_template_columns="repeat(3, 1fr)", gap="14px", width="100%"),
-        panel("Mappa della spesa straniera",
-              rx.plotly(data=State.map_fig, on_click=State.on_map_click, width="100%")),
+        rx.box(
+            panel("Mappa della spesa straniera",
+                  rx.plotly(data=State.map_fig, on_click=State.on_map_click,
+                            width="100%", height="740px")),
+            width="100%", max_width="780px", margin="0 auto"),
         rx.text("Reflex · DATI REALI (Banca d'Italia) · clic per selezionare · design «Istituzionale»",
                 color=FAINT, font_size="0.75rem"))
 
