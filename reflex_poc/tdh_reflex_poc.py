@@ -327,14 +327,10 @@ class State(rx.State):
         gj = self._map_geojson
         if not gj:
             return go.Figure()
-        sel = [i for i, c in enumerate(self._map_codes) if c == self.region_code]
         fig = go.Figure(go.Choropleth(
             geojson=gj, featureidkey="properties.reg_name",
             locations=self._map_names, z=self._map_z, customdata=self._map_codes,
             colorscale="Teal", marker_line_color="white", marker_line_width=0.6,
-            selectedpoints=(sel or None),
-            selected=dict(marker=dict(opacity=1.0)),
-            unselected=dict(marker=dict(opacity=0.5)),
             colorbar=dict(title=dict(text="spesa straniera<br>2024 (M€)", side="right")),
             hovertemplate="<b>%{location}</b><br>spesa %{z:,.0f} M€<extra></extra>"))
         fig.update_geos(visible=False, projection_type="mercator",
