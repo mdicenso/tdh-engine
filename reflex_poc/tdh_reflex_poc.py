@@ -576,7 +576,8 @@ def panel(title: str, body: rx.Component) -> rx.Component:
     return rx.box(
         rx.text(title, font_size="0.95rem", font_weight="600", color=INK, margin_bottom="10px"),
         body,
-        background=PANEL, border=f"1px solid {LINE}", border_radius="16px", padding="18px 20px")
+        background=PANEL, border=f"1px solid {LINE}", border_radius="16px", padding="18px 20px",
+        width="100%")
 
 
 def nav_group(label: str) -> rx.Component:
