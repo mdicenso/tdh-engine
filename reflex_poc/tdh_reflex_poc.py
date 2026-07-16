@@ -126,6 +126,10 @@ class State(rx.State):
     azioni_rows: list[dict] = []
     az_n_alta: str = "—"; az_n_aumentare: str = "—"; az_picco_top: str = "—"
     az_region: str = "—"; az_has_national: bool = False; az_error: str = ""
+    # interesse online (Google Trends)
+    _ie_series: list = []
+    ie_rows: list[dict] = []
+    ie_keyword: str = "—"; ie_n: str = "—"; ie_top_nome: str = "—"; ie_top_mom: str = "—"
 
     def _load(self):
         s = D.regione_snapshot(self.region_code)
@@ -191,6 +195,12 @@ class State(rx.State):
         self.az_n_alta, self.az_n_aumentare = str(az["n_alta"]), str(az["n_aumentare"])
         self.az_picco_top, self.az_region = az["picco_top"], az["region"]
         self.az_has_national, self.az_error = az["has_national"], az["error"]
+        # interesse online (Google Trends)
+        ie = D.interesse_snapshot(self.region_code)
+        self._ie_series = ie["series"]
+        self.ie_rows = ie["rows"]
+        self.ie_keyword, self.ie_n = ie["keyword"], str(ie["n"])
+        self.ie_top_nome, self.ie_top_mom = ie["top_nome"], ie["top_mom"]
         # mercati d'origine
         me = D.mercati_snapshot(self.region_code)
         self._me_bar_nomi, self._me_bar_val = me["bar_nomi"], me["bar_val"]
@@ -454,6 +464,20 @@ class State(rx.State):
         fig.update_yaxes(showgrid=False)
         return fig
 
+    @rx.var
+    def ie_lines_fig(self) -> go.Figure:
+        palette = ["#0e6b70", "#f59e0b", "#7c3aed", "#059669", "#dc2626", "#2563eb"]
+        fig = go.Figure()
+        for i, s in enumerate(self._ie_series):
+            fig.add_trace(go.Scatter(x=s["dates"], y=s["values"], name=s["nome"], mode="lines",
+                                     line=dict(color=palette[i % len(palette)], width=1.8)))
+        fig.update_layout(height=430, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12),
+                          legend=dict(orientation="h", y=1.13, x=0))
+        fig.update_xaxes(showgrid=False, linecolor=LINE)
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="interesse di ricerca (0-100)")
+        return fig
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # componenti condivisi (design-system)
@@ -526,6 +550,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_group("Cosa fare"),
         nav_item("trophy", "Ranking regioni", active=(active == "ranking"), href="/ranking"),
         nav_item("target", "Azioni & budget", active=(active == "azioni"), href="/azioni"),
+        nav_item("trending-up", "Interesse online", active=(active == "interesse"), href="/interesse-online"),
         nav_group("Sistema"),
         nav_item("messages-square", "Assistente"),
         spacing="1", align_items="start", width="264px", min_width="264px",
@@ -941,6 +966,47 @@ def azioni_page() -> rx.Component:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# pagina: Interesse online / Google Trends ("/interesse-online")
+# ════════════════════════════════════════════════════════════════════════════
+def interesse_table() -> rx.Component:
+    return rx.box(
+        rx.table.root(
+            rx.table.header(rx.table.row(
+                rx.table.column_header_cell("Mercato"),
+                rx.table.column_header_cell("Interesse recente (media 3 mesi)"),
+                rx.table.column_header_cell("Momentum (vs anno prima)"))),
+            rx.table.body(rx.foreach(State.ie_rows, lambda r: rx.table.row(
+                rx.table.cell(r["nome"]),
+                rx.table.cell(r["recente"]),
+                rx.table.cell(rx.badge(r["momentum"], color_scheme="teal", variant="soft", radius="full"))))),
+            variant="surface", size="1", width="100%"),
+        width="100%")
+
+
+def interesse_page() -> rx.Component:
+    return page_shell(
+        "interesse", "Cosa fare  ›  Interesse online",
+        rx.box(
+            rx.heading(State.region_name + " — interesse di ricerca online", size="7", color=INK, weight="bold"),
+            rx.text("Quanto si cerca la destinazione su Google, mercato per mercato (Google Trends). "
+                    "È un segnale «leading»: l'interesse online anticipa gli arrivi di alcuni mesi.",
+                    color=MUT, font_size="0.9rem", margin_top="4px"),
+            width="100%"),
+        rx.box(
+            kpi("Parola chiave", State.ie_keyword, "termine cercato"),
+            kpi("Mercati monitorati", State.ie_n, "paesi · Google Trends"),
+            kpi("In maggior crescita", State.ie_top_nome, State.ie_top_mom + " sull'anno prima"),
+            display="grid", grid_template_columns="repeat(3, 1fr)", gap="14px", width="100%"),
+        panel("Interesse di ricerca nel tempo", rx.plotly(data=State.ie_lines_fig, width="100%")),
+        panel("Dettaglio per mercato", interesse_table()),
+        _note("Metodo: Google Trends normalizza l'interesse 0-100 SEPARATAMENTE per ciascun paese → i "
+              "livelli non sono confrontabili tra paesi in assoluto; il segnale utile è il MOMENTUM "
+              "(la variazione nel tempo dentro lo stesso paese)."),
+        rx.text("Reflex · Google Trends · segnale leading · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # pagina: Home / landing ("/")
 # ════════════════════════════════════════════════════════════════════════════
 def entry_card(icon: str, title: str, desc: str, href: str) -> rx.Component:
@@ -998,6 +1064,7 @@ def home_page() -> rx.Component:
 
 app = rx.App(theme=rx.theme(appearance="light", accent_color="teal", gray_color="slate"))
 app.add_page(azioni_page, route="/azioni", title="TDH · Azioni & budget", on_load=State.on_load)
+app.add_page(interesse_page, route="/interesse-online", title="TDH · Interesse online", on_load=State.on_load)
 app.add_page(home_page, route="/", title="TDH · Turism Data Hub", on_load=State.on_load)
 app.add_page(index, route="/regione", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)

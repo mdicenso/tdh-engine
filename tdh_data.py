@@ -811,6 +811,51 @@ def azioni_snapshot(code: str) -> dict:
             "picco_top": (acts[0]["picco"] if acts else "—")}
 
 
+# ── INTERESSE ONLINE (Google Trends) — segnale leading per-mercato ──
+# Trends normalizza 0-100 SEPARATAMENTE per query/geo: i livelli NON sono confrontabili
+# tra paesi in assoluto, ma il MOMENTUM (variazione nel tempo dentro lo stesso paese) sì.
+_TRENDS_MARKETS = [("DE", "Germania"), ("AT", "Austria"), ("GB", "Regno Unito"),
+                   ("NL", "Paesi Bassi"), ("CH", "Svizzera"), ("US", "Stati Uniti")]
+
+
+def _safe_kw(kw: str) -> str:
+    return "".join(c if c.isalnum() else "_" for c in kw.lower())
+
+
+def interesse_snapshot(code: str) -> dict:
+    """Interesse di ricerca (Google Trends) per la regione, per i 6 mercati del motore.
+    Serie mensili + momentum (media ultimi 3 mesi vs stessi 3 mesi un anno prima)."""
+    empty = {"keyword": "—", "n": 0, "top_nome": "—", "top_mom": "—", "series": [], "rows": []}
+    info = RG.region(code)
+    kw = info.get("trends_kw") or info["nome"]
+    sk = _safe_kw(kw)
+    series, rows = [], []
+    for mk, nome in _TRENDS_MARKETS:
+        p = _cpath(f"trends_{sk}_{mk}.csv")
+        if not os.path.exists(p):
+            continue
+        df = pd.read_csv(p, parse_dates=["date"]).sort_values("date")
+        if df.empty or "search" not in df:
+            continue
+        s = df["search"].astype(float)
+        recent = float(s.tail(3).mean()) if len(s) >= 3 else (float(s.mean()) if len(s) else 0.0)
+        yoy = float(s.tail(15).head(3).mean()) if len(s) >= 15 else float("nan")
+        mom = ((recent - yoy) / yoy * 100) if (pd.notna(yoy) and yoy) else None
+        series.append({"code": mk, "nome": nome,
+                       "dates": [d.strftime("%Y-%m") for d in df["date"]],
+                       "values": [float(v) for v in s]})
+        rows.append({"nome": nome, "recente": f"{recent:.0f}",
+                     "momentum": (f"{mom:+.0f}%" if mom is not None else "—"),
+                     "_m": (mom if mom is not None else -1e9)})
+    if not series:
+        return empty
+    rows.sort(key=lambda r: -r["_m"])
+    top = rows[0]
+    return {"keyword": kw, "n": len(series), "top_nome": top["nome"], "top_mom": top["momentum"],
+            "series": series,
+            "rows": [{"nome": r["nome"], "recente": r["recente"], "momentum": r["momentum"]} for r in rows]}
+
+
 def mercati_snapshot(code: str, top_bar: int = 12, top_lines: int = 5) -> dict:
     """Mercati esteri della regione in tipi Python puri (per la pagina 'Mercati
     d'origine'): classifica ultimo anno (barre + tabella con quota) e serie storiche
