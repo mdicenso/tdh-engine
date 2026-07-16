@@ -994,6 +994,54 @@ def gestione_snapshot() -> dict:
             "n_live": sum(1 for r in rows if r["agg"].startswith("live"))}
 
 
+def architettura_content() -> dict:
+    """Contenuto (statico) della pagina Architettura: visione del TDH a livelli, sorgenti,
+    motore statistico, roadmap, principi. È contenuto di prodotto, non dati."""
+    return {
+        "livelli": [
+            ("1 · Sorgenti dati", "Portali regionali, MaaS, registri ricettivi, Hub nazionale PDND"),
+            ("2 · Ingestion", "Batch ETL · Streaming · API connectors · connettore PDND"),
+            ("3 · Data Lake (Medallion)", "Bronze (grezzo) → Silver (normalizzato/anonimizzato GDPR) → Gold (KPI)"),
+            ("4 · Governance & processing", "Trasformazioni · GDPR engine · identity resolution · Auth/ACL (SPID/CIE)"),
+            ("5 · Servizi di output", "Cruscotto Regione · API Operatori · Analytics ML · integrazione MaaS"),
+        ],
+        "sorgenti": [
+            {"Sorgente": "ISTAT — movimento clienti", "Tipo": "Presenze per provenienza", "Frequenza": "Mensile", "Stato": "🟢 Attiva"},
+            {"Sorgente": "ECB — cambio valute", "Tipo": "Driver economico (FX)", "Frequenza": "Mensile", "Stato": "🟢 Attiva"},
+            {"Sorgente": "Google Trends", "Tipo": "Segnale leading di ricerca", "Frequenza": "Mensile", "Stato": "🟢 Attiva"},
+            {"Sorgente": "Banca d'Italia — turismo internazionale", "Tipo": "Spesa per paese/regione (valore economico)", "Frequenza": "Trimestrale", "Stato": "🟢 Attiva"},
+            {"Sorgente": "Eurostat — trasporto aereo (avia_par)", "Tipo": "Connettività voli per paese (fattibilità)", "Frequenza": "Annuale", "Stato": "🟢 Attiva"},
+            {"Sorgente": "Wikipedia (Wikimedia Pageviews)", "Tipo": "Interesse per lingua (2° segnale leading)", "Frequenza": "Mensile", "Stato": "🟢 Attiva"},
+            {"Sorgente": "PDND — Ministero Turismo SIT/CIR", "Tipo": "Statistiche turismo nazionali", "Frequenza": "Periodica", "Stato": "🟡 Pianificata"},
+            {"Sorgente": "PDND — ANPR", "Tipo": "Presenze cittadini", "Frequenza": "Periodica", "Stato": "🟡 Pianificata"},
+            {"Sorgente": "Portale Regionale (GA4)", "Tipo": "Web analytics, funnel visitatori", "Frequenza": "Giornaliera", "Stato": "🟡 Pianificata"},
+            {"Sorgente": "MaaS4Abruzzo (GTFS-RT)", "Tipo": "Mobilità, percorsi, viaggi", "Frequenza": "Real-time", "Stato": "🟡 Pianificata"},
+            {"Sorgente": "Registro Ricettivo (~2.800 strutture)", "Tipo": "Offerta ricettiva", "Frequenza": "Batch", "Stato": "🟡 Pianificata"},
+            {"Sorgente": "App TUA", "Tipo": "Ticketing / transiti", "Frequenza": "Real-time", "Stato": "⚪ Da valutare"},
+            {"Sorgente": "Meteo ARPAM", "Tipo": "Dati territoriali", "Frequenza": "Oraria", "Stato": "⚪ Da valutare"},
+        ],
+        "roadmap": [
+            "**Fase 1 — Fondamenta**: sorgenti nazionali (PDND/ISTAT) + primo motore decisionale. *Questo MVP è il primo mattone reale.*",
+            "**Fase 2 — Integrazione regionale**: portale GA4, MaaS4Abruzzo, registro ricettivo.",
+            "**Fase 3 — Analytics ML**: forecasting flussi, segmentazione turisti, alerting anomalie.",
+            "**Fase 4 — Servizi**: cruscotto Regione, API operatori, integrazione MaaS in tempo reale.",
+        ],
+        "principi": [
+            "**GDPR by design** — anonimizzazione PII nelle zone Silver/Gold, nessun dato nominale.",
+            "**Cloud PA-first** — infrastruttura su provider qualificato ACN (PSNC), dati nell'UE.",
+            "**Non sostitutivo** — il TDH si appoggia sopra i sistemi esistenti come layer di integrazione.",
+            "**PDND** — sorgenti nazionali senza convenzioni bilaterali (art. 50-ter CAD).",
+        ],
+        "motore_statistico": [
+            "**Spina dorsale** — modello lineare trasparente (OLS): stagionalità esplicita (effetti di mese) + trend + dummy COVID. Ogni coefficiente è leggibile in italiano corrente.",
+            "**Barriera di onestà** — si prevede un numero solo se il modello batte la *naive stagionale* (ripetere lo stesso periodo dell'anno prima) in un backtest; altrimenti «segnale insufficiente».",
+            "**Sfidanti** (si tiene il migliore, serie per serie): ETS/Holt-Winters, SARIMAX, stato latente (UCM), Theta, STL+ARIMA — scelti con backtest **rolling-origin**; + opzione di trend **robusto** (Huber) per gli outlier.",
+            "**Tra regioni** — *partial pooling* (empirical-Bayes): stabilizza le serie corte tirando il trend di ogni regione verso la media nazionale; + riconciliazione Italia↔regioni.",
+            "**Confine** — è un **ranking decisionale** (forza anticipatrice × momentum × valore × fattibilità), NON una stima causale della spesa promozionale.",
+        ],
+    }
+
+
 def mercati_snapshot(code: str, top_bar: int = 12, top_lines: int = 5) -> dict:
     """Mercati esteri della regione in tipi Python puri (per la pagina 'Mercati
     d'origine'): classifica ultimo anno (barre + tabella con quota) e serie storiche

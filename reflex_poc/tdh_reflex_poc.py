@@ -54,6 +54,10 @@ STR_TERRITORI = D.str_territori_list() if D is not None else []
 STR_NOMI = [n for n, _ in STR_TERRITORI]
 STR_NAME2SLUG = {n: s for n, s in STR_TERRITORI}
 
+# contenuto statico della pagina Architettura
+ARCH = D.architettura_content() if D is not None else {
+    "livelli": [], "sorgenti": [], "roadmap": [], "principi": [], "motore_statistico": []}
+
 
 class State(rx.State):
     boot_error: str = ""           # se non vuoto: mostra un banner con l'errore di caricamento
@@ -623,6 +627,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_item("trending-up", "Interesse online", active=(active == "interesse"), href="/interesse-online"),
         nav_item("activity", "Forecast presenze", active=(active == "forecast"), href="/forecast"),
         nav_group("Sistema"),
+        nav_item("layers", "Architettura", active=(active == "architettura"), href="/architettura"),
         nav_item("database", "Gestione dati", active=(active == "gestione"), href="/gestione-dati"),
         nav_item("messages-square", "Assistente"),
         spacing="1", align_items="start", width="264px", min_width="264px",
@@ -1038,6 +1043,60 @@ def azioni_page() -> rx.Component:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# pagina: Architettura ("/architettura") — contenuto statico di prodotto
+# ════════════════════════════════════════════════════════════════════════════
+def _arch_level(nome: str, desc: str) -> rx.Component:
+    return rx.box(
+        rx.text(nome, font_weight="700", color=ACCENT_INK, font_size="0.92rem"),
+        rx.text(desc, color=MUT, font_size="0.84rem", margin_top="3px"),
+        background=PANEL, border=f"1px solid {LINE}", border_radius="12px", padding="12px 16px",
+        width="100%")
+
+
+def _sorgenti_table() -> rx.Component:
+    return rx.box(
+        rx.table.root(
+            rx.table.header(rx.table.row(
+                rx.table.column_header_cell("Sorgente"),
+                rx.table.column_header_cell("Tipo"),
+                rx.table.column_header_cell("Frequenza"),
+                rx.table.column_header_cell("Stato"))),
+            rx.table.body(*[rx.table.row(
+                rx.table.cell(rx.text(s["Sorgente"], font_weight="600", color=INK)),
+                rx.table.cell(s["Tipo"]),
+                rx.table.cell(s["Frequenza"]),
+                rx.table.cell(s["Stato"])) for s in ARCH["sorgenti"]]),
+            variant="surface", size="1", width="100%"),
+        width="100%")
+
+
+def architettura_page() -> rx.Component:
+    return page_shell(
+        "architettura", "Sistema  ›  Architettura",
+        rx.box(
+            rx.heading("Architettura & sorgenti — la visione del TDH", size="7", color=INK, weight="bold"),
+            rx.text("Come è pensato il Turism Data Hub: dai dati grezzi ai servizi, il motore "
+                    "statistico, la roadmap e i principi guida.", color=MUT, font_size="0.9rem",
+                    margin_top="4px"),
+            width="100%"),
+        panel("Architettura a 5 livelli",
+              rx.vstack(*[_arch_level(n, d) for n, d in ARCH["livelli"]], spacing="2", width="100%")),
+        panel("Sorgenti dati",
+              rx.vstack(_sorgenti_table(),
+                        rx.text("🟢 Attiva (già nel motore) · 🟡 Pianificata · ⚪ Da valutare",
+                                color=FAINT, font_size="0.75rem"),
+                        spacing="2", width="100%")),
+        panel("Il motore statistico",
+              rx.vstack(*[rx.markdown(m) for m in ARCH["motore_statistico"]], spacing="0", width="100%")),
+        rx.box(
+            panel("Roadmap", rx.vstack(*[rx.markdown(r) for r in ARCH["roadmap"]], spacing="0", width="100%")),
+            panel("Principi guida", rx.vstack(*[rx.markdown(p) for p in ARCH["principi"]], spacing="0", width="100%")),
+            display="grid", grid_template_columns="repeat(2, 1fr)", gap="18px", width="100%"),
+        rx.text("Turism Data Hub · visione di prodotto · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # pagina: Gestione dati / inventario sorgenti ("/gestione-dati")
 # ════════════════════════════════════════════════════════════════════════════
 def gestione_table() -> rx.Component:
@@ -1272,6 +1331,7 @@ app.add_page(interesse_page, route="/interesse-online", title="TDH · Interesse 
 app.add_page(forecast_page, route="/forecast", title="TDH · Forecast presenze", on_load=State.on_load)
 app.add_page(confronto_page, route="/confronto", title="TDH · Confronto regioni", on_load=State.on_load)
 app.add_page(gestione_page, route="/gestione-dati", title="TDH · Gestione dati", on_load=State.on_load)
+app.add_page(architettura_page, route="/architettura", title="TDH · Architettura", on_load=State.on_load)
 app.add_page(home_page, route="/", title="TDH · Turism Data Hub", on_load=State.on_load)
 app.add_page(index, route="/regione", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)
