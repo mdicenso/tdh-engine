@@ -58,6 +58,76 @@ STR_NAME2SLUG = {n: s for n, s in STR_TERRITORI}
 ARCH = D.architettura_content() if D is not None else {
     "livelli": [], "sorgenti": [], "roadmap": [], "principi": [], "motore_statistico": []}
 
+# ── cancello di accesso (username/password) — credenziali da env TDH_LOGINS ──
+# Formato: "user1:pass1;user2:pass2". Se la variabile NON è impostata → gate APERTO
+# (comodo in locale). Le password NON stanno nel codice (repo pubblico).
+import hashlib  # noqa: E402
+_LOGINS_RAW = os.environ.get("TDH_LOGINS", "")
+
+
+def _parse_logins(raw):
+    d = {}
+    for pair in raw.split(";"):
+        if ":" in pair:
+            u, p = pair.split(":", 1)
+            if u.strip():
+                d[u.strip()] = p.strip()
+    return d
+
+
+LOGINS = _parse_logins(_LOGINS_RAW)
+AUTH_REQUIRED = bool(LOGINS)
+# token del cookie derivato dal segreto (chi non ha la password non può falsificarlo)
+_COOKIE_TOKEN = (hashlib.sha256(("tdh-gate::" + _LOGINS_RAW).encode()).hexdigest()[:24]
+                 if AUTH_REQUIRED else "open")
+
+
+class AuthState(rx.State):
+    auth_cookie: str = rx.Cookie("")
+    auth_error: str = ""
+
+    @rx.var
+    def is_authed(self) -> bool:
+        return (not AUTH_REQUIRED) or (self.auth_cookie == _COOKIE_TOKEN)
+
+    @rx.event
+    def login(self, form_data: dict):
+        u = (form_data.get("username") or "").strip()
+        p = form_data.get("password") or ""
+        if p and LOGINS.get(u) == p:
+            self.auth_cookie = _COOKIE_TOKEN
+            self.auth_error = ""
+        else:
+            self.auth_error = "Credenziali non valide."
+
+    @rx.event
+    def logout(self):
+        self.auth_cookie = ""
+
+
+def login_view() -> rx.Component:
+    return rx.center(
+        rx.vstack(
+            logo(),
+            rx.heading("Accesso riservato", size="6", color=INK, margin_top="6px"),
+            rx.text("Turism Data Hub — inserisci le credenziali per continuare.",
+                    color=MUT, font_size="0.88rem", text_align="center"),
+            rx.form(
+                rx.vstack(
+                    rx.input(placeholder="Username", name="username", width="100%", size="3"),
+                    rx.input(placeholder="Password", name="password", type="password",
+                             width="100%", size="3"),
+                    rx.cond(AuthState.auth_error != "",
+                            rx.text(AuthState.auth_error, color="#dc2626", font_size="0.82rem"),
+                            rx.box()),
+                    rx.button("Entra", type="submit", width="100%", size="3",
+                              background=ACCENT, color="white"),
+                    spacing="3", width="100%"),
+                on_submit=AuthState.login, width="100%"),
+            spacing="3", width="360px", align="center", background=PANEL,
+            border=f"1px solid {LINE}", border_radius="18px", padding="34px 30px"),
+        height="100vh", width="100%", background=BG)
+
 
 class State(rx.State):
     boot_error: str = ""           # se non vuoto: mostra un banner con l'errore di caricamento
@@ -554,17 +624,8 @@ class State(rx.State):
 # ════════════════════════════════════════════════════════════════════════════
 # componenti condivisi (design-system)
 # ════════════════════════════════════════════════════════════════════════════
-def logo() -> rx.Component:
-    svg = ('<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" '
-           'stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-14 4 9 3-5 5 10"/></svg>')
-    return rx.hstack(
-        rx.box(rx.html(svg), background=ACCENT, border_radius="10px", width="40px", height="40px",
-               display="flex", align_items="center", justify_content="center"),
-        rx.vstack(
-            rx.text("Turism Data Hub", font_size="1.05rem", font_weight="700", color=INK, line_height="1.1"),
-            rx.text("PORTALE NAZIONALE DEL TURISMO", font_size="0.62rem", letter_spacing="0.16em", color=FAINT),
-            spacing="0", align_items="start"),
-        spacing="3", align="center")
+def logo(height: str = "40px") -> rx.Component:
+    return rx.image(src="/tdh_logo.svg", height=height, width="auto", alt="Turism Data Hub")
 
 
 def kpi(label: str, value, hint) -> rx.Component:
@@ -636,12 +697,16 @@ def sidebar(active: str = "regione") -> rx.Component:
 
 
 def topbar(breadcrumb: str) -> rx.Component:
+    right = [rx.select(NOMI, value=State.region_name, on_change=State.set_region, width="220px")]
+    if AUTH_REQUIRED:
+        right.append(rx.button("Esci", on_click=AuthState.logout, variant="soft",
+                               color_scheme="gray", size="1"))
     return rx.box(
         rx.hstack(
             rx.text(breadcrumb, font_size="0.8rem", color=MUT),
             rx.spacer(),
-            rx.select(NOMI, value=State.region_name, on_change=State.set_region, width="220px"),
-            align="center", width="100%"),
+            *right,
+            align="center", spacing="3", width="100%"),
         border_bottom=f"1px solid {LINE}", padding_bottom="12px", width="100%")
 
 
@@ -659,7 +724,7 @@ def error_banner() -> rx.Component:
 
 
 def page_shell(active: str, breadcrumb: str, *content) -> rx.Component:
-    return rx.hstack(
+    shell = rx.hstack(
         sidebar(active),
         rx.box(
             rx.vstack(topbar(breadcrumb), error_banner(), *content,
@@ -667,6 +732,7 @@ def page_shell(active: str, breadcrumb: str, *content) -> rx.Component:
             flex="1", min_height="100vh", background=BG, padding="24px 34px",
             display="flex", justify_content="center"),
         spacing="0", align="start", width="100%")
+    return rx.cond(AuthState.is_authed, shell, login_view())
 
 
 # ════════════════════════════════════════════════════════════════════════════
