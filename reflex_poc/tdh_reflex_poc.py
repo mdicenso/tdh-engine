@@ -333,8 +333,7 @@ class State(rx.State):
             colorscale="Teal", marker_line_color="white", marker_line_width=0.6,
             colorbar=dict(title=dict(text="spesa straniera<br>2024 (M€)", side="right")),
             hovertemplate="<b>%{location}</b><br>spesa %{z:,.0f} M€<extra></extra>"))
-        fig.update_geos(visible=False, projection_type="mercator",
-                        lonaxis_range=[6.2, 18.8], lataxis_range=[36.2, 47.2],
+        fig.update_geos(fitbounds="locations", visible=False, projection_type="mercator",
                         bgcolor="rgba(0,0,0,0)")
         fig.update_layout(height=760, margin=dict(l=0, r=0, t=0, b=0), autosize=True,
                           paper_bgcolor="rgba(0,0,0,0)", font=dict(color=MUT, size=12),
