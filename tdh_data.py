@@ -895,6 +895,42 @@ def forecast_snapshot(code: str) -> dict:
             "reading": (fit.coefficient_reading() if hasattr(fit, "coefficient_reading") else "")}
 
 
+def confronto_snapshot() -> dict:
+    """Confronto di TUTTE le regioni su più metriche (ultimo valore disponibile da
+    region_annual_panel): spesa, presenze straniere, posti letto, occupazione,
+    spesa/viaggiatore, quota stranieri. + arrays per scatter spesa×occupazione."""
+    rows = []
+    sc_names, sc_codes, sc_spesa, sc_occ, sc_letti = [], [], [], [], []
+    for code, info in RG.REGIONS.items():
+        panel = region_annual_panel(code)
+
+        def lastv(k, _p=None):
+            p = panel
+            if p is None or getattr(p, "empty", True) or k not in p.columns:
+                return None
+            s = p[k].dropna()
+            return float(s.iloc[-1]) if not s.empty else None
+
+        spesa, presenze, letti = lastv("spesa"), lastv("presenze_str"), lastv("letti")
+        occ, spv, quota = lastv("occ"), lastv("spesa_per_viagg"), lastv("quota_str")
+        rows.append({"code": code, "regione": info["nome"],
+                     "spesa": _fmt_val(spesa, "M€", 0), "presenze": _it_int(presenze),
+                     "letti": _it_int(letti), "occ": _fmt_val(occ, "%", 1),
+                     "sp_viagg": _fmt_val(spv, "€", 0), "quota": _fmt_val(quota, "%", 1),
+                     "_spesa": (spesa if spesa is not None else -1.0),
+                     "_occ": (occ if occ is not None else -1.0)})
+        if spesa is not None and occ is not None:
+            sc_names.append(info["nome"]); sc_codes.append(code)
+            sc_spesa.append(spesa); sc_occ.append(occ); sc_letti.append(letti or 0.0)
+    rows.sort(key=lambda r: -r["_spesa"])
+    top_spesa = rows[0]["regione"] if rows else "—"
+    top_occ = max(rows, key=lambda r: r["_occ"])["regione"] if rows else "—"
+    clean = [{k: v for k, v in r.items() if not k.startswith("_")} for r in rows]
+    return {"n": len(rows), "top_spesa": top_spesa, "top_occ": top_occ, "rows": clean,
+            "sc_names": sc_names, "sc_codes": sc_codes,
+            "sc_spesa": sc_spesa, "sc_occ": sc_occ, "sc_letti": sc_letti}
+
+
 def mercati_snapshot(code: str, top_bar: int = 12, top_lines: int = 5) -> dict:
     """Mercati esteri della regione in tipi Python puri (per la pagina 'Mercati
     d'origine'): classifica ultimo anno (barre + tabella con quota) e serie storiche

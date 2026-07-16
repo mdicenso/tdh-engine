@@ -74,6 +74,10 @@ class State(rx.State):
     italia_spesa: str = "—"
     it_presenze: str = "—"; it_mercati: str = "—"
     home_top: list[dict] = []
+    # confronto regioni (indipendente dalla regione; evidenzia quella selezionata)
+    cf_rows: list[dict] = []
+    cf_n: str = "—"; cf_top_spesa: str = "—"; cf_top_occ: str = "—"
+    _cf_names: list = []; _cf_codes: list = []; _cf_spesa: list = []; _cf_occ: list = []; _cf_letti: list = []
     # base dati regionale (pannello pluriennale, dipende dalla regione).
     # Le serie numeriche hanno "buchi" (None) → backend vars (_): consumate solo lato
     # server nei grafici, non serializzate al client.
@@ -242,6 +246,12 @@ class State(rx.State):
                 m = D.mappa_snapshot()
                 self._map_geojson = m["geojson"] or {}
                 self._map_names, self._map_codes, self._map_z = m["names"], m["codes"], m["z"]
+            if not self.cf_rows:
+                cf = D.confronto_snapshot()
+                self.cf_rows = cf["rows"]
+                self.cf_n, self.cf_top_spesa, self.cf_top_occ = str(cf["n"]), cf["top_spesa"], cf["top_occ"]
+                self._cf_names, self._cf_codes = cf["sc_names"], cf["sc_codes"]
+                self._cf_spesa, self._cf_occ, self._cf_letti = cf["sc_spesa"], cf["sc_occ"], cf["sc_letti"]
             if not self._str_adr_slugs:
                 self._load_str()
             self.boot_error = ""
@@ -512,6 +522,23 @@ class State(rx.State):
         fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="presenze straniere / mese")
         return fig
 
+    @rx.var
+    def cf_scatter_fig(self) -> go.Figure:
+        colors = ["#f59e0b" if c == self.region_code else ACCENT for c in self._cf_codes]
+        mx = max(self._cf_letti) if self._cf_letti else 1.0
+        sizes = [10 + 34 * ((l / mx) ** 0.5) for l in self._cf_letti]
+        fig = go.Figure(go.Scatter(
+            x=self._cf_spesa, y=self._cf_occ, mode="markers+text", text=self._cf_names,
+            textposition="top center", textfont=dict(size=9, color=MUT), customdata=self._cf_letti,
+            marker=dict(size=sizes, color=colors, opacity=0.85, line=dict(width=1, color="white")),
+            hovertemplate="<b>%{text}</b><br>spesa %{x:,.0f} M€<br>occupazione %{y:.1f}%"
+                          "<br>posti letto %{customdata:,.0f}<extra></extra>"))
+        fig.update_layout(height=470, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(gridcolor="#eef3f3", title="spesa straniera (M€)")
+        fig.update_yaxes(gridcolor="#eef3f3", title="occupazione media (%)")
+        return fig
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # componenti condivisi (design-system)
@@ -576,6 +603,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_item("layout-dashboard", "Regione", active=(active == "regione"), href="/regione"),
         nav_item("map", "Italia · mappa", active=(active == "mappa"), href="/mappa"),
         nav_item("globe", "Mercati d'origine", active=(active == "mercati"), href="/mercati"),
+        nav_item("git-compare", "Confronto regioni", active=(active == "confronto"), href="/confronto"),
         nav_group("Cosa è successo"),
         nav_item("map-pin", "Per provincia", active=(active == "province"), href="/per-provincia"),
         nav_item("bed-double", "Affitti brevi", active=(active == "str"), href="/affitti-brevi"),
@@ -1001,6 +1029,54 @@ def azioni_page() -> rx.Component:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# pagina: Confronto regioni ("/confronto")
+# ════════════════════════════════════════════════════════════════════════════
+def confronto_table() -> rx.Component:
+    return rx.box(
+        rx.table.root(
+            rx.table.header(rx.table.row(
+                rx.table.column_header_cell("Regione"),
+                rx.table.column_header_cell("Spesa straniera"),
+                rx.table.column_header_cell("Presenze str."),
+                rx.table.column_header_cell("Posti letto"),
+                rx.table.column_header_cell("Occupazione"),
+                rx.table.column_header_cell("€/viaggiatore"),
+                rx.table.column_header_cell("Quota str."))),
+            rx.table.body(rx.foreach(State.cf_rows, lambda r: rx.table.row(
+                rx.table.cell(r["regione"]),
+                rx.table.cell(r["spesa"]),
+                rx.table.cell(r["presenze"]),
+                rx.table.cell(r["letti"]),
+                rx.table.cell(r["occ"]),
+                rx.table.cell(r["sp_viagg"]),
+                rx.table.cell(r["quota"]),
+                background=rx.cond(r["code"] == State.region_code, "#eef3f3", "transparent")))),
+            variant="surface", size="1", width="100%"),
+        max_height="420px", overflow_y="auto", width="100%")
+
+
+def confronto_page() -> rx.Component:
+    return page_shell(
+        "confronto", "Panoramica  ›  Confronto regioni",
+        rx.box(
+            rx.heading("Confronto tra regioni", size="7", color=INK, weight="bold"),
+            rx.text("Tutte le regioni a confronto sulle metriche chiave (ultimo anno disponibile). "
+                    "La regione selezionata dal menu in alto è evidenziata nella tabella e nel grafico.",
+                    color=MUT, font_size="0.9rem", margin_top="4px"),
+            width="100%"),
+        rx.box(
+            kpi("Regioni", State.cf_n, "a confronto"),
+            kpi("Leader per spesa", State.cf_top_spesa, "spesa straniera"),
+            kpi("Leader per occupazione", State.cf_top_occ, "posti letto occupati"),
+            display="grid", grid_template_columns="repeat(3, 1fr)", gap="14px", width="100%"),
+        panel("Posizionamento: spesa × occupazione (bolla = posti letto)",
+              rx.plotly(data=State.cf_scatter_fig, width="100%")),
+        panel("Tabella comparativa", confronto_table()),
+        rx.text("Reflex · DATI REALI (ISTAT · Banca d'Italia) · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # pagina: Forecast presenze ("/forecast")
 # ════════════════════════════════════════════════════════════════════════════
 def forecast_page() -> rx.Component:
@@ -1135,6 +1211,7 @@ app = rx.App(theme=rx.theme(appearance="light", accent_color="teal", gray_color=
 app.add_page(azioni_page, route="/azioni", title="TDH · Azioni & budget", on_load=State.on_load)
 app.add_page(interesse_page, route="/interesse-online", title="TDH · Interesse online", on_load=State.on_load)
 app.add_page(forecast_page, route="/forecast", title="TDH · Forecast presenze", on_load=State.on_load)
+app.add_page(confronto_page, route="/confronto", title="TDH · Confronto regioni", on_load=State.on_load)
 app.add_page(home_page, route="/", title="TDH · Turism Data Hub", on_load=State.on_load)
 app.add_page(index, route="/regione", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)
