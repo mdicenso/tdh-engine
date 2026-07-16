@@ -78,6 +78,9 @@ class State(rx.State):
     cf_rows: list[dict] = []
     cf_n: str = "—"; cf_top_spesa: str = "—"; cf_top_occ: str = "—"
     _cf_names: list = []; _cf_codes: list = []; _cf_spesa: list = []; _cf_occ: list = []; _cf_letti: list = []
+    # gestione dati (inventario sorgenti, indipendente dalla regione)
+    ges_rows: list[dict] = []
+    ges_n: str = "—"; ges_ok: str = "—"; ges_live: str = "—"
     # base dati regionale (pannello pluriennale, dipende dalla regione).
     # Le serie numeriche hanno "buchi" (None) → backend vars (_): consumate solo lato
     # server nei grafici, non serializzate al client.
@@ -252,6 +255,10 @@ class State(rx.State):
                 self.cf_n, self.cf_top_spesa, self.cf_top_occ = str(cf["n"]), cf["top_spesa"], cf["top_occ"]
                 self._cf_names, self._cf_codes = cf["sc_names"], cf["sc_codes"]
                 self._cf_spesa, self._cf_occ, self._cf_letti = cf["sc_spesa"], cf["sc_occ"], cf["sc_letti"]
+            if not self.ges_rows:
+                g = D.gestione_snapshot()
+                self.ges_rows = g["rows"]
+                self.ges_n, self.ges_ok, self.ges_live = str(g["n_fonti"]), str(g["n_ok"]), str(g["n_live"])
             if not self._str_adr_slugs:
                 self._load_str()
             self.boot_error = ""
@@ -615,6 +622,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_item("trending-up", "Interesse online", active=(active == "interesse"), href="/interesse-online"),
         nav_item("activity", "Forecast presenze", active=(active == "forecast"), href="/forecast"),
         nav_group("Sistema"),
+        nav_item("database", "Gestione dati", active=(active == "gestione"), href="/gestione-dati"),
         nav_item("messages-square", "Assistente"),
         spacing="1", align_items="start", width="264px", min_width="264px",
         height="100vh", position="sticky", top="0px", overflow_y="auto",
@@ -1029,6 +1037,56 @@ def azioni_page() -> rx.Component:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# pagina: Gestione dati / inventario sorgenti ("/gestione-dati")
+# ════════════════════════════════════════════════════════════════════════════
+def gestione_table() -> rx.Component:
+    return rx.box(
+        rx.table.root(
+            rx.table.header(rx.table.row(
+                rx.table.column_header_cell(""),
+                rx.table.column_header_cell("Sorgente"),
+                rx.table.column_header_cell("Ente"),
+                rx.table.column_header_cell("Frequenza"),
+                rx.table.column_header_cell("Copertura"),
+                rx.table.column_header_cell("Ultimo dato"),
+                rx.table.column_header_cell("Aggiornabilità"))),
+            rx.table.body(rx.foreach(State.ges_rows, lambda r: rx.table.row(
+                rx.table.cell(r["stato"]),
+                rx.table.cell(rx.text(r["nome"], font_weight="600", color=INK)),
+                rx.table.cell(r["ente"]),
+                rx.table.cell(r["freq"]),
+                rx.table.cell(r["livello"]),
+                rx.table.cell(r["ultimo"]),
+                rx.table.cell(rx.badge(r["agg"],
+                              color_scheme=rx.match(r["agg"], ("live", "grass"), "gray"),
+                              variant="soft", radius="full"))))),
+            variant="surface", size="1", width="100%"),
+        width="100%")
+
+
+def gestione_page() -> rx.Component:
+    return page_shell(
+        "gestione", "Sistema  ›  Gestione dati",
+        rx.box(
+            rx.heading("Gestione dati — sorgenti", size="7", color=INK, weight="bold"),
+            rx.text("Le basi dati che alimentano il motore, con stato letto DALLA CACHE reale. "
+                    "«live» = re-interrogabile in automatico (ISTAT · Google Trends · ECB); "
+                    "«manuale» = da aggiornare a mano (Banca d'Italia · Inside Airbnb · export regionali).",
+                    color=MUT, font_size="0.9rem", margin_top="4px"),
+            width="100%"),
+        rx.box(
+            kpi("Sorgenti collegate", State.ges_n, "al motore"),
+            kpi("Attive (in cache)", State.ges_ok, "dati presenti"),
+            kpi("Ri-aggiornabili live", State.ges_live, "ISTAT · Trends · ECB"),
+            display="grid", grid_template_columns="repeat(3, 1fr)", gap="14px", width="100%"),
+        panel("Inventario delle sorgenti", gestione_table()),
+        _note("Vista in sola lettura. Le funzioni «admin» dello Streamlit (caricare file, approvare "
+              "candidati, lanciare il controllo live) verranno portate come pannello a parte."),
+        rx.text("Reflex · stato letto dalla cache · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # pagina: Confronto regioni ("/confronto")
 # ════════════════════════════════════════════════════════════════════════════
 def confronto_table() -> rx.Component:
@@ -1212,6 +1270,7 @@ app.add_page(azioni_page, route="/azioni", title="TDH · Azioni & budget", on_lo
 app.add_page(interesse_page, route="/interesse-online", title="TDH · Interesse online", on_load=State.on_load)
 app.add_page(forecast_page, route="/forecast", title="TDH · Forecast presenze", on_load=State.on_load)
 app.add_page(confronto_page, route="/confronto", title="TDH · Confronto regioni", on_load=State.on_load)
+app.add_page(gestione_page, route="/gestione-dati", title="TDH · Gestione dati", on_load=State.on_load)
 app.add_page(home_page, route="/", title="TDH · Turism Data Hub", on_load=State.on_load)
 app.add_page(index, route="/regione", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)

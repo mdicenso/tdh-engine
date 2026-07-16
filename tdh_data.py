@@ -931,6 +931,69 @@ def confronto_snapshot() -> dict:
             "sc_spesa": sc_spesa, "sc_occ": sc_occ, "sc_letti": sc_letti}
 
 
+def gestione_snapshot() -> dict:
+    """Inventario in sola lettura delle sorgenti dati, con stato letto DALLA CACHE reale
+    (numero file, ultimo dato). Nessuna duplicazione di cataloghi statici → niente drift."""
+    import glob as _glob
+
+    def status(pat, date_col=None, anno_col=None):
+        files = _glob.glob(_cpath(pat))
+        if not files:
+            return 0, None
+        f = max(files, key=os.path.getmtime)
+        ultimo = None
+        try:
+            df = pd.read_csv(f)
+            if date_col and date_col in df.columns:
+                t = pd.to_datetime(df[date_col], errors="coerce").max()
+                ultimo = t.strftime("%m/%Y") if pd.notna(t) else None
+            elif anno_col and anno_col in df.columns:
+                y = pd.to_numeric(df[anno_col], errors="coerce").max()
+                ultimo = str(int(y)) if pd.notna(y) else None
+        except Exception:  # noqa: BLE001
+            pass
+        return len(files), ultimo
+
+    rows = []
+
+    def add(nome, ente, freq, livello, agg, n, ultimo, dett=""):
+        rows.append({"nome": nome, "ente": ente, "freq": freq, "livello": livello, "agg": agg,
+                     "stato": ("✅" if n else "—"), "ultimo": (ultimo or "—"), "dettaglio": dett})
+
+    n, u = status("istat_????_NI_ALL_WRL_X_ITA.csv", date_col="date")
+    add("Presenze straniere (mensile)", "ISTAT", "mensile", "Regionale", "live", n, u, f"{n} regioni")
+    n, u = status("istat_?????_NI_ALL_WORLD.csv", date_col="date")
+    add("Presenze per provincia", "ISTAT", "mensile", "Provinciale", "live", n, u, f"{n} province")
+    n, u = status("istat_capacity_letti_*.csv", anno_col="anno")
+    add("Capacità ricettiva (posti letto)", "ISTAT", "annuale", "Regionale", "live", n, u, f"{n} file")
+    n, u = status("istat_estero_regione_prov_annuale.csv", anno_col="TIME_PERIOD")
+    add("Esteri per paese × territorio", "ISTAT (cube _9)", "annuale", "Naz./Regionale", "live", n, u)
+    n, u = status("trends_*.csv", date_col="date")
+    add("Interesse di ricerca (Google Trends)", "Google Trends", "mensile", "mercato × regione", "live", n, u, f"{n} serie")
+    add("Turismo internazionale (spesa · notti · viaggiatori)", "Banca d'Italia", "trimestrale",
+        "Naz./Regionale", "manuale (xlsx)", 1 if os.path.exists(_cpath("bdi_turismo_ts.xlsx")) else 0,
+        "2025", "1997–2025")
+    add("Spesa straniera per regione", "Banca d'Italia", "annuale", "Regionale", "manuale",
+        1 if os.path.exists(_cpath("bdi_extended.json")) else 0, "2024", "")
+    add("Spesa €/viaggiatore per mercato", "Banca d'Italia", "annuale", "Nazionale", "manuale",
+        1 if os.path.exists(_cpath("bdi_spend_per_market.csv")) else 0, "—", "")
+    ns, us = 0, None
+    try:
+        pt = _cpath("str_airbnb_territorio.csv")
+        if os.path.exists(pt):
+            d = pd.read_csv(pt)
+            ns = len(d)
+            if "snapshot" in d.columns and ns:
+                us = str(d["snapshot"].iloc[0])
+    except Exception:  # noqa: BLE001
+        pass
+    add("Affitti brevi (Inside Airbnb)", "Inside Airbnb", "snapshot", "Città + 3 regioni",
+        "manuale", ns, us, f"{ns} territori")
+
+    return {"rows": rows, "n_fonti": len(rows), "n_ok": sum(1 for r in rows if r["stato"] == "✅"),
+            "n_live": sum(1 for r in rows if r["agg"].startswith("live"))}
+
+
 def mercati_snapshot(code: str, top_bar: int = 12, top_lines: int = 5) -> dict:
     """Mercati esteri della regione in tipi Python puri (per la pagina 'Mercati
     d'origine'): classifica ultimo anno (barre + tabella con quota) e serie storiche
