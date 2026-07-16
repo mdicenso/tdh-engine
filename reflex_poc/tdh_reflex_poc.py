@@ -617,7 +617,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_group("Sistema"),
         nav_item("messages-square", "Assistente"),
         spacing="1", align_items="start", width="264px", min_width="264px",
-        height="100vh", position="sticky", top="0px",
+        height="100vh", position="sticky", top="0px", overflow_y="auto",
         background=PANEL, border_right=f"1px solid {LINE}", padding="20px 14px")
 
 
