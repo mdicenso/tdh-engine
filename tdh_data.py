@@ -856,6 +856,45 @@ def interesse_snapshot(code: str) -> dict:
             "rows": [{"nome": r["nome"], "recente": r["recente"], "momentum": r["momentum"]} for r in rows]}
 
 
+@functools.lru_cache(maxsize=None)
+def forecast_snapshot(code: str) -> dict:
+    """Previsione delle presenze straniere (motore statistico): storico + previsione con
+    intervallo, confronto anno prima, e qualità del modello (MAPE, batte il naïve?, lag).
+    Vista nazionale (ITALIA): usa la regione di default come esempio."""
+    national = RG.is_national(code)
+    eng = RG.DEFAULT_REGION if national else code
+    base = {"region": RG.region(eng)["nome"], "has_national": national, "error": "",
+            "hist_x": [], "hist_y": [], "fc_x": [], "fc_mean": [], "fc_lo": [], "fc_hi": [],
+            "fc_lastyear": [], "mape": "—", "beats": "—", "lag": "—", "reading": ""}
+    cwd = os.getcwd()
+    try:
+        os.chdir(_ROOT)
+        from tourism_wedge import engine_aggregate as _EA
+        info = RG.region(eng)
+        df = _EA.assemble_real(start="2019-01", region_code=eng, trends_kw=info["trends_kw"])
+        fit = _EA.fit_aggregate(df)
+        fc = _EA.forecast_aggregate(fit)
+        obs = df.dropna(subset=["presences"])[["date", "presences"]]
+    except Exception as e:  # noqa: BLE001
+        return {**base, "error": f"{type(e).__name__}: {e}"}
+    finally:
+        os.chdir(cwd)
+
+    mape = float(getattr(fit, "mape_model", float("nan")))
+    return {**base,
+            "hist_x": [pd.Timestamp(d).strftime("%Y-%m") for d in obs["date"]],
+            "hist_y": [float(v) for v in obs["presences"]],
+            "fc_x": [pd.Timestamp(d).strftime("%Y-%m") for d in fc.dates],
+            "fc_mean": [float(x) for x in fc.mean],
+            "fc_lo": [float(x) for x in fc.lo],
+            "fc_hi": [float(x) for x in fc.hi],
+            "fc_lastyear": [None if pd.isna(x) else float(x) for x in fc.lastyear],
+            "mape": (f"{mape * 100:.1f}%" if mape == mape and mape < 1 else (f"{mape:.1f}%" if mape == mape else "—")),
+            "beats": ("sì" if getattr(fit, "beats_naive", False) else "no"),
+            "lag": str(int(getattr(fit, "lag", 0))),
+            "reading": (fit.coefficient_reading() if hasattr(fit, "coefficient_reading") else "")}
+
+
 def mercati_snapshot(code: str, top_bar: int = 12, top_lines: int = 5) -> dict:
     """Mercati esteri della regione in tipi Python puri (per la pagina 'Mercati
     d'origine'): classifica ultimo anno (barre + tabella con quota) e serie storiche

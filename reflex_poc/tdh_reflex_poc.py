@@ -130,6 +130,12 @@ class State(rx.State):
     _ie_series: list = []
     ie_rows: list[dict] = []
     ie_keyword: str = "—"; ie_n: str = "—"; ie_top_nome: str = "—"; ie_top_mom: str = "—"
+    # forecast presenze (motore statistico)
+    _fc_hist_x: list = []; _fc_hist_y: list = []
+    _fc_x: list = []; _fc_mean: list = []; _fc_lo: list = []; _fc_hi: list = []
+    fc_region: str = "—"; fc_has_national: bool = False; fc_error: str = ""
+    fc_mape: str = "—"; fc_beats: str = "—"; fc_lag: str = "—"
+    fc_reading: list[str] = []
 
     def _load(self):
         s = D.regione_snapshot(self.region_code)
@@ -201,6 +207,14 @@ class State(rx.State):
         self.ie_rows = ie["rows"]
         self.ie_keyword, self.ie_n = ie["keyword"], str(ie["n"])
         self.ie_top_nome, self.ie_top_mom = ie["top_nome"], ie["top_mom"]
+        # forecast presenze (motore statistico)
+        fcs = D.forecast_snapshot(self.region_code)
+        self._fc_hist_x, self._fc_hist_y = fcs["hist_x"], fcs["hist_y"]
+        self._fc_x, self._fc_mean = fcs["fc_x"], fcs["fc_mean"]
+        self._fc_lo, self._fc_hi = fcs["fc_lo"], fcs["fc_hi"]
+        self.fc_region, self.fc_has_national, self.fc_error = fcs["region"], fcs["has_national"], fcs["error"]
+        self.fc_mape, self.fc_beats, self.fc_lag = fcs["mape"], fcs["beats"], fcs["lag"]
+        self.fc_reading = fcs["reading"]
         # mercati d'origine
         me = D.mercati_snapshot(self.region_code)
         self._me_bar_nomi, self._me_bar_val = me["bar_nomi"], me["bar_val"]
@@ -478,6 +492,26 @@ class State(rx.State):
         fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="interesse di ricerca (0-100)")
         return fig
 
+    @rx.var
+    def forecast_fig(self) -> go.Figure:
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=self._fc_hist_x, y=self._fc_hist_y, name="storico", mode="lines",
+                                 line=dict(color=MUT, width=1.8)))
+        if self._fc_x:
+            fig.add_trace(go.Scatter(x=self._fc_x, y=self._fc_hi, mode="lines", line=dict(width=0),
+                                     showlegend=False, hoverinfo="skip"))
+            fig.add_trace(go.Scatter(x=self._fc_x, y=self._fc_lo, name="intervallo 80%", mode="lines",
+                                     line=dict(width=0), fill="tonexty", fillcolor="rgba(14,107,112,.15)",
+                                     hoverinfo="skip"))
+            fig.add_trace(go.Scatter(x=self._fc_x, y=self._fc_mean, name="previsione",
+                                     mode="lines+markers", line=dict(color=ACCENT, width=2.6)))
+        fig.update_layout(height=430, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12),
+                          legend=dict(orientation="h", y=1.13, x=0))
+        fig.update_xaxes(showgrid=False, linecolor=LINE)
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="presenze straniere / mese")
+        return fig
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # componenti condivisi (design-system)
@@ -551,6 +585,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_item("trophy", "Ranking regioni", active=(active == "ranking"), href="/ranking"),
         nav_item("target", "Azioni & budget", active=(active == "azioni"), href="/azioni"),
         nav_item("trending-up", "Interesse online", active=(active == "interesse"), href="/interesse-online"),
+        nav_item("activity", "Forecast presenze", active=(active == "forecast"), href="/forecast"),
         nav_group("Sistema"),
         nav_item("messages-square", "Assistente"),
         spacing="1", align_items="start", width="264px", min_width="264px",
@@ -966,6 +1001,40 @@ def azioni_page() -> rx.Component:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# pagina: Forecast presenze ("/forecast")
+# ════════════════════════════════════════════════════════════════════════════
+def forecast_page() -> rx.Component:
+    return page_shell(
+        "forecast", "Cosa fare  ›  Forecast presenze",
+        rx.box(
+            rx.heading(State.fc_region + " — previsione presenze straniere", size="7", color=INK, weight="bold"),
+            rx.text("Il motore statistico usa l'interesse di ricerca (con l'anticipo tipico del mercato), "
+                    "la stagionalità e il trend per prevedere le presenze straniere dei prossimi mesi. "
+                    "Orizzonte breve, entro l'anticipo del segnale.", color=MUT, font_size="0.9rem",
+                    margin_top="4px"),
+            width="100%"),
+        rx.cond(State.fc_has_national,
+                _note("Vista «Italia»: mostro " + State.fc_region + " come esempio. Scegli una regione "
+                      "per la sua previsione."), rx.box()),
+        rx.cond(State.fc_error != "", _note("Motore non disponibile: " + State.fc_error), rx.box()),
+        rx.box(
+            kpi("Errore medio (MAPE)", State.fc_mape, "più basso = più affidabile"),
+            kpi("Batte il modello «ingenuo»?", State.fc_beats, "vs ripetere l'anno prima"),
+            kpi("Anticipo del segnale", State.fc_lag, "mesi (ricerca → arrivi)"),
+            display="grid", grid_template_columns="repeat(3, 1fr)", gap="14px", width="100%"),
+        panel("Storico e previsione (con intervallo 80%)", rx.plotly(data=State.forecast_fig, width="100%")),
+        panel("Come il modello legge i dati",
+              rx.vstack(rx.foreach(State.fc_reading, lambda t: rx.hstack(
+                  rx.icon("dot", size=18, color=ACCENT),
+                  rx.text(t, color=MUT, font_size="0.85rem"),
+                  align="start", spacing="1", width="100%")), spacing="2", width="100%")),
+        _note("Stima d'opportunità, non garanzia: il modello coglie il segnale anticipatore, non "
+              "l'effetto causale della spesa promozionale."),
+        rx.text("Reflex · MOTORE STATISTICO (ISTAT · Google Trends) · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # pagina: Interesse online / Google Trends ("/interesse-online")
 # ════════════════════════════════════════════════════════════════════════════
 def interesse_table() -> rx.Component:
@@ -1065,6 +1134,7 @@ def home_page() -> rx.Component:
 app = rx.App(theme=rx.theme(appearance="light", accent_color="teal", gray_color="slate"))
 app.add_page(azioni_page, route="/azioni", title="TDH · Azioni & budget", on_load=State.on_load)
 app.add_page(interesse_page, route="/interesse-online", title="TDH · Interesse online", on_load=State.on_load)
+app.add_page(forecast_page, route="/forecast", title="TDH · Forecast presenze", on_load=State.on_load)
 app.add_page(home_page, route="/", title="TDH · Turism Data Hub", on_load=State.on_load)
 app.add_page(index, route="/regione", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)
