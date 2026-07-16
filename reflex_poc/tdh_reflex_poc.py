@@ -72,6 +72,8 @@ class State(rx.State):
     # ranking regioni (indipendente dalla regione; l'evidenziazione dipende da region_code)
     rank_regioni: list[dict] = []
     italia_spesa: str = "—"
+    it_presenze: str = "—"; it_mercati: str = "—"
+    home_top: list[dict] = []
     # base dati regionale (pannello pluriennale, dipende dalla regione).
     # Le serie numeriche hanno "buchi" (None) → backend vars (_): consumate solo lato
     # server nei grafici, non serializzate al client.
@@ -208,6 +210,10 @@ class State(rx.State):
                 self.rank_regioni = [dict(r) for r in D.regions_spend_ranking()]
                 tot = D.region_spend("ITALIA")
                 self.italia_spesa = f"{D._it_int(tot[0])} M€" if tot else "—"
+                it = D.regione_snapshot("ITALIA")
+                self.it_presenze, self.it_mercati = it["kpi_presenze"], it["kpi_mercati"]
+                self.home_top = [{"regione": r["regione"], "spesa": f"{D._it_int(r['spesa_M'])} M€"}
+                                 for r in list(D.regions_spend_ranking())[:6]]
             if not self._map_codes:
                 m = D.mappa_snapshot()
                 self._map_geojson = m["geojson"] or {}
@@ -508,12 +514,13 @@ def sidebar(active: str = "regione") -> rx.Component:
         rx.box(logo(), padding_bottom="16px", margin_bottom="6px",
                border_bottom=f"1px solid {LINE}", width="100%"),
         nav_group("Panoramica"),
-        nav_item("layout-dashboard", "Regione", active=(active == "regione"), href="/"),
+        nav_item("house", "Home", active=(active == "home"), href="/"),
+        nav_item("layout-dashboard", "Regione", active=(active == "regione"), href="/regione"),
         nav_item("map", "Italia · mappa", active=(active == "mappa"), href="/mappa"),
         nav_item("globe", "Mercati d'origine", active=(active == "mercati"), href="/mercati"),
         nav_group("Cosa è successo"),
         nav_item("map-pin", "Per provincia", active=(active == "province"), href="/per-provincia"),
-        nav_item("house", "Affitti brevi", active=(active == "str"), href="/affitti-brevi"),
+        nav_item("bed-double", "Affitti brevi", active=(active == "str"), href="/affitti-brevi"),
         nav_item("database", "Base dati regionale", active=(active == "basedati"), href="/base-dati"),
         nav_item("banknote", "Spesa turistica", active=(active == "spesa"), href="/spesa"),
         nav_group("Cosa fare"),
@@ -933,9 +940,66 @@ def azioni_page() -> rx.Component:
                 "stime d'opportunità · design «Istituzionale»", color=FAINT, font_size="0.75rem"))
 
 
+# ════════════════════════════════════════════════════════════════════════════
+# pagina: Home / landing ("/")
+# ════════════════════════════════════════════════════════════════════════════
+def entry_card(icon: str, title: str, desc: str, href: str) -> rx.Component:
+    return rx.link(
+        rx.box(
+            rx.hstack(rx.icon(icon, size=22, color=ACCENT),
+                      rx.text(title, font_weight="700", font_size="1rem", color=INK),
+                      spacing="3", align="center"),
+            rx.text(desc, color=MUT, font_size="0.82rem", margin_top="6px"),
+            background=PANEL, border=f"1px solid {LINE}", border_radius="14px", padding="16px 18px",
+            height="100%", _hover={"border_color": ACCENT, "box_shadow": "0 2px 12px rgba(14,107,112,0.10)"}),
+        href=href, width="100%", text_decoration="none", style={"text-decoration": "none"})
+
+
+def home_page() -> rx.Component:
+    return page_shell(
+        "home", "Home",
+        rx.box(
+            logo(),
+            rx.heading("Dal dato turistico all'azione.", size="8", color=INK, weight="bold",
+                       margin_top="16px"),
+            rx.text("Intelligence turistica multi-regione: presenze, spesa, mercati esteri, affitti "
+                    "brevi e un motore che indica dove e quando investire il budget promozionale. "
+                    "Tutte le 20 regioni italiane, dati reali — ISTAT · Banca d'Italia · Google Trends · "
+                    "Inside Airbnb.", color=MUT, font_size="1rem", max_width="840px", margin_top="8px"),
+            background=PANEL, border=f"1px solid {LINE}", border_radius="18px", padding="28px 30px",
+            width="100%"),
+        rx.box(
+            kpi("Spesa straniera · Italia", State.italia_spesa, "Banca d'Italia 2024"),
+            kpi("Presenze straniere", State.it_presenze, "ultimo mese · ISTAT"),
+            kpi("Regioni coperte", "20", "l'intera Italia"),
+            kpi("Mercati esteri", State.it_mercati, "paesi di origine"),
+            display="grid", grid_template_columns="repeat(4, 1fr)", gap="14px", width="100%"),
+        rx.text("Esplora", font_size="0.7rem", letter_spacing="0.14em", color=FAINT,
+                font_weight="600", style={"text-transform": "uppercase"}),
+        rx.box(
+            entry_card("layout-dashboard", "Regione", "Quadro sintetico: presenze, capacità, mercati, spesa.", "/regione"),
+            entry_card("map", "Italia · mappa", "La spesa straniera regione per regione, cliccabile.", "/mappa"),
+            entry_card("globe", "Mercati d'origine", "Da quali paesi arrivano i turisti e come cambia nel tempo.", "/mercati"),
+            entry_card("bed-double", "Affitti brevi", "Il mercato Airbnb: annunci, prezzi, operatori, licenze.", "/affitti-brevi"),
+            entry_card("banknote", "Spesa turistica", "Quanto vale ogni visitatore: yield e permanenza.", "/spesa"),
+            entry_card("target", "Azioni & budget", "Il motore: dove e quando investire il budget promozionale.", "/azioni"),
+            display="grid", grid_template_columns="repeat(3, 1fr)", gap="14px", width="100%"),
+        panel("Top regioni per spesa turistica straniera (2024)",
+              rx.vstack(
+                  rx.foreach(State.home_top, lambda r: rx.hstack(
+                      rx.text(r["regione"], color=INK, font_size="0.9rem"),
+                      rx.spacer(),
+                      rx.text(r["spesa"], color=ACCENT_INK, font_weight="600", font_size="0.9rem"),
+                      width="100%")),
+                  spacing="2", width="100%")),
+        rx.text("Turism Data Hub · Reflex · dati reali · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
 app = rx.App(theme=rx.theme(appearance="light", accent_color="teal", gray_color="slate"))
 app.add_page(azioni_page, route="/azioni", title="TDH · Azioni & budget", on_load=State.on_load)
-app.add_page(index, route="/", title="TDH · Regione", on_load=State.on_load)
+app.add_page(home_page, route="/", title="TDH · Turism Data Hub", on_load=State.on_load)
+app.add_page(index, route="/regione", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)
 app.add_page(mercati_page, route="/mercati", title="TDH · Mercati d'origine", on_load=State.on_load)
 app.add_page(affitti_page, route="/affitti-brevi", title="TDH · Affitti brevi (STR)", on_load=State.on_load)
