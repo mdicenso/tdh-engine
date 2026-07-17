@@ -841,6 +841,9 @@ def azioni_snapshot(code: str) -> dict:
 # tra paesi in assoluto, ma il MOMENTUM (variazione nel tempo dentro lo stesso paese) sì.
 _TRENDS_MARKETS = [("DE", "Germania"), ("AT", "Austria"), ("GB", "Regno Unito"),
                    ("NL", "Paesi Bassi"), ("CH", "Svizzera"), ("US", "Stati Uniti")]
+# mappa codice paese ISTAT → codice mercato Google Trends (per il Dettaglio mercato)
+_ISTAT_TO_TREND = {"DE": "DE", "AT": "AT", "GB": "GB", "UK": "GB", "NL": "NL",
+                   "US": "US", "CH": "CH", "CH_LI": "CH"}
 
 
 def _safe_kw(kw: str) -> str:
@@ -879,6 +882,42 @@ def interesse_snapshot(code: str) -> dict:
     return {"keyword": kw, "n": len(series), "top_nome": top["nome"], "top_mom": top["momentum"],
             "series": series,
             "rows": [{"nome": r["nome"], "recente": r["recente"], "momentum": r["momentum"]} for r in rows]}
+
+
+def dettaglio_snapshot(code: str, country: str = "") -> dict:
+    """Approfondimento su un singolo mercato (paese) per la regione: serie storica presenze,
+    quota, posizione, variazione; + interesse Google Trends se è uno dei 6 mercati del motore.
+    `markets` = lista {country, nome} per il selettore (default = mercato #1)."""
+    empty = {"markets": [], "sel_country": "", "sel_nome": "—", "kpi": {},
+             "series_x": [], "series_y": [], "has_trends": False, "trends_x": [], "trends_y": []}
+    mk = estero_markets(code)
+    if mk is None or mk.empty:
+        return empty
+    markets = [{"country": str(r["country"]), "nome": str(r["nome"])} for _, r in mk.iterrows()]
+    codes = [m["country"] for m in markets]
+    if country not in codes:
+        country = codes[0]
+    total = float(mk["valore"].sum()) or 1.0
+    rank = codes.index(country) + 1
+    val = float(mk[mk["country"] == country]["valore"].iloc[0])
+    s = estero_country_series(code, country)
+    sx = [int(a) for a in s["anno"]] if s is not None else []
+    sy = [float(v) for v in s["valore"]] if s is not None else []
+    yoy = ((sy[-1] - sy[-2]) / sy[-2] * 100) if (len(sy) >= 2 and sy[-2]) else None
+    kpi = {"presenze": _it_int(val), "quota": f"{val / total * 100:.1f}".replace(".", ",") + "%",
+           "rank": f"{rank}ª su {len(markets)}", "yoy": (f"{yoy:+.0f}%" if yoy is not None else "—")}
+    tx, ty = [], []
+    tcode = _ISTAT_TO_TREND.get(country)
+    if tcode:
+        info = RG.region(code)
+        p = _cpath(f"trends_{_safe_kw(info.get('trends_kw') or info['nome'])}_{tcode}.csv")
+        if os.path.exists(p):
+            df = pd.read_csv(p, parse_dates=["date"]).sort_values("date")
+            tx = [d.strftime("%Y-%m") for d in df["date"]]
+            ty = [float(v) for v in df["search"]]
+    return {"markets": markets, "sel_country": country, "sel_nome": estero_country_name(country),
+            "kpi": kpi, "series_x": sx, "series_y": sy,
+            "has_trends": bool(tx), "trends_x": tx, "trends_y": ty}
 
 
 @functools.lru_cache(maxsize=None)

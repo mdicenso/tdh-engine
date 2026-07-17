@@ -215,6 +215,13 @@ class State(rx.State):
     _ie_series: list = []
     ie_rows: list[dict] = []
     ie_keyword: str = "—"; ie_n: str = "—"; ie_top_nome: str = "—"; ie_top_mom: str = "—"
+    # dettaglio mercato (paese singolo; dipende da regione + mercato scelto)
+    de_market_names: list[str] = []
+    _de_markets: list = []
+    de_sel_country: str = ""; de_sel_nome: str = "—"
+    de_k_presenze: str = "—"; de_k_quota: str = "—"; de_k_rank: str = "—"; de_k_yoy: str = "—"
+    de_has_trends: bool = False
+    _de_sx: list = []; _de_sy: list = []; _de_tx: list = []; _de_ty: list = []
     # forecast presenze (motore statistico)
     _fc_hist_x: list = []; _fc_hist_y: list = []
     _fc_x: list = []; _fc_mean: list = []; _fc_lo: list = []; _fc_hi: list = []
@@ -298,6 +305,9 @@ class State(rx.State):
         self.ie_rows = ie["rows"]
         self.ie_keyword, self.ie_n = ie["keyword"], str(ie["n"])
         self.ie_top_nome, self.ie_top_mom = ie["top_nome"], ie["top_mom"]
+        # dettaglio mercato (default = mercato #1 della regione)
+        self.de_sel_country = ""
+        self._load_dett()
         # forecast presenze (motore statistico)
         fcs = D.forecast_snapshot(self.region_code)
         self._fc_hist_x, self._fc_hist_y = fcs["hist_x"], fcs["hist_y"]
@@ -365,6 +375,23 @@ class State(rx.State):
     def set_str_territorio(self, nome: str):
         self.str_slug = STR_NAME2SLUG.get(nome, self.str_slug)
         self._load_str()
+
+    def _load_dett(self):
+        d = D.dettaglio_snapshot(self.region_code, self.de_sel_country)
+        self._de_markets = d["markets"]
+        self.de_market_names = [m["nome"] for m in d["markets"]]
+        self.de_sel_country, self.de_sel_nome = d["sel_country"], d["sel_nome"]
+        k = d["kpi"]
+        self.de_k_presenze, self.de_k_quota = k.get("presenze", "—"), k.get("quota", "—")
+        self.de_k_rank, self.de_k_yoy = k.get("rank", "—"), k.get("yoy", "—")
+        self._de_sx, self._de_sy = d["series_x"], d["series_y"]
+        self.de_has_trends, self._de_tx, self._de_ty = d["has_trends"], d["trends_x"], d["trends_y"]
+
+    @rx.event
+    def set_dett_market(self, nome: str):
+        self.de_sel_country = next((m["country"] for m in self._de_markets if m["nome"] == nome),
+                                   self.de_sel_country)
+        self._load_dett()
 
     @rx.event
     def set_region(self, name: str):
@@ -594,6 +621,29 @@ class State(rx.State):
         return fig
 
     @rx.var
+    def de_series_fig(self) -> go.Figure:
+        fig = go.Figure(go.Scatter(x=self._de_sx, y=self._de_sy, mode="lines+markers",
+                                   line=dict(color=ACCENT, width=2.4), fill="tozeroy",
+                                   fillcolor="rgba(14,107,112,.10)",
+                                   hovertemplate="%{x}<br>%{y:,.0f} presenze<extra></extra>"))
+        fig.update_layout(height=360, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(showgrid=False, linecolor=LINE, dtick=1)
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="presenze straniere (anno)")
+        return fig
+
+    @rx.var
+    def de_trends_fig(self) -> go.Figure:
+        fig = go.Figure(go.Scatter(x=self._de_tx, y=self._de_ty, mode="lines",
+                                   line=dict(color="#f59e0b", width=1.8),
+                                   hovertemplate="%{x}<br>interesse %{y:.0f}<extra></extra>"))
+        fig.update_layout(height=340, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(showgrid=False, linecolor=LINE)
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="interesse di ricerca (0-100)")
+        return fig
+
+    @rx.var
     def ie_lines_fig(self) -> go.Figure:
         palette = ["#0e6b70", "#f59e0b", "#7c3aed", "#059669", "#dc2626", "#2563eb"]
         fig = go.Figure()
@@ -700,6 +750,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_item("layout-dashboard", "Regione", active=(active == "regione"), href="/regione"),
         nav_item("map", "Italia · mappa", active=(active == "mappa"), href="/mappa"),
         nav_item("globe", "Mercati d'origine", active=(active == "mercati"), href="/mercati"),
+        nav_item("flag", "Dettaglio mercato", active=(active == "dettaglio"), href="/dettaglio-mercato"),
         nav_item("git-compare", "Confronto regioni", active=(active == "confronto"), href="/confronto"),
         nav_group("Cosa è successo"),
         nav_item("map-pin", "Per provincia", active=(active == "province"), href="/per-provincia"),
@@ -1134,6 +1185,42 @@ def azioni_page() -> rx.Component:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# pagina: Dettaglio mercato ("/dettaglio-mercato")
+# ════════════════════════════════════════════════════════════════════════════
+def dettaglio_page() -> rx.Component:
+    return page_shell(
+        "dettaglio", "Panoramica  ›  Dettaglio mercato",
+        rx.box(
+            rx.hstack(
+                rx.vstack(
+                    rx.heading(State.region_name + " · " + State.de_sel_nome, size="7", color=INK, weight="bold"),
+                    rx.text("Approfondimento su un singolo mercato estero: presenze storiche, quota, "
+                            "posizione e interesse di ricerca.", color=MUT, font_size="0.9rem", margin_top="4px"),
+                    align_items="start", spacing="1"),
+                rx.spacer(),
+                rx.vstack(rx.text("Mercato", font_size="0.7rem", color=MUT, font_weight="600"),
+                          rx.select(State.de_market_names, value=State.de_sel_nome,
+                                    on_change=State.set_dett_market, width="220px"),
+                          spacing="1", align_items="end"),
+                align="start", width="100%"),
+            width="100%"),
+        rx.box(
+            kpi("Presenze (ultimo anno)", State.de_k_presenze, "nella regione"),
+            kpi("Quota mercati esteri", State.de_k_quota, "del totale straniero"),
+            kpi("Posizione", State.de_k_rank, "in classifica"),
+            kpi("Variazione", State.de_k_yoy, "sull'anno prima"),
+            display="grid", grid_template_columns="repeat(4, 1fr)", gap="14px", width="100%"),
+        panel("Presenze del mercato nel tempo", rx.plotly(data=State.de_series_fig, width="100%")),
+        rx.cond(State.de_has_trends,
+                panel("Interesse di ricerca online (Google Trends)",
+                      rx.plotly(data=State.de_trends_fig, width="100%")),
+                _note("L'interesse di ricerca online è disponibile solo per i 6 mercati principali del "
+                      "motore (Germania, Austria, Regno Unito, Paesi Bassi, Svizzera, Stati Uniti).")),
+        rx.text("Reflex · DATI REALI (ISTAT · Google Trends) · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # pagina: Per struttura ("/per-struttura")
 # ════════════════════════════════════════════════════════════════════════════
 def struttura_page() -> rx.Component:
@@ -1451,6 +1538,7 @@ app.add_page(confronto_page, route="/confronto", title="TDH · Confronto regioni
 app.add_page(gestione_page, route="/gestione-dati", title="TDH · Gestione dati", on_load=State.on_load)
 app.add_page(architettura_page, route="/architettura", title="TDH · Architettura", on_load=State.on_load)
 app.add_page(struttura_page, route="/per-struttura", title="TDH · Per struttura", on_load=State.on_load)
+app.add_page(dettaglio_page, route="/dettaglio-mercato", title="TDH · Dettaglio mercato", on_load=State.on_load)
 app.add_page(home_page, route="/", title="TDH · Turism Data Hub", on_load=State.on_load)
 app.add_page(index, route="/regione", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)
