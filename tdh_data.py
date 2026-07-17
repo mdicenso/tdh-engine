@@ -706,6 +706,36 @@ def struttura_snapshot(code: str) -> dict:
             "ext": [None if pd.isna(v) else float(v) for v in m["ext"]]}
 
 
+def occupazione_snapshot(code: str) -> dict:
+    """Occupazione dei posti letto: serie annuale (da region_annual_panel) + profilo di
+    stagionalità mensile (presenze totali / (letti × giorni), media per mese calendario)."""
+    panel = region_annual_panel(code)
+    ov = region_overview(code)
+    occ_years, occ_vals = [], []
+    if panel is not None and not getattr(panel, "empty", True) and "occ" in panel.columns:
+        s = panel["occ"].dropna()
+        occ_years = [int(y) for y in s.index]
+        occ_vals = [round(float(v), 1) for v in s]
+    prof = [None] * 12
+    letti = ov.get("letti")
+    pres = ov.get("presenze")
+    if letti and pres is not None and not pres.empty and "totale" in pres.columns:
+        d = pres.dropna(subset=["totale"]).copy()
+        d["m"] = d["date"].dt.month
+        d["gg"] = d["date"].dt.days_in_month
+        d["occ"] = d["totale"] / (letti * d["gg"]) * 100
+        g = d.groupby("m")["occ"].mean()
+        prof = [round(float(g[m]), 1) if m in g.index else None for m in range(1, 13)]
+    occ_ultimo = occ_vals[-1] if occ_vals else None
+    valid = [(MESI_IT[i], prof[i]) for i in range(12) if prof[i] is not None]
+    picco = max(valid, key=lambda x: x[1])[0] if valid else "—"
+    basso = min(valid, key=lambda x: x[1])[0] if valid else "—"
+    return {"region": RG.region(code)["nome"],
+            "occ_ultimo": (f"{occ_ultimo:.1f}".replace(".", ",") + "%" if occ_ultimo is not None else "—"),
+            "anno": (str(occ_years[-1]) if occ_years else "—"), "picco": picco, "basso": basso,
+            "occ_years": occ_years, "occ_vals": occ_vals, "mesi": list(MESI_IT), "prof": prof}
+
+
 # ════════════════════════════════════════════════════════════════════════════
 # ALLOCATORE — "Azioni & budget": ranking mercati esteri (il cuore-motore)
 # Usa il MOTORE VERO (tourism_wedge.rank_markets, fonte unica) via import LAZY +

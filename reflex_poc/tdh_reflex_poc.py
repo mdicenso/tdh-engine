@@ -207,6 +207,9 @@ class State(rx.State):
     st_has_data: bool = False
     st_alberghiero: str = "—"; st_extra: str = "—"; st_quota_alb: str = "—"; st_quota_ext: str = "—"
     _st_x: list = []; _st_alb: list = []; _st_ext: list = []
+    # occupazione (dipende dalla regione)
+    oc_ultimo: str = "—"; oc_anno: str = "—"; oc_picco: str = "—"; oc_basso: str = "—"
+    _oc_years: list = []; _oc_vals: list = []; _oc_prof: list = []; _oc_mesi: list = []
     # azioni & budget (allocatore, dipende dalla regione)
     azioni_rows: list[dict] = []
     az_n_alta: str = "—"; az_n_aumentare: str = "—"; az_picco_top: str = "—"
@@ -293,6 +296,12 @@ class State(rx.State):
         self.st_alberghiero, self.st_extra = stt["alberghiero"], stt["extra"]
         self.st_quota_alb, self.st_quota_ext = stt["quota_alb"], stt["quota_ext"]
         self._st_x, self._st_alb, self._st_ext = stt["x"], stt["alb"], stt["ext"]
+        # occupazione
+        oc = D.occupazione_snapshot(self.region_code)
+        self.oc_ultimo, self.oc_anno = oc["occ_ultimo"], oc["anno"]
+        self.oc_picco, self.oc_basso = oc["picco"], oc["basso"]
+        self._oc_years, self._oc_vals = oc["occ_years"], oc["occ_vals"]
+        self._oc_prof, self._oc_mesi = oc["prof"], oc["mesi"]
         # azioni & budget (allocatore)
         az = D.azioni_snapshot(self.region_code)
         self.azioni_rows = az["actions"]
@@ -621,6 +630,27 @@ class State(rx.State):
         return fig
 
     @rx.var
+    def oc_trend_fig(self) -> go.Figure:
+        fig = go.Figure(go.Scatter(x=self._oc_years, y=self._oc_vals, mode="lines+markers",
+                                   line=dict(color=ACCENT, width=2.4),
+                                   hovertemplate="%{x}: %{y:.1f}%<extra></extra>"))
+        fig.update_layout(height=340, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(showgrid=False, linecolor=LINE, dtick=1)
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="occupazione media (%)", ticksuffix="%")
+        return fig
+
+    @rx.var
+    def oc_season_fig(self) -> go.Figure:
+        fig = go.Figure(go.Bar(x=self._oc_mesi, y=self._oc_prof, marker_color=ACCENT,
+                               hovertemplate="%{x}: %{y:.1f}%<extra></extra>"))
+        fig.update_layout(height=340, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(showgrid=False, linecolor=LINE)
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="occupazione media (%)", ticksuffix="%")
+        return fig
+
+    @rx.var
     def de_series_fig(self) -> go.Figure:
         fig = go.Figure(go.Scatter(x=self._de_sx, y=self._de_sy, mode="lines+markers",
                                    line=dict(color=ACCENT, width=2.4), fill="tozeroy",
@@ -755,6 +785,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_group("Cosa è successo"),
         nav_item("map-pin", "Per provincia", active=(active == "province"), href="/per-provincia"),
         nav_item("building-2", "Per struttura", active=(active == "struttura"), href="/per-struttura"),
+        nav_item("gauge", "Occupazione", active=(active == "occupazione"), href="/occupazione"),
         nav_item("bed-double", "Affitti brevi", active=(active == "str"), href="/affitti-brevi"),
         nav_item("database", "Base dati regionale", active=(active == "basedati"), href="/base-dati"),
         nav_item("banknote", "Spesa turistica", active=(active == "spesa"), href="/spesa"),
@@ -1185,6 +1216,31 @@ def azioni_page() -> rx.Component:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# pagina: Occupazione ("/occupazione")
+# ════════════════════════════════════════════════════════════════════════════
+def occupazione_page() -> rx.Component:
+    return page_shell(
+        "occupazione", "Cosa è successo  ›  Occupazione",
+        rx.box(
+            rx.heading(State.region_name + " — occupazione dei posti letto", size="7", color=INK, weight="bold"),
+            rx.text("Quanto sono occupati i posti letto (presenze / capacità × giorni). Andamento negli "
+                    "anni e stagionalità: quando lavorano di più le strutture.", color=MUT,
+                    font_size="0.9rem", margin_top="4px"),
+            width="100%"),
+        rx.box(
+            kpi("Occupazione media", State.oc_ultimo, "anno " + State.oc_anno),
+            kpi("Mese di picco", State.oc_picco, "massima occupazione"),
+            kpi("Mese più basso", State.oc_basso, "minima occupazione"),
+            display="grid", grid_template_columns="repeat(3, 1fr)", gap="14px", width="100%"),
+        rx.box(
+            panel("Occupazione media annuale", rx.plotly(data=State.oc_trend_fig, width="100%")),
+            panel("Stagionalità · occupazione media per mese", rx.plotly(data=State.oc_season_fig, width="100%")),
+            display="grid", grid_template_columns="repeat(2, 1fr)", gap="18px", width="100%"),
+        rx.text("Reflex · DATI REALI (ISTAT) · occupazione stimata sulla capacità annua · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # pagina: Dettaglio mercato ("/dettaglio-mercato")
 # ════════════════════════════════════════════════════════════════════════════
 def dettaglio_page() -> rx.Component:
@@ -1538,6 +1594,7 @@ app.add_page(confronto_page, route="/confronto", title="TDH · Confronto regioni
 app.add_page(gestione_page, route="/gestione-dati", title="TDH · Gestione dati", on_load=State.on_load)
 app.add_page(architettura_page, route="/architettura", title="TDH · Architettura", on_load=State.on_load)
 app.add_page(struttura_page, route="/per-struttura", title="TDH · Per struttura", on_load=State.on_load)
+app.add_page(occupazione_page, route="/occupazione", title="TDH · Occupazione", on_load=State.on_load)
 app.add_page(dettaglio_page, route="/dettaglio-mercato", title="TDH · Dettaglio mercato", on_load=State.on_load)
 app.add_page(home_page, route="/", title="TDH · Turism Data Hub", on_load=State.on_load)
 app.add_page(index, route="/regione", title="TDH · Regione", on_load=State.on_load)
