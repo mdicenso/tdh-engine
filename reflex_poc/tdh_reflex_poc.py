@@ -189,6 +189,14 @@ class State(rx.State):
     _str_zone_nomi: list = []; _str_zone_val: list = []
     _str_room_nomi: list = []; _str_room_val: list = []
     _str_rev_x: list = []; _str_rev_y: list = []
+    # affitti brevi — vista Italia (aggregata, indipendente dalla regione)
+    sti_k_annunci: str = "—"; sti_k_terr: str = "—"; sti_k_citta: str = "—"; sti_k_regioni: str = "—"
+    sti_k_adr: str = "—"; sti_k_rating: str = "—"; sti_k_licenza: str = "—"
+    sti_k_multihost: str = "—"; sti_k_occ: str = "—"; sti_k_intero: str = "—"
+    _sti_vol_nomi: list = []; _sti_vol_val: list = []; _sti_vol_tipo: list = []
+    _sti_adr_nomi: list = []; _sti_adr_val: list = []; _sti_adr_tipo: list = []
+    _sti_occ_nomi: list = []; _sti_occ_val: list = []; _sti_occ_tipo: list = []
+    _sti_lic_nomi: list = []; _sti_lic_val: list = []; _sti_lic_tipo: list = []
     # spesa turistica (dipende dalla regione)
     _sp_years: list = []; _sp_spesa: list = []; _sp_viagg_val: list = []
     sp_rows: list[dict] = []
@@ -364,6 +372,17 @@ class State(rx.State):
                 self.ges_n, self.ges_ok, self.ges_live = str(g["n_fonti"]), str(g["n_ok"]), str(g["n_live"])
             if not self._str_adr_slugs:
                 self._load_str()
+            if not self._sti_vol_nomi:
+                si = D.str_italia_snapshot()
+                self.sti_k_annunci, self.sti_k_terr = si["k_annunci"], si["k_terr"]
+                self.sti_k_citta, self.sti_k_regioni = si["k_citta"], si["k_regioni"]
+                self.sti_k_adr, self.sti_k_rating = si["k_adr"], si["k_rating"]
+                self.sti_k_licenza, self.sti_k_multihost = si["k_licenza"], si["k_multihost"]
+                self.sti_k_occ, self.sti_k_intero = si["k_occ"], si["k_intero"]
+                self._sti_vol_nomi, self._sti_vol_val, self._sti_vol_tipo = si["vol_nomi"], si["vol_val"], si["vol_tipo"]
+                self._sti_adr_nomi, self._sti_adr_val, self._sti_adr_tipo = si["adr_nomi"], si["adr_val"], si["adr_tipo"]
+                self._sti_occ_nomi, self._sti_occ_val, self._sti_occ_tipo = si["occ_nomi"], si["occ_val"], si["occ_tipo"]
+                self._sti_lic_nomi, self._sti_lic_val, self._sti_lic_tipo = si["lic_nomi"], si["lic_val"], si["lic_tipo"]
             self.boot_error = ""
         except Exception as e:  # noqa: BLE001
             import traceback
@@ -582,6 +601,41 @@ class State(rx.State):
         fig.update_yaxes(showgrid=False)
         return fig
 
+    # ── vista Italia (aggregata) ── barre orizzontali; colore = tipo territorio
+    @staticmethod
+    def _sti_bar(nomi, val, tipo, xtitle, fmt):
+        # rank() torna in ordine decrescente → inverto così il più grande sta in alto
+        n = nomi[::-1]; v = val[::-1]; t = tipo[::-1]
+        colors = ["#f59e0b" if x == "città" else ACCENT for x in t]
+        fig = go.Figure(go.Bar(x=v, y=n, orientation="h", marker_color=colors,
+                               customdata=t,
+                               hovertemplate="<b>%{y}</b> (%{customdata})<br>" + fmt + "<extra></extra>"))
+        fig.update_layout(height=430, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(gridcolor="#eef3f3", title=xtitle)
+        fig.update_yaxes(showgrid=False)
+        return fig
+
+    @rx.var
+    def sti_vol_fig(self) -> go.Figure:
+        return self._sti_bar(self._sti_vol_nomi, self._sti_vol_val, self._sti_vol_tipo,
+                             "numero di annunci attivi", "%{x:,.0f} annunci")
+
+    @rx.var
+    def sti_adr_fig(self) -> go.Figure:
+        return self._sti_bar(self._sti_adr_nomi, self._sti_adr_val, self._sti_adr_tipo,
+                             "ADR mediano (€/notte)", "ADR mediano € %{x:,.0f}")
+
+    @rx.var
+    def sti_occ_fig(self) -> go.Figure:
+        return self._sti_bar(self._sti_occ_nomi, self._sti_occ_val, self._sti_occ_tipo,
+                             "occupazione stimata (%)", "occ. stimata %{x:.1f}%")
+
+    @rx.var
+    def sti_lic_fig(self) -> go.Figure:
+        return self._sti_bar(self._sti_lic_nomi, self._sti_lic_val, self._sti_lic_tipo,
+                             "annunci con licenza / CIR (%)", "%{x:.1f}% con licenza")
+
     @rx.var
     def sp_spesa_fig(self) -> go.Figure:
         fig = go.Figure(go.Bar(x=self._sp_years, y=self._sp_spesa, marker_color=ACCENT,
@@ -786,7 +840,8 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_item("map-pin", "Per provincia", active=(active == "province"), href="/per-provincia"),
         nav_item("building-2", "Per struttura", active=(active == "struttura"), href="/per-struttura"),
         nav_item("gauge", "Occupazione", active=(active == "occupazione"), href="/occupazione"),
-        nav_item("bed-double", "Affitti brevi", active=(active == "str"), href="/affitti-brevi"),
+        nav_item("bed-double", "Affitti brevi · Italia", active=(active == "str_italia"), href="/affitti-brevi-italia"),
+        nav_item("bed-single", "Affitti brevi · territorio", active=(active == "str"), href="/affitti-brevi"),
         nav_item("database", "Base dati regionale", active=(active == "basedati"), href="/base-dati"),
         nav_item("banknote", "Spesa turistica", active=(active == "spesa"), href="/spesa"),
         nav_group("Cosa fare"),
@@ -1021,6 +1076,50 @@ def mercati_page() -> rx.Component:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# pagina: Affitti brevi · Italia ("/affitti-brevi-italia")
+# ════════════════════════════════════════════════════════════════════════════
+def _tipo_chip(color: str, label: str) -> rx.Component:
+    return rx.hstack(
+        rx.box(width="11px", height="11px", border_radius="3px", background=color),
+        rx.text(label, font_size="0.78rem", color=MUT),
+        spacing="2", align="center")
+
+
+def affitti_italia_page() -> rx.Component:
+    return page_shell(
+        "str_italia", "Cosa è successo  ›  Affitti brevi · Italia",
+        rx.box(
+            rx.heading("Affitti brevi — vista d'insieme Italia", size="7", color=INK, weight="bold"),
+            rx.text("Il mercato Airbnb aggregato su tutti i territori coperti (fonte: Inside Airbnb). "
+                    "Le medie sono ponderate sul numero di annunci: i mercati grandi pesano di più. "
+                    "Indipendente dalla regione selezionata in alto.",
+                    color=MUT, font_size="0.9rem", margin_top="4px"),
+            rx.hstack(
+                _tipo_chip(ACCENT, "regioni intere"),
+                _tipo_chip("#f59e0b", "città"),
+                spacing="4", margin_top="10px"),
+            width="100%"),
+        rx.box(
+            kpi("Annunci totali", State.sti_k_annunci, State.sti_k_terr + " territori coperti"),
+            kpi("ADR mediano", State.sti_k_adr, "€/notte · ponderato"),
+            kpi("Soddisfazione ★", State.sti_k_rating, "rating medio Airbnb (su 5)"),
+            kpi("Con licenza / CIR", State.sti_k_licenza, "% annunci · ponderato"),
+            kpi("Occupazione stimata", State.sti_k_occ, "proxy domanda · ponderato"),
+            display="grid", grid_template_columns="repeat(5, 1fr)", gap="12px", width="100%"),
+        rx.box(
+            panel("Territori per volume di annunci", rx.plotly(data=State.sti_vol_fig, width="100%")),
+            panel("Territori per ADR mediano", rx.plotly(data=State.sti_adr_fig, width="100%")),
+            display="grid", grid_template_columns="repeat(2, 1fr)", gap="18px", width="100%"),
+        rx.box(
+            panel("Occupazione stimata (proxy della domanda)", rx.plotly(data=State.sti_occ_fig, width="100%")),
+            panel("Regolarizzazione — % annunci con licenza / CIR", rx.plotly(data=State.sti_lic_fig, width="100%")),
+            display="grid", grid_template_columns="repeat(2, 1fr)", gap="18px", width="100%"),
+        rx.text("Reflex · DATI REALI (Inside Airbnb) · città e regioni non sono confrontabili 1:1 "
+                "(una regione somma molti comuni) · «Soddisfazione» = rating medio, sentiment Tier 0 · "
+                "design «Istituzionale»", color=FAINT, font_size="0.75rem"))
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # pagina: Affitti brevi / STR ("/affitti-brevi")
 # ════════════════════════════════════════════════════════════════════════════
 def affitti_page() -> rx.Component:
@@ -1030,9 +1129,9 @@ def affitti_page() -> rx.Component:
             rx.hstack(
                 rx.vstack(
                     rx.heading("Affitti brevi — " + State.str_terr_nome, size="7", color=INK, weight="bold"),
-                    rx.text("Struttura del mercato Airbnb (fonte: Inside Airbnb): annunci, prezzi, "
-                            "operatori, licenze e domanda nel tempo. Copertura: 7 città + 3 regioni — "
-                            "vista NAZIONALE, indipendente dalla regione selezionata in alto.",
+                    rx.text("Dettaglio del mercato Airbnb per singolo territorio (fonte: Inside Airbnb): "
+                            "annunci, prezzi, operatori, licenze e domanda nel tempo. Per lo sguardo "
+                            "d'insieme vedi «Affitti brevi · Italia». Indipendente dalla regione in alto.",
                             color=MUT, font_size="0.9rem", margin_top="4px"),
                     align_items="start", spacing="1"),
                 rx.spacer(),
@@ -1600,6 +1699,7 @@ app.add_page(home_page, route="/", title="TDH · Turism Data Hub", on_load=State
 app.add_page(index, route="/regione", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)
 app.add_page(mercati_page, route="/mercati", title="TDH · Mercati d'origine", on_load=State.on_load)
+app.add_page(affitti_italia_page, route="/affitti-brevi-italia", title="TDH · Affitti brevi · Italia", on_load=State.on_load)
 app.add_page(affitti_page, route="/affitti-brevi", title="TDH · Affitti brevi (STR)", on_load=State.on_load)
 app.add_page(spesa_page, route="/spesa", title="TDH · Spesa turistica", on_load=State.on_load)
 app.add_page(province_page, route="/per-provincia", title="TDH · Per provincia", on_load=State.on_load)

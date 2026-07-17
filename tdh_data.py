@@ -1278,6 +1278,68 @@ def str_snapshot(slug: str) -> dict:
     }
 
 
+def str_italia_snapshot() -> dict:
+    """Vista d'insieme NAZIONALE degli affitti brevi (Inside Airbnb) su tutti i territori
+    coperti. Medie ponderate sul numero di annunci (i mercati grandi pesano di più).
+    Tutto in tipi Python puri, robusto ai dati mancanti."""
+    empty = {"k_annunci": "—", "k_terr": "—", "k_citta": "—", "k_regioni": "—",
+             "k_adr": "—", "k_rating": "—", "k_licenza": "—", "k_multihost": "—",
+             "k_occ": "—", "k_intero": "—",
+             "vol_nomi": [], "vol_val": [], "vol_tipo": [],
+             "adr_nomi": [], "adr_val": [], "adr_tipo": [],
+             "occ_nomi": [], "occ_val": [], "occ_tipo": [],
+             "lic_nomi": [], "lic_val": [], "lic_tipo": []}
+    terr = str_territori()
+    if terr.empty:
+        return empty
+
+    df = terr.copy()
+    df["n"] = pd.to_numeric(df["n_annunci"], errors="coerce")
+    tot = float(df["n"].dropna().sum())
+
+    def wavg(col):
+        d = df.dropna(subset=[col])
+        d = d[pd.to_numeric(d["n"], errors="coerce").notna()]
+        w = pd.to_numeric(d["n"], errors="coerce")
+        v = pd.to_numeric(d[col], errors="coerce")
+        s = float(w.sum())
+        return float((v * w).sum() / s) if s > 0 else None
+
+    n_citta = int((df["tipo"] == "città").sum())
+    n_reg = int((df["tipo"] == "regione").sum())
+    adr = wavg("adr_mediano")
+    rating = wavg("rating_medio")
+
+    def rank(col, asc=False, n=12):
+        d = df.dropna(subset=[col]).sort_values(col, ascending=asc).head(n)
+        nomi = [str(x) for x in d["territorio"]]
+        val = [float(x) for x in pd.to_numeric(d[col], errors="coerce")]
+        tipo = [str(x) for x in d["tipo"]]
+        return nomi, val, tipo
+
+    vol_nomi, vol_val, vol_tipo = rank("n_annunci")
+    adr_nomi, adr_val, adr_tipo = rank("adr_mediano")
+    occ_nomi, occ_val, occ_tipo = rank("occ_proxy")
+    lic_nomi, lic_val, lic_tipo = rank("pct_licenza")
+
+    return {
+        "k_annunci": _it_int(tot),
+        "k_terr": str(len(df)),
+        "k_citta": str(n_citta),
+        "k_regioni": str(n_reg),
+        "k_adr": (f"€ {_it_int(adr)}" if adr is not None else "—"),
+        "k_rating": (f"{rating:.2f}".replace(".", ",") if rating is not None else "—"),
+        "k_licenza": _pct(wavg("pct_licenza")),
+        "k_multihost": _pct(wavg("pct_multihost")),
+        "k_occ": _pct(wavg("occ_proxy")),
+        "k_intero": _pct(wavg("pct_intero")),
+        "vol_nomi": vol_nomi, "vol_val": vol_val, "vol_tipo": vol_tipo,
+        "adr_nomi": adr_nomi, "adr_val": adr_val, "adr_tipo": adr_tipo,
+        "occ_nomi": occ_nomi, "occ_val": occ_val, "occ_tipo": occ_tipo,
+        "lic_nomi": lic_nomi, "lic_val": lic_val, "lic_tipo": lic_tipo,
+    }
+
+
 _GEOJSON_PATH = os.path.join(_ROOT, "assets", "italy_regions.geojson")
 
 
