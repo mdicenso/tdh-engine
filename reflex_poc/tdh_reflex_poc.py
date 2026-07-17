@@ -203,6 +203,10 @@ class State(rx.State):
     prov_top_nome: str = "—"; prov_top_presenze: str = "—"; prov_top_peso: str = "—"; prov_share3: str = "—"
     _prov_bar_nomi: list = []; _prov_bar_val: list = []
     prov_rows: list[dict] = []
+    # per struttura (alberghiero vs extra, dipende dalla regione)
+    st_has_data: bool = False
+    st_alberghiero: str = "—"; st_extra: str = "—"; st_quota_alb: str = "—"; st_quota_ext: str = "—"
+    _st_x: list = []; _st_alb: list = []; _st_ext: list = []
     # azioni & budget (allocatore, dipende dalla regione)
     azioni_rows: list[dict] = []
     az_n_alta: str = "—"; az_n_aumentare: str = "—"; az_picco_top: str = "—"
@@ -276,6 +280,12 @@ class State(rx.State):
         self.prov_has_note = man > 0
         self.prov_note = (f"{man} province non ancora in cache (prefetch dati in corso — "
                           "ricarica tra poco per vederle)." if man else "")
+        # per struttura (alberghiero vs extra)
+        stt = D.struttura_snapshot(self.region_code)
+        self.st_has_data = stt["has_data"]
+        self.st_alberghiero, self.st_extra = stt["alberghiero"], stt["extra"]
+        self.st_quota_alb, self.st_quota_ext = stt["quota_alb"], stt["quota_ext"]
+        self._st_x, self._st_alb, self._st_ext = stt["x"], stt["alb"], stt["ext"]
         # azioni & budget (allocatore)
         az = D.azioni_snapshot(self.region_code)
         self.azioni_rows = az["actions"]
@@ -570,6 +580,20 @@ class State(rx.State):
         return fig
 
     @rx.var
+    def struttura_fig(self) -> go.Figure:
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=self._st_x, y=self._st_alb, name="alberghiero", mode="lines",
+                                 line=dict(color=ACCENT, width=2)))
+        fig.add_trace(go.Scatter(x=self._st_x, y=self._st_ext, name="extra-alberghiero", mode="lines",
+                                 line=dict(color="#f59e0b", width=2)))
+        fig.update_layout(height=400, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12),
+                          legend=dict(orientation="h", y=1.13, x=0))
+        fig.update_xaxes(showgrid=False, linecolor=LINE)
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="presenze / mese")
+        return fig
+
+    @rx.var
     def ie_lines_fig(self) -> go.Figure:
         palette = ["#0e6b70", "#f59e0b", "#7c3aed", "#059669", "#dc2626", "#2563eb"]
         fig = go.Figure()
@@ -679,6 +703,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_item("git-compare", "Confronto regioni", active=(active == "confronto"), href="/confronto"),
         nav_group("Cosa è successo"),
         nav_item("map-pin", "Per provincia", active=(active == "province"), href="/per-provincia"),
+        nav_item("building-2", "Per struttura", active=(active == "struttura"), href="/per-struttura"),
         nav_item("bed-double", "Affitti brevi", active=(active == "str"), href="/affitti-brevi"),
         nav_item("database", "Base dati regionale", active=(active == "basedati"), href="/base-dati"),
         nav_item("banknote", "Spesa turistica", active=(active == "spesa"), href="/spesa"),
@@ -1109,6 +1134,33 @@ def azioni_page() -> rx.Component:
 
 
 # ════════════════════════════════════════════════════════════════════════════
+# pagina: Per struttura ("/per-struttura")
+# ════════════════════════════════════════════════════════════════════════════
+def struttura_page() -> rx.Component:
+    dati = rx.vstack(
+        rx.box(
+            kpi("Alberghiero (12 mesi)", State.st_alberghiero, State.st_quota_alb + " del totale"),
+            kpi("Extra-alberghiero (12 mesi)", State.st_extra, State.st_quota_ext + " del totale"),
+            kpi("Quota alberghiero", State.st_quota_alb, "sul totale presenze"),
+            display="grid", grid_template_columns="repeat(3, 1fr)", gap="14px", width="100%"),
+        panel("Presenze mensili per tipo di struttura", rx.plotly(data=State.struttura_fig, width="100%")),
+        spacing="4", width="100%")
+    return page_shell(
+        "struttura", "Cosa è successo  ›  Per struttura",
+        rx.box(
+            rx.heading(State.region_name + " — presenze per tipo di struttura", size="7", color=INK, weight="bold"),
+            rx.text("Alberghiero (hotel e strutture assimilate) vs extra-alberghiero (B&B, agriturismi, "
+                    "case vacanza, campeggi…). ISTAT: ultimi 12 mesi e andamento mensile.",
+                    color=MUT, font_size="0.9rem", margin_top="4px"),
+            width="100%"),
+        rx.cond(State.st_has_data, dati,
+                _note("Dati per tipo di struttura non ancora in cache per questa regione (prefetch in "
+                      "corso — ricarica tra poco). Disponibili subito per Abruzzo e Italia.")),
+        rx.text("Reflex · DATI REALI (ISTAT) · alberghiero vs extra · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
+# ════════════════════════════════════════════════════════════════════════════
 # pagina: Architettura ("/architettura") — contenuto statico di prodotto
 # ════════════════════════════════════════════════════════════════════════════
 def _arch_level(nome: str, desc: str) -> rx.Component:
@@ -1398,6 +1450,7 @@ app.add_page(forecast_page, route="/forecast", title="TDH · Forecast presenze",
 app.add_page(confronto_page, route="/confronto", title="TDH · Confronto regioni", on_load=State.on_load)
 app.add_page(gestione_page, route="/gestione-dati", title="TDH · Gestione dati", on_load=State.on_load)
 app.add_page(architettura_page, route="/architettura", title="TDH · Architettura", on_load=State.on_load)
+app.add_page(struttura_page, route="/per-struttura", title="TDH · Per struttura", on_load=State.on_load)
 app.add_page(home_page, route="/", title="TDH · Turism Data Hub", on_load=State.on_load)
 app.add_page(index, route="/regione", title="TDH · Regione", on_load=State.on_load)
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)

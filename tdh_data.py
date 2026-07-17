@@ -681,6 +681,31 @@ def province_snapshot(code: str) -> dict:
             "top_peso": f"{top['presenze'] / tot_reg * 100:.0f}%", "share_top3": f"{share3:.0f}%"}
 
 
+def struttura_snapshot(code: str) -> dict:
+    """Presenze per TIPO di struttura (alberghiero vs extra-alberghiero, ISTAT), SOLO da
+    cache. Ultimi 12 mesi + serie mensile. has_data=False se la regione non è in cache."""
+    empty = {"has_data": False, "region": RG.region(code)["nome"], "alberghiero": "—",
+             "extra": "—", "quota_alb": "—", "quota_ext": "—", "x": [], "alb": [], "ext": []}
+    area = RG.istat_area(code)
+    hp = _cpath(f"istat_{area}_NI_HOTELLIKE_WORLD.csv")
+    op = _cpath(f"istat_{area}_NI_OTHER_WORLD.csv")
+    if not (os.path.exists(hp) and os.path.exists(op)):
+        return empty
+    hot = pd.read_csv(hp, parse_dates=["date"]).rename(columns={"presences": "alb"})
+    oth = pd.read_csv(op, parse_dates=["date"]).rename(columns={"presences": "ext"})
+    m = hot[["date", "alb"]].merge(oth[["date", "ext"]], on="date", how="outer").sort_values("date")
+    alb12 = float(m["alb"].dropna().tail(12).sum())
+    ext12 = float(m["ext"].dropna().tail(12).sum())
+    tot = alb12 + ext12
+    return {"has_data": True, "region": RG.region(code)["nome"],
+            "alberghiero": _it_int(alb12), "extra": _it_int(ext12),
+            "quota_alb": (f"{alb12 / tot * 100:.0f}%" if tot else "—"),
+            "quota_ext": (f"{ext12 / tot * 100:.0f}%" if tot else "—"),
+            "x": [d.strftime("%Y-%m") for d in m["date"]],
+            "alb": [None if pd.isna(v) else float(v) for v in m["alb"]],
+            "ext": [None if pd.isna(v) else float(v) for v in m["ext"]]}
+
+
 # ════════════════════════════════════════════════════════════════════════════
 # ALLOCATORE — "Azioni & budget": ranking mercati esteri (il cuore-motore)
 # Usa il MOTORE VERO (tourism_wedge.rank_markets, fonte unica) via import LAZY +
