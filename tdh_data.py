@@ -1216,13 +1216,32 @@ def _pct(v, dec: int = 1) -> str:
     return f"{float(v):.{dec}f}".replace(".", ",") + "%"
 
 
+def _str_natl_wavg() -> dict:
+    """Medie nazionali ponderate sul n. annunci, in numeri grezzi (per il confronto)."""
+    terr = str_territori()
+    if terr.empty:
+        return {}
+    w = pd.to_numeric(terr["n_annunci"], errors="coerce")
+    out = {}
+    for col in ("adr_mediano", "occ_proxy", "rating_medio", "pct_licenza",
+                "pct_multihost", "pct_superhost", "pct_intero"):
+        if col not in terr.columns:
+            continue
+        v = pd.to_numeric(terr[col], errors="coerce")
+        m = v.notna() & w.notna()
+        s = float(w[m].sum())
+        out[col] = float((v[m] * w[m]).sum() / s) if s > 0 else None
+    return out
+
+
 def str_snapshot(slug: str) -> dict:
     """Quadro affitti brevi (Inside Airbnb) del territorio `slug`, in tipi Python puri.
     Indipendente dalla regione. Robusto ai dati mancanti."""
     empty = {"slug": slug, "territorio": "—", "tipo": "—", "k_annunci": "—", "k_adr": "—",
              "k_intero": "—", "k_multihost": "—", "k_licenza": "—", "k_rating": "—",
+             "k_occ": "—", "k_superhost": "—", "k_adr_medio": "—",
              "adr_nomi": [], "adr_val": [], "adr_slugs": [], "zone_nomi": [], "zone_val": [],
-             "room_nomi": [], "room_val": [], "rev_x": [], "rev_y": []}
+             "room_nomi": [], "room_val": [], "rev_x": [], "rev_y": [], "pos_rows": []}
     terr = str_territori()
     if terr.empty:
         return empty
@@ -1260,21 +1279,59 @@ def str_snapshot(slug: str) -> dict:
         rev_y = [float(x) for x in rv["n_recensioni"]]
 
     adr = num("adr_mediano")
+    adr_medio = num("adr_medio")
     rating = num("rating_medio")
+
+    # posizionamento del territorio vs media nazionale (ponderata)
+    natl = _str_natl_wavg()
+
+    def _rating_str(v):
+        return f"{v:.2f}".replace(".", ",") if v is not None else "—"
+
+    def pos(voce, col, kind):
+        tv, iv = num(col), natl.get(col)
+        if kind == "eur":
+            fmt = lambda x: (f"€ {_it_int(x)}" if x is not None else "—")
+            delta = (tv - iv) if (tv is not None and iv is not None) else None
+            dstr = (f"{'+' if delta >= 0 else '−'}€ {_it_int(abs(delta))}" if delta is not None else "—")
+        elif kind == "rating":
+            fmt = _rating_str
+            delta = (tv - iv) if (tv is not None and iv is not None) else None
+            dstr = (f"{'+' if delta >= 0 else '−'}{abs(delta):.2f}".replace(".", ",") if delta is not None else "—")
+        else:  # pct
+            fmt = _pct
+            delta = (tv - iv) if (tv is not None and iv is not None) else None
+            dstr = (f"{'+' if delta >= 0 else '−'}{abs(delta):.1f}".replace(".", ",") + " p.p." if delta is not None else "—")
+        d = "flat" if (delta is None or abs(delta) < 1e-9) else ("up" if delta > 0 else "down")
+        return {"voce": voce, "terr": fmt(tv), "ita": fmt(iv), "scarto": dstr, "dir": d}
+
+    pos_rows = [
+        pos("ADR mediano", "adr_mediano", "eur"),
+        pos("Occupazione stimata", "occ_proxy", "pct"),
+        pos("Soddisfazione (rating)", "rating_medio", "rating"),
+        pos("Con licenza / CIR", "pct_licenza", "pct"),
+        pos("Operatori professionali", "pct_multihost", "pct"),
+        pos("Superhost", "pct_superhost", "pct"),
+    ]
+
     return {
         "slug": slug,
         "territorio": str(r.get("territorio", "—")),
         "tipo": str(r.get("tipo", "—")),
         "k_annunci": _it_int(num("n_annunci")),
         "k_adr": (f"€ {_it_int(adr)}" if adr is not None else "—"),
+        "k_adr_medio": (f"€ {_it_int(adr_medio)}" if adr_medio is not None else "—"),
         "k_intero": _pct(num("pct_intero")),
         "k_multihost": _pct(num("pct_multihost")),
         "k_licenza": _pct(num("pct_licenza")),
         "k_rating": (f"{rating:.2f}".replace(".", ",") if rating is not None else "—"),
+        "k_occ": _pct(num("occ_proxy")),
+        "k_superhost": _pct(num("pct_superhost")),
         "adr_nomi": adr_nomi, "adr_val": adr_val, "adr_slugs": adr_slugs,
         "zone_nomi": zone_nomi, "zone_val": zone_val,
         "room_nomi": room_nomi, "room_val": room_val,
         "rev_x": rev_x, "rev_y": rev_y,
+        "pos_rows": pos_rows,
     }
 
 

@@ -185,6 +185,8 @@ class State(rx.State):
     str_terr_nome: str = "Roma"; str_tipo: str = "—"
     str_k_annunci: str = "—"; str_k_adr: str = "—"; str_k_intero: str = "—"
     str_k_multihost: str = "—"; str_k_licenza: str = "—"; str_k_rating: str = "—"
+    str_k_occ: str = "—"; str_k_superhost: str = "—"; str_k_adr_medio: str = "—"
+    str_pos_rows: list[dict] = []
     _str_adr_nomi: list = []; _str_adr_val: list = []; _str_adr_slugs: list = []
     _str_zone_nomi: list = []; _str_zone_val: list = []
     _str_room_nomi: list = []; _str_room_val: list = []
@@ -394,6 +396,9 @@ class State(rx.State):
         self.str_k_annunci, self.str_k_adr = s["k_annunci"], s["k_adr"]
         self.str_k_intero, self.str_k_multihost = s["k_intero"], s["k_multihost"]
         self.str_k_licenza, self.str_k_rating = s["k_licenza"], s["k_rating"]
+        self.str_k_occ, self.str_k_superhost = s["k_occ"], s["k_superhost"]
+        self.str_k_adr_medio = s["k_adr_medio"]
+        self.str_pos_rows = s["pos_rows"]
         self._str_adr_nomi, self._str_adr_val, self._str_adr_slugs = s["adr_nomi"], s["adr_val"], s["adr_slugs"]
         self._str_zone_nomi, self._str_zone_val = s["zone_nomi"], s["zone_val"]
         self._str_room_nomi, self._str_room_val = s["room_nomi"], s["room_val"]
@@ -1122,6 +1127,30 @@ def affitti_italia_page() -> rx.Component:
 # ════════════════════════════════════════════════════════════════════════════
 # pagina: Affitti brevi / STR ("/affitti-brevi")
 # ════════════════════════════════════════════════════════════════════════════
+def str_pos_table() -> rx.Component:
+    def cell_scarto(r):
+        col = rx.match(r["dir"], ("up", "#16a34a"), ("down", "#d97706"), MUT)
+        arrow = rx.match(r["dir"], ("up", "▲"), ("down", "▼"), "–")
+        return rx.table.cell(rx.hstack(
+            rx.text(arrow, color=col, font_size="0.7rem"),
+            rx.text(r["scarto"], color=col, font_weight="600", font_size="0.85rem"),
+            spacing="1", align="center"))
+    return rx.box(
+        rx.table.root(
+            rx.table.header(rx.table.row(
+                rx.table.column_header_cell("Indicatore"),
+                rx.table.column_header_cell("Questo territorio"),
+                rx.table.column_header_cell("Media Italia"),
+                rx.table.column_header_cell("Scarto"))),
+            rx.table.body(rx.foreach(State.str_pos_rows, lambda r: rx.table.row(
+                rx.table.cell(rx.text(r["voce"], font_weight="600", color=INK)),
+                rx.table.cell(r["terr"]),
+                rx.table.cell(rx.text(r["ita"], color=MUT)),
+                cell_scarto(r)))),
+            variant="surface", size="1", width="100%"),
+        width="100%")
+
+
 def affitti_page() -> rx.Component:
     return page_shell(
         "str", "Cosa è successo  ›  Affitti brevi (STR)",
@@ -1144,11 +1173,18 @@ def affitti_page() -> rx.Component:
             width="100%"),
         rx.box(
             kpi("Annunci attivi", State.str_k_annunci, "snapshot Inside Airbnb"),
-            kpi("ADR mediano", State.str_k_adr, "€/notte"),
+            kpi("ADR mediano", State.str_k_adr, "€/notte · medio " + State.str_k_adr_medio),
+            kpi("Occupazione stimata", State.str_k_occ, "proxy della domanda"),
             kpi("Soddisfazione ★", State.str_k_rating, "rating medio Airbnb (su 5)"),
             kpi("Operatori professionali", State.str_k_multihost, "host con più annunci"),
             kpi("Con licenza / CIR", State.str_k_licenza, "% degli annunci"),
-            display="grid", grid_template_columns="repeat(5, 1fr)", gap="12px", width="100%"),
+            display="grid", grid_template_columns="repeat(6, 1fr)", gap="12px", width="100%"),
+        panel("Posizionamento vs media Italia", rx.fragment(
+            str_pos_table(),
+            rx.text("Scarto = differenza rispetto alla media nazionale ponderata (verde sopra, "
+                    "arancione sotto). Non è un giudizio di merito: un ADR più alto significa prezzi "
+                    "più alti, non necessariamente «meglio». p.p. = punti percentuali.",
+                    color=FAINT, font_size="0.75rem", margin_top="10px"))),
         rx.box(
             panel("ADR mediano — confronto territori", rx.plotly(data=State.str_adr_fig, width="100%")),
             panel("Recensioni / mese (proxy della domanda)", rx.plotly(data=State.str_rev_fig, width="100%")),
