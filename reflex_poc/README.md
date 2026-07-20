@@ -67,8 +67,11 @@ Il **bundle** self-contained sta in `tdh_reflex_poc/tdh_engine/` (copia di `tdh_
 va **ricopiato** nel bundle prima del deploy. Gotcha noti nella memoria di progetto
 (dot-dir esclusi, cap 1MB per file, foreach su `list[dict]`, niente concat `Var + item`).
 
-## Migrazione — resta da fare
-- **Fase 3**: far importare a `tdhlib` le stesse funzioni da `tdh_data` (elimina la
-  duplicazione oggi ancora presente in `tdhlib`).
-- Opzionali: assistente Claude in-app · video intro in Home · STR con dati reali AirROI
-  (fonte a pagamento) · credenziali più robuste di admin/admin.
+## Migrazione — stato
+- **Fase 3 FATTA** (20-07-2026): `tdhlib.py` non duplica più la logica delle 22
+  funzioni-base — sono deleghe sottili a `tdh_data` (stessa firma, ancora `@st.cache_data`).
+  `tdh_data.clear_caches()` + `L.clear_data_caches()` collegato ai refresh in `app.py`.
+  Verificato: output vecchio-vs-nuovo 77/77 identici. `tdh_data` è ora l'unica fonte di
+  verità dei dati, condivisa tra app Streamlit e app Reflex.
+- Opzionali rimasti: assistente Claude in-app · video intro in Home · STR con dati reali
+  AirROI (fonte a pagamento) · credenziali più robuste di admin/admin.
