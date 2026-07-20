@@ -1397,6 +1397,61 @@ def str_italia_snapshot() -> dict:
     }
 
 
+def airroi_snapshot(num_months: int = 12) -> dict:
+    """Metriche di mercato REALI degli affitti brevi (AirROI) — SOLO USO INTERNO.
+    Torna sempre uno stato utilizzabile: se manca la chiave/cache, `configured`/
+    `has_data` sono False e la UI mostra un avviso invece dei dati. La chiave sta
+    nell'env `TDH_AIRROI_KEY`; i dati non sono mai committati (cache gitignorata,
+    max 30gg). Vedi airroi_sources.py per i vincoli di licenza."""
+    out = {"configured": False, "has_data": False, "cache_age_days": None,
+           "expired": False, "rows": [], "note": ""}
+    try:
+        import importlib
+        AR = importlib.import_module("airroi_sources")
+    except Exception:  # noqa: BLE001
+        out["note"] = "Modulo airroi_sources non disponibile in questo ambiente."
+        return out
+
+    st = AR.cache_status()
+    out.update(configured=st["configured"], cache_age_days=st["age_days"],
+               expired=st["expired"])
+    if not st["configured"]:
+        out["note"] = ("AirROI non configurato: manca la chiave TDH_AIRROI_KEY. "
+                       "Fonte a pagamento, uso interno — attivare l'account per i dati reali.")
+        return out
+    try:
+        df = AR.fetch_airroi_markets(num_months=num_months)
+    except Exception as e:  # noqa: BLE001
+        out["note"] = f"Errore nella lettura AirROI: {type(e).__name__}"
+        return out
+    if df is None or df.empty:
+        out["note"] = "Nessun dato AirROI in cache (o mercati non trovati)."
+        return out
+
+    def _occ(v):
+        if v is None or (isinstance(v, float) and pd.isna(v)):
+            return "—"
+        v = float(v)
+        if v <= 1.5:      # AirROI può esprimere l'occupazione come frazione (0,45)
+            v *= 100
+        return _pct(v)
+
+    rows = []
+    for _, r in df.iterrows():
+        code = str(r.get("tdh") or "")
+        nome = RG.region(code)["nome"] if code in RG.REGIONS else str(r.get("locality") or "")
+        rows.append({
+            "regione": nome, "citta": str(r.get("locality") or ""),
+            "occ": _occ(r.get("occupancy")),
+            "adr": (f"€ {_it_int(r.get('adr'))}" if pd.notna(r.get("adr")) else "—"),
+            "revpar": (f"€ {_it_int(r.get('revpar'))}" if pd.notna(r.get("revpar")) else "—"),
+            "revenue": (f"€ {_it_int(r.get('revenue'))}" if pd.notna(r.get("revenue")) else "—"),
+            "annunci": _it_int(r.get("active_listings")),
+        })
+    out.update(has_data=True, rows=rows)
+    return out
+
+
 _GEOJSON_PATH = os.path.join(_ROOT, "assets", "italy_regions.geojson")
 
 
