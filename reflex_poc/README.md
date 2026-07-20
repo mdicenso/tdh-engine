@@ -52,7 +52,8 @@ Pagine (~21), per gruppo:
   Dettaglio mercato · Confronto regioni.
 - **Cosa è successo**: Per provincia · Per struttura · **Occupazione** (occ. posti letto:
   trend annuale + stagionalità) · **Affitti brevi · Italia** (aggregato STR ponderato) ·
-  **Affitti brevi · territorio** (dettaglio + posizionamento vs media Italia) · Base dati
+  **Affitti brevi · territorio** (dettaglio + posizionamento vs media Italia) · **Affitti
+  brevi · AirROI** (DEMO dati simulati che anticipa la fonte a pagamento) · Base dati
   regionale · Spesa turistica.
 - **Cosa fare**: Ranking regioni · Azioni & budget (motore) · Interesse online (Google
   Trends) · Forecast presenze (motore).
@@ -73,5 +74,9 @@ va **ricopiato** nel bundle prima del deploy. Gotcha noti nella memoria di proge
   `tdh_data.clear_caches()` + `L.clear_data_caches()` collegato ai refresh in `app.py`.
   Verificato: output vecchio-vs-nuovo 77/77 identici. `tdh_data` è ora l'unica fonte di
   verità dei dati, condivisa tra app Streamlit e app Reflex.
-- Opzionali rimasti: assistente Claude in-app · video intro in Home · STR con dati reali
-  AirROI (fonte a pagamento) · credenziali più robuste di admin/admin.
+- **AirROI predisposto** (20-07-2026): reader `airroi_sources.py` (uso interno, chiave da
+  env `TDH_AIRROI_KEY`, cache gitignorata ≤30gg) + `tdh_data.airroi_snapshot()` pronti; la
+  pagina attuale «Affitti brevi · AirROI» è una DEMO con dati simulati. Con la chiave: probe
+  → rifinire il parser sui campi reali → collegare i dati veri (nel deploy privato).
+- Opzionali rimasti: assistente Claude in-app · video intro in Home · credenziali più
+  robuste di admin/admin.
