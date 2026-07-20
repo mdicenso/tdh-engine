@@ -1430,6 +1430,18 @@ def mappa_snapshot(year: int | None = None) -> dict:
 REGIONI_SELECT = [(info["nome"], code) for code, info in RG.REGIONS.items()]
 
 
+def clear_caches() -> None:
+    """Svuota tutte le lru_cache del data-layer. Da chiamare quando i dati su disco
+    cambiano a runtime (es. refresh di una fonte dal cruscotto Streamlit), altrimenti
+    le funzioni continuerebbero a restituire i valori in memoria dell'avvio."""
+    for _obj in list(globals().values()):
+        if callable(_obj) and hasattr(_obj, "cache_clear"):
+            try:
+                _obj.cache_clear()
+            except Exception:  # noqa: BLE001
+                pass
+
+
 # ── self-check: `python tdh_data.py` stampa numeri REALI per alcune regioni ──
 if __name__ == "__main__":
     for _c in ("ITE1", "ITC4", "ITF1", "ITALIA"):

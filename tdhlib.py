@@ -28,6 +28,12 @@ from tourism_wedge import candidate_sources as CS
 from tourism_wedge import real_sources as RS
 import regions as RG
 import econ_sources as ECS
+import tdh_data
+# Fase 3: le funzioni-base (presenze/spesa/esteri/STR) vivono ORA in tdh_data (data-layer
+# puro, condiviso con l'app Reflex). Qui sotto sono deleghe sottili con la stessa firma,
+# ancora decorate con @st.cache_data (copia → sicuro alle mutazioni). Per svuotare anche
+# le lru_cache di tdh_data quando i dati su disco cambiano a runtime:
+clear_data_caches = tdh_data.clear_caches
 
 MODEL = "claude-sonnet-4-6"
 MODE_SYN = "🧪 Sintetico (collaudo)"
@@ -444,76 +450,15 @@ _BDI_REG_SHEETS = {"spesa": "TS2-S-S", "notti": "TS2-N-S", "viaggiatori": "TS2-V
 
 @st.cache_data(show_spinner=False)
 def bdi_region_long():
-    """Spesa/notti/viaggiatori dei turisti stranieri per REGIONE visitata (trimestrale,
-    1997-2025). DataFrame: date·code·spesa·notti·viaggiatori. None se l'xlsx manca."""
-    import re
-    p = ".cache/bdi_turismo_ts.xlsx"
-    if not os.path.exists(p):
-        return None
-    import openpyxl
-    wb = openpyxl.load_workbook(p, read_only=True, data_only=True)
-    recs = []
-    for metric, sheet in _BDI_REG_SHEETS.items():
-        year = None
-        for r in wb[sheet].iter_rows(values_only=True):
-            if r and r[0] is not None:
-                try:
-                    year = int(r[0])
-                except (TypeError, ValueError):
-                    pass
-            m = re.match(r"\s*(\d)", str((r[1] or r[2]) if r else ""))
-            if not (year and m):
-                continue
-            q = int(m.group(1))
-            date = pd.Timestamp(year, q * 3 - 2, 1)
-            for col, codes in _BDI_REG_COL.items():
-                if col < len(r) and r[col] is not None:
-                    try:
-                        val = float(r[col])
-                    except (TypeError, ValueError):
-                        continue
-                    for code in codes:
-                        recs.append((date, code, metric, val))
-    if not recs:
-        return None
-    df = pd.DataFrame(recs, columns=["date", "code", "metric", "value"])
-    return df.pivot_table(index=["date", "code"], columns="metric", values="value").reset_index()
+    return tdh_data.bdi_region_long()
 
 
 def bdi_national_annual():
-    """Spesa straniera ANNUALE per TUTTA Italia = somma delle regioni visitate (BdI).
-    Deduplica il Trentino, che nei dati è duplicato su Bolzano (ITD1) e Trento (ITD2)."""
-    df = bdi_region_long()
-    if df is None or df.empty:
-        return None
-    reps = {codes[0] for codes in _BDI_REG_COL.values()}  # un codice per colonna-regione (no doppio Trentino)
-    d = df[df["code"].isin(reps)].copy()
-    if d.empty:
-        return None
-    # nazionale per trimestre = somma sulle regioni; poi aggregato per anno
-    qn = d.groupby("date").agg(spesa=("spesa", "sum"), notti=("notti", "sum"),
-                               viaggiatori=("viaggiatori", "sum")).reset_index()
-    qn["anno"] = qn["date"].dt.year
-    return qn.groupby("anno").agg(spesa=("spesa", "sum"), notti=("notti", "sum"),
-                                  viaggiatori=("viaggiatori", "sum"),
-                                  trimestri=("date", "count")).reset_index()
+    return tdh_data.bdi_national_annual()
 
 
 def bdi_region_annual(code: str):
-    """Aggregato ANNUALE (spesa M€, notti/viaggiatori in migliaia) per la regione,
-    oppure il totale Italia se è selezionata la vista nazionale."""
-    if RG.is_national(code):
-        return bdi_national_annual()
-    df = bdi_region_long()
-    if df is None or df.empty:
-        return None
-    d = df[df["code"] == code].copy()
-    if d.empty:
-        return None
-    d["anno"] = d["date"].dt.year
-    return d.groupby("anno").agg(spesa=("spesa", "sum"), notti=("notti", "sum"),
-                                 viaggiatori=("viaggiatori", "sum"),
-                                 trimestri=("date", "count")).reset_index()
+    return tdh_data.bdi_region_annual(code)
 
 
 def chart_region_spend(code: str, yr_range=None) -> go.Figure | None:
@@ -556,86 +501,29 @@ _ISTAT_COUNTRY_NAME = {
 
 
 def estero_country_name(code: str) -> str:
-    """Nome leggibile del codice paese ISTAT (pass-through se non mappato)."""
-    return _ISTAT_COUNTRY_NAME.get(code, code)
+    return tdh_data.estero_country_name(code)
 
 
 def _tur9_is_aggregate(c: str) -> bool:
-    """True se il codice è un aggregato (mondo/ripartizioni continentali/UE) o l'Italia,
-    non un singolo paese estero. CH_LI (Svizzera+Liechtenstein) è tenuto come mercato."""
-    if c in {"WORLD", "WRL_X_ITA", "IT", "EU"}:
-        return True
-    if c.endswith("_OTH") or c.endswith("_NEU"):
-        return True
-    return c in {"AFRMED", "EUR", "AFR", "ASI", "AME", "OCE"}
+    return tdh_data._tur9_is_aggregate(c)
 
 
 @st.cache_data(show_spinner=False)
 def estero_regione_long():
-    """Presenze/arrivi turisti ESTERI per PAESE × territorio (naz/regione/provincia),
-    ANNUALE (ISTAT DCSC_TUR_9). DataFrame: area·datatype·country·anno·valore.
-    None se la cache manca."""
-    if not os.path.exists(_TUR9_PATH):
-        return None
-    df = pd.read_csv(_TUR9_PATH, dtype={"REF_AREA": str, "DATA_TYPE": str,
-                                        "COUNTRY_RES_GUESTS": str})
-    if df.empty:
-        return None
-    df = df.rename(columns={"REF_AREA": "area", "DATA_TYPE": "datatype",
-                            "COUNTRY_RES_GUESTS": "country", "TIME_PERIOD": "anno",
-                            "OBS_VALUE": "valore"})
-    df["anno"] = pd.to_numeric(df["anno"], errors="coerce").astype("Int64")
-    df["valore"] = pd.to_numeric(df["valore"], errors="coerce")
-    return df.dropna(subset=["anno", "valore"])
+    return tdh_data.estero_regione_long()
 
 
 def estero_markets(code: str, datatype: str = "NI", year: int | None = None,
                    only_countries: bool = True, top: int | None = None):
-    """Classifica dei mercati esteri per la regione (o Italia): DataFrame
-    country·nome·valore per l'anno scelto (o l'ultimo disponibile), ordinata desc.
-    datatype: 'NI' presenze, 'AR' arrivi. only_countries esclude gli aggregati."""
-    df = estero_regione_long()
-    if df is None:
-        return None
-    area = RG.istat_area(code)
-    d = df[(df["area"] == area) & (df["datatype"] == datatype)]
-    if only_countries:
-        d = d[~d["country"].map(_tur9_is_aggregate)]
-    if d.empty:
-        return None
-    if year is None:
-        year = int(d["anno"].max())
-    d = d[d["anno"] == year].copy()
-    if d.empty:
-        return None
-    d["nome"] = d["country"].map(estero_country_name)
-    return d.sort_values("valore", ascending=False)[["country", "nome", "valore"]] \
-            .head(top).reset_index(drop=True) if top else \
-            d.sort_values("valore", ascending=False)[["country", "nome", "valore"]] \
-            .reset_index(drop=True)
+    return tdh_data.estero_markets(code, datatype, year, only_countries, top)
 
 
 def estero_country_series(code: str, country: str, datatype: str = "NI"):
-    """Serie storica annuale di un paese in una regione: DataFrame anno·valore."""
-    df = estero_regione_long()
-    if df is None:
-        return None
-    area = RG.istat_area(code)
-    d = df[(df["area"] == area) & (df["datatype"] == datatype) &
-           (df["country"] == country)]
-    if d.empty:
-        return None
-    return d.sort_values("anno")[["anno", "valore"]].reset_index(drop=True)
+    return tdh_data.estero_country_series(code, country, datatype)
 
 
 def estero_years(code: str, datatype: str = "NI"):
-    """Anni disponibili per la regione/territorio (lista ordinata di int)."""
-    df = estero_regione_long()
-    if df is None:
-        return []
-    area = RG.istat_area(code)
-    d = df[(df["area"] == area) & (df["datatype"] == datatype)]
-    return sorted(int(a) for a in d["anno"].dropna().unique())
+    return tdh_data.estero_years(code, datatype)
 
 
 # --- Banca d'Italia per PAESE di origine (nazionale, trimestrale 1997-2025) ---
@@ -647,36 +535,7 @@ BDI_MARKETS = ["DE", "AT", "GB", "CH", "US", "FR", "ES"]
 
 @st.cache_data(show_spinner=False)
 def bdi_country_long():
-    """Flussi nazionali BdI per paese di origine: DataFrame date·code·notti·spesa·viaggiatori
-    (trimestrale). Sorgente: fogli TS1 dell'xlsx BdI. None se il file manca."""
-    import re
-    p = ".cache/bdi_turismo_ts.xlsx"
-    if not os.path.exists(p):
-        return None
-    import openpyxl
-    wb = openpyxl.load_workbook(p, read_only=True, data_only=True)
-    recs = []
-    for metric, sheet in _BDI_SHEETS.items():
-        rows = list(wb[sheet].iter_rows(values_only=True))
-        h = next((i for i, r in enumerate(rows) if r and any(c == "Germania" for c in r if c)), None)
-        if h is None:
-            continue
-        year = None
-        for r in rows[h + 1:]:
-            if r[0] is not None:
-                year = int(r[0])
-            m = re.match(r"\s*(\d)", str(r[1] or r[2] or ""))
-            if not (year and m):
-                continue
-            q = int(m.group(1))
-            date = pd.Timestamp(year, q * 3 - 2, 1)
-            for col, code in _BDI_COLMAP.items():
-                if col < len(r) and r[col] is not None:
-                    recs.append((date, code, metric, float(r[col])))
-    if not recs:
-        return None
-    df = pd.DataFrame(recs, columns=["date", "code", "metric", "value"])
-    return df.pivot_table(index=["date", "code"], columns="metric", values="value").reset_index()
+    return tdh_data.bdi_country_long()
 
 
 def bdi_country_annual():
@@ -1587,23 +1446,17 @@ _STR_ROOM_PATH = ".cache/str_airbnb_roomtype.csv"
 
 @st.cache_data(show_spinner=False)
 def str_territori() -> pd.DataFrame:
-    if not os.path.exists(_STR_TERR_PATH):
-        return pd.DataFrame()
-    return pd.read_csv(_STR_TERR_PATH)
+    return tdh_data.str_territori()
 
 
 @st.cache_data(show_spinner=False)
 def _str_zone_all() -> pd.DataFrame:
-    if not os.path.exists(_STR_ZONA_PATH):
-        return pd.DataFrame()
-    return pd.read_csv(_STR_ZONA_PATH)
+    return tdh_data._str_zone_all()
 
 
 @st.cache_data(show_spinner=False)
 def _str_room_all() -> pd.DataFrame:
-    if not os.path.exists(_STR_ROOM_PATH):
-        return pd.DataFrame()
-    return pd.read_csv(_STR_ROOM_PATH)
+    return tdh_data._str_room_all()
 
 
 def str_kpi(slug: str) -> dict:
@@ -1674,11 +1527,7 @@ _STR_REV_PATH = ".cache/str_airbnb_recensioni_mese.csv"
 
 @st.cache_data(show_spinner=False)
 def str_reviews_monthly() -> pd.DataFrame:
-    if not os.path.exists(_STR_REV_PATH):
-        return pd.DataFrame()
-    df = pd.read_csv(_STR_REV_PATH)
-    df["date"] = pd.to_datetime(df["mese"].astype(str) + "-01", errors="coerce")
-    return df
+    return tdh_data.str_reviews_monthly()
 
 
 def chart_str_struttura() -> go.Figure | None:
@@ -2578,8 +2427,7 @@ def fmt_count_col(df: pd.DataFrame, col: str = "Righe") -> pd.DataFrame:
 
 
 def _safe_kw(kw: str) -> str:
-    """Slug del nome regione per i file di cache Trends (allineato a _trends_precache.py)."""
-    return "".join(c if c.isalnum() else "_" for c in kw.lower())
+    return tdh_data._safe_kw(kw)
 
 
 def builtin_sources() -> list[dict]:
@@ -3216,22 +3064,7 @@ def chart_occupancy(panel) -> go.Figure:
 # ── MULTI-REGIONE: quadro ISTAT per qualunque regione (NUTS2) ─────────────────
 @st.cache_data(show_spinner="Carico i dati ISTAT della regione…")
 def region_overview(code: str) -> dict:
-    """Presenze mensili (totale + stranieri) e capacità della regione richiesta.
-    Funziona per tutte le 20 regioni (ISTAT per NUTS2). Cache per-regione."""
-    info = RG.region(code)
-    area = RG.istat_area(code)
-    stran = RS.fetch_istat_presences(area=area, country="WRL_X_ITA", start="2019-01")
-    tot = RS.fetch_istat_presences(area=area, country="WORLD", start="2019-01")
-    df = (stran.rename(columns={"presences": "stranieri"})
-          .merge(tot.rename(columns={"presences": "totale"}), on="date", how="outer")
-          .sort_values("date").reset_index(drop=True))
-    letti = anno = None
-    try:
-        cap = RS.fetch_istat_capacity(area=area)
-        letti, anno = int(cap["letti"].iloc[-1]), int(cap["anno"].iloc[-1])
-    except Exception:  # noqa: BLE001
-        pass
-    return {"info": info, "presenze": df, "letti": letti, "anno_letti": anno}
+    return tdh_data.region_overview(code)
 
 
 def chart_region_presences(df) -> go.Figure:
@@ -3267,53 +3100,7 @@ REGION_VAR_DEC = {k: d for k, _l, _u, d in REGION_VARS}
 
 @st.cache_data(show_spinner="Costruisco il quadro pluriennale…")
 def region_annual_panel(code: str) -> pd.DataFrame:
-    """Pannello ANNUALE (anno × variabili) per regione o Italia. Unisce ISTAT (presenze
-    mensili→somma annua su anni completi, capacità) e Banca d'Italia (spesa/notti/viaggiatori,
-    anni completi). Aggiunge le derivate: quota stranieri, spesa/viaggiatore, spesa/notte,
-    occupazione. Le celle mancanti restano NaN (le serie partono da anni diversi)."""
-    out: dict[int, dict] = {}
-    # ISTAT presenze: mensile → somma annua, solo anni con 12 mesi
-    try:
-        p = region_overview(code)["presenze"].copy()
-        p["anno"] = p["date"].dt.year
-        for col, key in (("totale", "presenze_tot"), ("stranieri", "presenze_str")):
-            if col in p:
-                g = p.dropna(subset=[col]).groupby("anno")[col].agg(["sum", "count"])
-                for y, r in g.iterrows():
-                    if r["count"] >= 12:
-                        out.setdefault(int(y), {})[key] = float(r["sum"])
-    except Exception:  # noqa: BLE001
-        pass
-    # Banca d'Italia: spesa/notti/viaggiatori (stranieri), solo anni completi (4 trimestri)
-    g = bdi_region_annual(code)
-    if g is not None and not g.empty:
-        for _, r in g.iterrows():
-            if r["trimestri"] >= 4:
-                d = out.setdefault(int(r["anno"]), {})
-                d["spesa"], d["notti"], d["viaggiatori"] = float(r["spesa"]), float(r["notti"]), float(r["viaggiatori"])
-    # ISTAT capacità: posti letto annuali
-    try:
-        cap = RS.fetch_istat_capacity(area=RG.istat_area(code))
-        for _, r in cap.iterrows():
-            out.setdefault(int(r["anno"]), {})["letti"] = float(r["letti"])
-    except Exception:  # noqa: BLE001
-        pass
-    if not out:
-        return pd.DataFrame()
-    df = pd.DataFrame(out).T.sort_index()
-    df.index.name = "anno"
-    # derivate
-    if {"presenze_str", "presenze_tot"} <= set(df.columns):
-        df["quota_str"] = df["presenze_str"] / df["presenze_tot"] * 100
-    if {"spesa", "viaggiatori"} <= set(df.columns):
-        df["spesa_per_viagg"] = df["spesa"] * 1e6 / (df["viaggiatori"] * 1e3)
-    if {"spesa", "notti"} <= set(df.columns):
-        df["spesa_per_notte"] = df["spesa"] * 1e6 / (df["notti"] * 1e3)
-    if {"presenze_tot", "letti"} <= set(df.columns):
-        df["occ"] = df["presenze_tot"] / (df["letti"] * 365) * 100
-    # ordina le colonne come nel registro
-    cols = [k for k, *_ in REGION_VARS if k in df.columns]
-    return df[cols]
+    return tdh_data.region_annual_panel(code)
 
 
 def chart_region_indexed(df: pd.DataFrame, keys: list[str], labels: dict | None = None) -> go.Figure:
@@ -3787,70 +3574,21 @@ def chart_projection_monthly(proj: dict, label: str, unit: str = "") -> go.Figur
 
 
 def regions_spend_ranking() -> list[dict]:
-    """Classifica delle regioni per spesa turistica straniera 2024 (Banca d'Italia).
-    code (NUTS2) · regione · spesa_M · rank. Multi-regione by construction."""
-    ext = bdi_extended()
-    spese = (ext or {}).get("regioni_2024", {})
-    if not spese:
-        return []
-    rows = []
-    for code, info in RG.REGIONS.items():
-        sp = spese.get(info["bdi"])
-        if sp is not None:
-            rows.append({"code": code, "regione": info["nome"], "spesa_M": float(sp)})
-    rows.sort(key=lambda r: r["spesa_M"], reverse=True)
-    for i, r in enumerate(rows):
-        r["rank"] = i + 1
-    return rows
+    return list(tdh_data.regions_spend_ranking())
 
 
 @st.cache_data(show_spinner=False)
 def bdi_region_years() -> list[int]:
-    """Anni con i 4 trimestri completi nella serie regionale BdI (per i selettori)."""
-    df = bdi_region_long()
-    if df is None or df.empty:
-        return []
-    g = df.assign(anno=df["date"].dt.year).groupby("anno")["date"].nunique()
-    return sorted(int(y) for y, n in g.items() if n >= 4)
+    return list(tdh_data.bdi_region_years())
 
 
 @st.cache_data(show_spinner=False)
 def regions_spend_ranking_year(year: int) -> list[dict]:
-    """Come regions_spend_ranking() ma per l'ANNO indicato (spesa straniera M€, BdI).
-    Ricavata da bdi_region_long(); per il 2024 coincide col dato di bdi_extended."""
-    df = bdi_region_long()
-    if df is None or df.empty:
-        return []
-    d = df[df["date"].dt.year == year]
-    if d.empty:
-        return []
-    # Spesa annuale per regione visitata. Trentino: ITD1/ITD2 hanno lo stesso valore,
-    # quindi mappando per nome BdI non si duplica (allineato a regions_spend_ranking).
-    by_name: dict[str, float] = {}
-    for code, val in d.groupby("code")["spesa"].sum().items():
-        info = RG.REGIONS.get(code)
-        if info:
-            by_name[info["bdi"]] = float(val)
-    rows = []
-    for code, info in RG.REGIONS.items():
-        sp = by_name.get(info["bdi"])
-        if sp is not None:
-            rows.append({"code": code, "regione": info["nome"], "spesa_M": sp})
-    rows.sort(key=lambda r: r["spesa_M"], reverse=True)
-    for i, r in enumerate(rows):
-        r["rank"] = i + 1
-    return rows
+    return list(tdh_data.regions_spend_ranking_year(year))
 
 
 def region_spend(code: str):
-    """(spesa_M, rank, totale_regioni) per la regione richiesta, o None.
-    Per la vista nazionale: (totale_Italia, None, n_regioni) — rank=None = «Italia»."""
-    rk = regions_spend_ranking()
-    if RG.is_national(code):
-        return (sum(r["spesa_M"] for r in rk), None, len(rk)) if rk else None
-    bdi = RG.region(code)["bdi"]
-    hit = next((r for r in rk if RG.REGIONS[r["code"]]["bdi"] == bdi), None)
-    return (hit["spesa_M"], hit["rank"], len(rk)) if hit else None
+    return tdh_data.region_spend(code)
 
 
 @st.cache_data(show_spinner=False)
@@ -4082,8 +3820,7 @@ def chart_coverage(cov: list[dict]) -> go.Figure:
 # ════════════════════════════════════════════════════════════════════════════
 @st.cache_data(show_spinner=False)
 def bdi_extended():
-    p = ".cache/bdi_extended.json"
-    return json.load(open(p, encoding="utf-8")) if os.path.exists(p) else None
+    return tdh_data.bdi_extended()
 
 
 def chart_abruzzo_spend(ext: dict, yr_range=None) -> go.Figure:

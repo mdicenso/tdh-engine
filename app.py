@@ -60,6 +60,7 @@ with st.sidebar:
         for _fn in (L.compute_real, L.compute_synthetic, L.compute_provinces,
                     L.compute_structure, L.compute_occupancy):
             _fn.clear()
+        L.clear_data_caches()  # svuota anche le lru_cache del data-layer tdh_data
         st.rerun()
     if bc[1].button(":material/delete: Chat", use_container_width=True):
         st.session_state.messages = []; st.rerun()
@@ -774,6 +775,7 @@ def page_gestione_dati():
                         ar = U.apply_update(r["key"])
                     if ar["ok"]:
                         st.cache_data.clear()
+                        L.clear_data_caches()  # svuota anche le lru_cache di tdh_data
                         st.success(ar["msg"] + " · cache rigenerata.")
                         st.rerun()
                     else:
