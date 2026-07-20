@@ -199,6 +199,11 @@ class State(rx.State):
     _sti_adr_nomi: list = []; _sti_adr_val: list = []; _sti_adr_tipo: list = []
     _sti_occ_nomi: list = []; _sti_occ_val: list = []; _sti_occ_tipo: list = []
     _sti_lic_nomi: list = []; _sti_lic_val: list = []; _sti_lic_tipo: list = []
+    # affitti brevi — AirROI (DEMO, dati simulati; indipendente dalla regione)
+    ar_k_occ: str = "—"; ar_k_adr: str = "—"; ar_k_revpar: str = "—"
+    ar_k_revenue: str = "—"; ar_k_annunci: str = "—"; ar_n: str = "—"
+    ar_rows: list[dict] = []
+    _ar_mesi: list = []; _ar_occ: list = []; _ar_adr: list = []
     # spesa turistica (dipende dalla regione)
     _sp_years: list = []; _sp_spesa: list = []; _sp_viagg_val: list = []
     sp_rows: list[dict] = []
@@ -385,6 +390,13 @@ class State(rx.State):
                 self._sti_adr_nomi, self._sti_adr_val, self._sti_adr_tipo = si["adr_nomi"], si["adr_val"], si["adr_tipo"]
                 self._sti_occ_nomi, self._sti_occ_val, self._sti_occ_tipo = si["occ_nomi"], si["occ_val"], si["occ_tipo"]
                 self._sti_lic_nomi, self._sti_lic_val, self._sti_lic_tipo = si["lic_nomi"], si["lic_val"], si["lic_tipo"]
+            if not self.ar_rows:
+                ar = D.airroi_demo_snapshot()
+                self.ar_k_occ, self.ar_k_adr, self.ar_k_revpar = ar["k_occ"], ar["k_adr"], ar["k_revpar"]
+                self.ar_k_revenue, self.ar_k_annunci = ar["k_revenue"], ar["k_annunci"]
+                self.ar_n = str(ar["n_mercati"])
+                self.ar_rows = ar["rows"]
+                self._ar_mesi, self._ar_occ, self._ar_adr = ar["mesi"], ar["occ_mesi"], ar["adr_mesi"]
             self.boot_error = ""
         except Exception as e:  # noqa: BLE001
             import traceback
@@ -642,6 +654,27 @@ class State(rx.State):
                              "annunci con licenza / CIR (%)", "%{x:.1f}% con licenza")
 
     @rx.var
+    def ar_occ_fig(self) -> go.Figure:
+        fig = go.Figure(go.Bar(x=self._ar_mesi, y=self._ar_occ, marker_color=ACCENT,
+                               hovertemplate="%{x}: %{y:.1f}%<extra></extra>"))
+        fig.update_layout(height=340, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(showgrid=False, linecolor=LINE)
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="occupazione (%)", ticksuffix="%")
+        return fig
+
+    @rx.var
+    def ar_adr_fig(self) -> go.Figure:
+        fig = go.Figure(go.Scatter(x=self._ar_mesi, y=self._ar_adr, mode="lines+markers",
+                                   line=dict(color="#f59e0b", width=2.4),
+                                   hovertemplate="%{x}: € %{y:,.0f}<extra></extra>"))
+        fig.update_layout(height=340, margin=dict(l=8, r=8, t=8, b=8), paper_bgcolor="rgba(0,0,0,0)",
+                          plot_bgcolor="#ffffff", font=dict(color=MUT, size=12), showlegend=False)
+        fig.update_xaxes(showgrid=False, linecolor=LINE)
+        fig.update_yaxes(gridcolor="#eef3f3", zeroline=False, title="ADR (€/notte)")
+        return fig
+
+    @rx.var
     def sp_spesa_fig(self) -> go.Figure:
         fig = go.Figure(go.Bar(x=self._sp_years, y=self._sp_spesa, marker_color=ACCENT,
                                hovertemplate="%{x}: %{y:,.0f} M€<extra></extra>"))
@@ -847,6 +880,7 @@ def sidebar(active: str = "regione") -> rx.Component:
         nav_item("gauge", "Occupazione", active=(active == "occupazione"), href="/occupazione"),
         nav_item("bed-double", "Affitti brevi · Italia", active=(active == "str_italia"), href="/affitti-brevi-italia"),
         nav_item("bed-single", "Affitti brevi · territorio", active=(active == "str"), href="/affitti-brevi"),
+        nav_item("gem", "Affitti brevi · AirROI", active=(active == "airroi"), href="/affitti-brevi-airroi"),
         nav_item("database", "Base dati regionale", active=(active == "basedati"), href="/base-dati"),
         nav_item("banknote", "Spesa turistica", active=(active == "spesa"), href="/spesa"),
         nav_group("Cosa fare"),
@@ -1077,6 +1111,75 @@ def mercati_page() -> rx.Component:
             display="grid", grid_template_columns="repeat(2, 1fr)", gap="18px", width="100%"),
         panel("Classifica mercati — dettaglio", mercati_dettaglio_table()),
         rx.text("Reflex · DATI REALI (ISTAT esteri per paese) · design «Istituzionale»",
+                color=FAINT, font_size="0.75rem"))
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# pagina: Affitti brevi · AirROI (DEMO, dati simulati) ("/affitti-brevi-airroi")
+# ════════════════════════════════════════════════════════════════════════════
+def airroi_table() -> rx.Component:
+    return rx.box(
+        rx.table.root(
+            rx.table.header(rx.table.row(
+                rx.table.column_header_cell("Mercato"),
+                rx.table.column_header_cell("Occupazione"),
+                rx.table.column_header_cell("ADR"),
+                rx.table.column_header_cell("RevPAR"),
+                rx.table.column_header_cell("Ricavi/anno"),
+                rx.table.column_header_cell("Annunci"),
+                rx.table.column_header_cell("Permanenza"),
+                rx.table.column_header_cell("Anticipo pren."),
+                rx.table.column_header_cell("Già prenotato"))),
+            rx.table.body(rx.foreach(State.ar_rows, lambda r: rx.table.row(
+                rx.table.cell(rx.text(r["mercato"], font_weight="600", color=INK)),
+                rx.table.cell(r["occ"]),
+                rx.table.cell(r["adr"]),
+                rx.table.cell(r["revpar"]),
+                rx.table.cell(r["revenue"]),
+                rx.table.cell(r["annunci"]),
+                rx.table.cell(r["alos"]),
+                rx.table.cell(r["lead"]),
+                rx.table.cell(r["pacing"])))),
+            variant="surface", size="1", width="100%"),
+        overflow_x="auto", width="100%")
+
+
+def airroi_page() -> rx.Component:
+    banner = rx.box(
+        rx.hstack(
+            rx.icon("triangle-alert", size=18, color="#92400e"),
+            rx.text("DEMO · dati SIMULATI. Le metriche reali di mercato (occupazione, ricavi, "
+                    "RevPAR) provengono da AirROI, una fonte a pagamento. Con un account attivo il "
+                    "TDH mostra qui i dati REALI di ~100 mercati italiani, Abruzzo incluso.",
+                    color="#92400e", font_size="0.85rem"),
+            spacing="2", align="center"),
+        background="#fff7ed", border="1px solid #fed7aa", border_radius="10px",
+        padding="10px 14px", width="100%")
+    return page_shell(
+        "airroi", "Cosa è successo  ›  Affitti brevi · AirROI (demo)",
+        rx.box(
+            rx.heading("Affitti brevi — dati di mercato AirROI", size="7", color=INK, weight="bold"),
+            rx.text("Cosa potremmo mostrare con una fonte a pagamento: occupazione, prezzo medio "
+                    "(ADR), RevPAR, ricavi annui per annuncio, permanenza, anticipo di prenotazione e "
+                    "stagionalità — per ogni mercato italiano. Qui i valori sono simulati (base "
+                    "realistica: Inside Airbnb).", color=MUT, font_size="0.9rem", margin_top="4px"),
+            width="100%"),
+        banner,
+        rx.box(
+            kpi("Occupazione media", State.ar_k_occ, "dati simulati"),
+            kpi("ADR mediano", State.ar_k_adr, "€/notte · simulato"),
+            kpi("RevPAR", State.ar_k_revpar, "ricavo/notte disp."),
+            kpi("Ricavi/anno annuncio", State.ar_k_revenue, "per annuncio · simulato"),
+            kpi("Annunci attivi", State.ar_k_annunci, State.ar_n + " mercati"),
+            display="grid", grid_template_columns="repeat(5, 1fr)", gap="12px", width="100%"),
+        panel("Metriche per mercato (simulate)", airroi_table()),
+        rx.box(
+            panel("Stagionalità · occupazione per mese", rx.plotly(data=State.ar_occ_fig, width="100%")),
+            panel("Stagionalità · ADR per mese", rx.plotly(data=State.ar_adr_fig, width="100%")),
+            display="grid", grid_template_columns="repeat(2, 1fr)", gap="18px", width="100%"),
+        rx.text("DEMO su schema AirROI · valori simulati (base Inside Airbnb, open data) · i dati reali "
+                "AirROI costano ~$5-10 per uno snapshot nazionale (pay-as-you-go) e sono a uso interno "
+                "(per rivenderli serve un accordo di redistribuzione con AirROI) · design «Istituzionale»",
                 color=FAINT, font_size="0.75rem"))
 
 
@@ -1736,6 +1839,7 @@ app.add_page(index, route="/regione", title="TDH · Regione", on_load=State.on_l
 app.add_page(map_page, route="/mappa", title="TDH · Italia mappa", on_load=State.on_load)
 app.add_page(mercati_page, route="/mercati", title="TDH · Mercati d'origine", on_load=State.on_load)
 app.add_page(affitti_italia_page, route="/affitti-brevi-italia", title="TDH · Affitti brevi · Italia", on_load=State.on_load)
+app.add_page(airroi_page, route="/affitti-brevi-airroi", title="TDH · Affitti brevi · AirROI (demo)", on_load=State.on_load)
 app.add_page(affitti_page, route="/affitti-brevi", title="TDH · Affitti brevi (STR)", on_load=State.on_load)
 app.add_page(spesa_page, route="/spesa", title="TDH · Spesa turistica", on_load=State.on_load)
 app.add_page(province_page, route="/per-provincia", title="TDH · Per provincia", on_load=State.on_load)

@@ -1452,6 +1452,77 @@ def airroi_snapshot(num_months: int = 12) -> dict:
     return out
 
 
+_MESI_IT = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"]
+# forme stagionali fisse (peak estivo) per la DEMO — deterministiche, non casuali
+_OCC_SHAPE = [0.62, 0.60, 0.78, 0.88, 0.95, 1.06, 1.18, 1.25, 1.02, 0.90, 0.70, 0.72]
+_ADR_SHAPE = [0.82, 0.80, 0.90, 0.98, 1.05, 1.15, 1.28, 1.35, 1.08, 0.95, 0.82, 0.86]
+
+
+def airroi_demo_snapshot() -> dict:
+    """DEMO della vista AirROI con dati SIMULATI (per mostrare la UX; i dati reali
+    sono a pagamento). Base credibile: valori REALI di Inside Airbnb (open data) per
+    occupazione/ADR/annunci; le metriche esclusive di AirROI (RevPAR, ricavi annui,
+    permanenza, anticipo prenotazione, pacing) sono DERIVATE in modo deterministico.
+    Nessun dato reale AirROI: pagina lecita anche pubblicamente."""
+    terr = str_territori()
+    empty = {"demo": True, "rows": [], "k_occ": "—", "k_adr": "—", "k_revpar": "—",
+             "k_revenue": "—", "k_annunci": "—", "mesi": _MESI_IT,
+             "occ_mesi": [], "adr_mesi": [], "n_mercati": 0}
+    if terr.empty:
+        return empty
+
+    df = terr.copy()
+    for c in ("n_annunci", "adr_mediano", "occ_proxy"):
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    df = df.dropna(subset=["n_annunci", "adr_mediano", "occ_proxy"])
+    if df.empty:
+        return empty
+
+    rows = []
+    tot_ann = float(df["n_annunci"].sum())
+    w_occ = w_adr = w_revpar = w_rev = 0.0
+    for _, r in df.sort_values("n_annunci", ascending=False).iterrows():
+        occ = float(r["occ_proxy"])                       # % reale (Inside Airbnb proxy)
+        adr = float(r["adr_mediano"])                     # € reale
+        ann = float(r["n_annunci"])                       # reale
+        revpar = occ / 100.0 * adr                        # derivato
+        revenue = revpar * 365.0                          # ricavo annuo/annuncio (derivato)
+        alos = round(2.4 + adr / 130.0, 1)                # permanenza (derivata, deterministica)
+        lead = int(round(16 + occ * 0.7))                 # anticipo prenotazione gg (derivato)
+        pacing = round(occ * 0.72, 1)                     # occupazione già prenotata (derivato)
+        w = ann
+        w_occ += occ * w; w_adr += adr * w; w_revpar += revpar * w; w_rev += revenue * w
+        rows.append({
+            "regione": (RG.region(_slug_to_code(r["slug"]))["nome"]
+                        if _slug_to_code(r["slug"]) else str(r["territorio"])),
+            "mercato": str(r["territorio"]), "tipo": str(r["tipo"]),
+            "occ": _pct(occ), "adr": f"€ {_it_int(adr)}", "revpar": f"€ {_it_int(revpar)}",
+            "revenue": f"€ {_it_int(revenue)}", "annunci": _it_int(ann),
+            "alos": f"{alos:.1f}".replace(".", ",") + " notti",
+            "lead": f"{lead} gg", "pacing": _pct(pacing),
+        })
+
+    s = tot_ann or 1.0
+    occ_avg, adr_avg = w_occ / s, w_adr / s
+    occ_mesi = [round(occ_avg * k / (sum(_OCC_SHAPE) / 12), 1) for k in _OCC_SHAPE]
+    adr_mesi = [int(round(adr_avg * k / (sum(_ADR_SHAPE) / 12))) for k in _ADR_SHAPE]
+    return {
+        "demo": True, "rows": rows, "n_mercati": len(rows),
+        "k_occ": _pct(occ_avg), "k_adr": f"€ {_it_int(adr_avg)}",
+        "k_revpar": f"€ {_it_int(w_revpar / s)}", "k_revenue": f"€ {_it_int(w_rev / s)}",
+        "k_annunci": _it_int(tot_ann),
+        "mesi": _MESI_IT, "occ_mesi": occ_mesi, "adr_mesi": adr_mesi,
+    }
+
+
+def _slug_to_code(slug: str) -> str | None:
+    """Mappa uno slug-territorio STR (città/regione) al codice NUTS2 TDH, se noto."""
+    m = {"rome": "ITI4", "milan": "ITC4", "florence": "ITE1", "naples": "ITF3",
+         "venice": "ITH3", "bologna": "ITH5", "bergamo": "ITC4", "sicily": "ITG1",
+         "puglia": "ITF4", "trentino": "ITH2"}
+    return m.get(str(slug))
+
+
 _GEOJSON_PATH = os.path.join(_ROOT, "assets", "italy_regions.geojson")
 
 
